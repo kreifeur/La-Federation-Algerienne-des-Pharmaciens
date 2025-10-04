@@ -260,7 +260,7 @@ export default function Membership() {
   return (
     <div>
       <Head>
-        <title>Adhésion - Association de Cosmétologie</title>
+        <title>Adhésion - La Fédération Algérienne des Pharmaciens</title>
         <meta name="description" content="Rejoignez l'Association de Cosmétologie et bénéficiez de nos services exclusifs" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

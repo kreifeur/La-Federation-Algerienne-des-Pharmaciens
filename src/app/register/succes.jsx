@@ -6,14 +6,14 @@ export default function RegisterSuccess() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
       <Head>
-        <title>Inscription réussie - Association de Cosmétologie</title>
+        <title>Inscription réussie - La Fédération Algérienne des Pharmaciens</title>
       </Head>
 
       <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
         <div className="text-green-500 text-5xl mb-4">✓</div>
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Inscription réussie !</h1>
         <p className="text-gray-600 mb-6">
-          Bienvenue dans l'Association de Cosmétologie. Un email de confirmation a été envoyé à votre adresse.
+          Bienvenue dans La Fédération Algérienne des Pharmaciens. Un email de confirmation a été envoyé à votre adresse.
         </p>
         
         <div className="bg-blue-50 p-4 rounded-lg mb-6 text-left">

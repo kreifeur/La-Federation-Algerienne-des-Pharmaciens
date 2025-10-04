@@ -30,7 +30,7 @@ export default function ForgotPassword() {
   return (
     <div>
       <Head>
-        <title>Mot de passe oublié - Association de Cosmétologie</title>
+        <title>Mot de passe oublié - La Fédération Algérienne des Pharmaciens</title>
         <meta name="description" content="Réinitialisez votre mot de passe pour accéder à votre espace membre" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

@@ -197,7 +197,7 @@ export default function Blog() {
     return (
       <div>
         <Head>
-          <title>{selectedPost.title} - Blog Association de Cosmétologie</title>
+          <title>{selectedPost.title} - Blog La Fédération Algérienne des Pharmaciens</title>
           <meta name="description" content={selectedPost.excerpt} />
           <link rel="icon" href="/favicon.ico" />
         </Head>

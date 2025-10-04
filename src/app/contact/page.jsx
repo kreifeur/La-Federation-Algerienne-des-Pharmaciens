@@ -44,7 +44,7 @@ export default function Contact() {
   return (
     <div>
       <Head>
-        <title>Contact - Association de Cosmétologie</title>
+        <title>Contact - La Fédération Algérienne des Pharmaciens</title>
         <meta name="description" content="Contactez l'Association de Cosmétologie pour toute question ou demande d'information" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

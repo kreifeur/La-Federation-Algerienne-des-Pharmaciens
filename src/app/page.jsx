@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Association de Cosmétologie</title>
+        <title>La Fédération Algérienne des Pharmaciens</title>
         <meta name="description" content="Association professionnelle de cosmétologie" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

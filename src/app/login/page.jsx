@@ -93,7 +93,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 ">
       <Head>
-        <title>Connexion - Association de Cosmétologie</title>
+        <title>Connexion - La Fédération Algérienne des Pharmaciens</title>
         <meta
           name="description"
           content="Connectez-vous à votre espace membre"

@@ -146,7 +146,7 @@ export default function Gallery() {
   return (
     <div>
       <Head>
-        <title>Galerie - Association de Cosmétologie</title>
+        <title>Galerie - La Fédération Algérienne des Pharmaciens</title>
         <meta name="description" content="Galerie photos et vidéos des événements de l'Association de Cosmétologie" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
