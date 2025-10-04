@@ -387,7 +387,7 @@ export default function About() {
           <div className="container mx-auto text-center">
             <h2 className="text-3xl font-bold mb-6">Rejoignez-nous</h2>
             <p className="text-xl max-w-3xl mx-auto mb-8">
-              Devenez membre de l'Association de Cosmétologie et bénéficiez de
+              Devenez membre de La Fédération Algérienne des Pharmaciens et bénéficiez de
               tous nos services exclusifs, ressources privilégiées et d'un
               réseau de qualité.
             </p>

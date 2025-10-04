@@ -271,8 +271,7 @@ export default function Membership() {
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-center text-blue-800 mb-4">Devenez membre</h1>
           <p className="text-lg text-center text-gray-700 max-w-3xl mx-auto mb-12">
-            Rejoignez notre communauté de professionnels et bénéficiez d'avantages exclusifs, 
-            de ressources privilégiées et d'un réseau de qualité dans le secteur de la cosmétologie.
+           Rejoignez notre communauté de professionnels de la pharmacie et bénéficiez d’avantages exclusifs, de ressources spécialisées et d’un réseau de qualité pour accompagner votre développement
           </p>
 
           {!isSubmitted ? (

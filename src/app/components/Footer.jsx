@@ -6,8 +6,8 @@ const Footer = () => {
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-xl font-semibold mb-4">Association de Cosmétologie</h3>
-            <p className="mb-4">Promouvant l'excellence et l'innovation dans le secteur de la cosmétologie depuis 2010.</p>
+            <h3 className="text-xl font-semibold mb-4">La Fédération Algérienne des Pharmaciens</h3>
+            <p className="mb-4">organisation professionnelle qui regroupe et représente les pharmaciens exerçant dans différents secteurs</p>
             <div className="flex space-x-4">
               <a href="#" className="h-10 w-10 bg-blue-800 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
                 <span className="sr-only">Facebook</span>
@@ -42,15 +42,15 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-semibold mb-4">Contact</h3>
             <address className="not-italic">
-              <p className="mb-2">123 Rue de la Cosmétique, Paris</p>
+              <p className="mb-2">123 Rue de kreifeur, Paris</p>
               <p className="mb-2">Tél: +33 1 23 45 67 89</p>
-              <p className="mb-2">Email: contact@association-cosmetologie.fr</p>
+              <p className="mb-2">Email: contact@La Fédération Algérienne des Pharmaciens.dz</p>
             </address>
           </div>
         </div>
         
         <div className="border-t border-blue-800 mt-10 pt-6 text-center">
-          <p>&copy; 2025 Association de Cosmétologie. Tous droits réservés.</p>
+          <p>&copy; 2025 La Fédération Algérienne des Pharmaciens. Tous droits réservés.</p>
         </div>
       </div>
     </footer>
