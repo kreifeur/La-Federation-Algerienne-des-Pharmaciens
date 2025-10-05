@@ -336,7 +336,7 @@ export default function ArticlesTable({ articles, loading, onRefresh }) {
                             >
                               Modifier
                             </button>
-                            <button
+{/*                             <button
                               onClick={() => handleTogglePublish(article._id, article.isPublished)}
                               className={`${
                                 article.isPublished 
@@ -345,7 +345,7 @@ export default function ArticlesTable({ articles, loading, onRefresh }) {
                               }`}
                             >
                               {article.isPublished ? 'Dépublier' : 'Publier'}
-                            </button>
+                            </button> */}
                             <button
                               onClick={() => handleDeleteArticle(article._id)}
                               className="text-red-600 hover:text-red-900"

@@ -196,8 +196,8 @@ export default function MembersTable({ members, loading, onRefresh }) {
       }
 
       const newStatus = !currentStatus;
-      const response = await fetch(`/api/admin/users/${memberId}/status`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/admin/users/${memberId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`

@@ -35,7 +35,7 @@ export default function EventEditForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onUpdate(event.id);
+    onUpdate(event._id);
   };
 
   return (

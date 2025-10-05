@@ -118,7 +118,7 @@ export default function MembersTab({ stats, setStats }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="p-4 bg-blue-50 rounded-lg">
             <h3 className="font-medium text-blue-800">Membres Totaux</h3>
-            <p className="text-2xl font-bold">{stats.totalMembers}</p>
+            <p className="text-2xl font-bold">{members.length}</p>
           </div>
           <div className="p-4 bg-green-50 rounded-lg">
             <h3 className="font-medium text-green-800">Membres Actifs</h3>

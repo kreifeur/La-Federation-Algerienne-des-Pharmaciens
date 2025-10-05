@@ -117,6 +117,7 @@ export default function EventsTable({ events, loading, onRefresh }) {
       const result = await response.json();
 
       if (!response.ok) {
+      
         throw new Error(result.message || 'Erreur lors de la mise à jour de l\'événement');
       }
 
