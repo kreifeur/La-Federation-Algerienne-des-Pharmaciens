@@ -1,10 +1,10 @@
 // app/dashboard/layout.jsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Sidebar from './Sidebar';
-import Header from './Header';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Sidebar from "./Sidebar";
+import Header from "./Header";
 
 export default function DashboardLayout({ children }) {
   const [user, setUser] = useState(null);
@@ -14,25 +14,29 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     // Simulation de vérification d'authentification
     const checkAuth = async () => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
 
       if (!token) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
-      // Simulation de récupération des données utilisateur
-      const localuser = JSON.parse(localStorage.getItem("user"))
-      const userData = {
-        id: 1,
-        name: localuser?.email,
-        email: localuser?.email,
-        role: "member", // ou "admin"
-        membershipType: "individual",
-        membershipStatus: "active",
-        joinDate: "2023-01-15",
-        avatar: "MD"
-      };
+      // Simulation de récupération des données utilisateur\
+      // get the profile data :
+      const response = await fetch("/api/profile", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      const result = await response.json();
+      // log the data 
+      console.log(result.data);
+
+      const localuser = JSON.parse(localStorage.getItem("user"));
+      const userData =result.data;
+      localStorage.setItem("userData",JSON.stringify(userData))
 
       setUser(userData);
       setIsLoading(false);
@@ -54,9 +58,7 @@ export default function DashboardLayout({ children }) {
       <Sidebar user={user} />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header user={user} />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
   );

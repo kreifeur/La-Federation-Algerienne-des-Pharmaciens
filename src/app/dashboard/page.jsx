@@ -84,6 +84,7 @@ export default function Dashboard() {
   ];
 
   useEffect(() => {
+    console.log(localStorage.getItem("authToken"));
     // Simulation de chargement des données
     const loadData = async () => {
       setIsLoading(true);

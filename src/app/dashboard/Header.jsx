@@ -11,7 +11,7 @@ export default function Header({ user }) {
       <div className="flex items-center justify-between px-6 py-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Tableau de Bord</h2>
-          <p className="text-sm text-gray-600">Bienvenue, {user?.name}</p>
+          <p className="text-sm text-gray-600">Bienvenue, {user?.firstName} {user?.lastName}</p>
         </div>
         
         <div className="flex items-center space-x-4">
@@ -28,11 +28,11 @@ export default function Header({ user }) {
             >
               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium">
-                  {user?.name?.charAt(0)}
+                  {user?.firstName?.charAt(0)}
                 </span>
               </div>
               <span className="hidden md:block text-sm font-medium text-gray-700">
-                {user?.name}
+                {user?.firstName} {user?.lastName}
               </span>
             </button>
             
@@ -48,6 +48,8 @@ export default function Header({ user }) {
                 <button 
                   onClick={() => {
                     localStorage.removeItem('authToken');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('userData');
                     window.location.href = '/login';
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

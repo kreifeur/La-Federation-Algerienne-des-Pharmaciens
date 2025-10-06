@@ -71,13 +71,13 @@ export default function AdminDashboard() {
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       setStats({
-        totalMembers: 247,
-        activeMembers: 192,
-        pendingMembers: 15,
-        totalEvents: 42,
-        upcomingEvents: 5,
-        totalResources: 128,
-        newMessages: 23,
+        totalMembers: 0,
+        activeMembers: 0,
+        pendingMembers: 0,
+        totalEvents: 0,
+        upcomingEvents: 0,
+        totalResources: 0,
+        newMessages: 0,
       });
 
       setRecentActivities([

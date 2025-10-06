@@ -50,12 +50,12 @@ export default function Blog() {
   const fetchBlogPosts = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/articles');
+      const response = await fetch("/api/articles");
       const data = await response.json();
-      
+
       if (data.success) {
         // Transform API data to match component structure
-        const transformedPosts = data.data.articles.map(article => ({
+        const transformedPosts = data.data.articles.map((article) => ({
           id: article._id,
           title: article.title,
           content: article.content,
@@ -66,18 +66,18 @@ export default function Blog() {
           tags: article.tags || [],
           isMemberOnly: article.isMemberOnly,
           isPublished: article.isPublished,
-          date: new Date(article.publishedAt).toLocaleDateString('fr-FR'),
+          date: new Date(article.publishedAt).toLocaleDateString("fr-FR"),
           readTime: `${Math.ceil(article.content.length / 1000)} min read`,
           viewCount: article.views,
           publishedAt: article.publishedAt,
           createdAt: article.createdAt,
-          updatedAt: article.updatedAt
+          updatedAt: article.updatedAt,
         }));
-        
+
         setBlogPosts(transformedPosts);
       }
     } catch (error) {
-      console.error('Error fetching blog posts:', error);
+      console.error("Error fetching blog posts:", error);
     } finally {
       setLoading(false);
     }
@@ -85,30 +85,31 @@ export default function Blog() {
 
   const fetchPopularPosts = async () => {
     try {
-      const response = await fetch('/api/articles');
+      const response = await fetch("/api/articles");
       const data = await response.json();
-      
+
       if (data.success) {
         // Get most viewed posts
         const popular = data.data.articles
           .sort((a, b) => b.views - a.views)
           .slice(0, 3)
-          .map(article => ({
+          .map((article) => ({
             id: article._id,
             title: article.title,
             excerpt: article.excerpt,
             author: article.authorId?.email || "Auteur inconnu",
             category: article.tags?.[0] || "Général",
-            date: new Date(article.publishedAt).toLocaleDateString('fr-FR'),
+            tags: article.tags || [],
+            date: new Date(article.publishedAt).toLocaleDateString("fr-FR"),
             readTime: `${Math.ceil(article.content.length / 1000)} min read`,
             viewCount: article.views,
-            content: article.content
+            content: article.content,
           }));
-        
+
         setPopularPosts(popular);
       }
     } catch (error) {
-      console.error('Error fetching popular posts:', error);
+      console.error("Error fetching popular posts:", error);
     }
   };
 
@@ -118,7 +119,7 @@ export default function Blog() {
       const baseUrl = "https://backend-association-cosm-tologie.vercel.app/api";
       const response = await fetch(`${baseUrl}/articles/${postId}`);
       const data = await response.json();
-      
+
       if (data.success) {
         const article = data.data.article || data.data;
         const transformedPost = {
@@ -132,31 +133,32 @@ export default function Blog() {
           tags: article.tags || [],
           isMemberOnly: article.isMemberOnly,
           isPublished: article.isPublished,
-          date: new Date(article.publishedAt).toLocaleDateString('fr-FR'),
+          date: new Date(article.publishedAt).toLocaleDateString("fr-FR"),
           readTime: `${Math.ceil(article.content.length / 1000)} min read`,
           viewCount: article.views,
-          publishedAt: article.publishedAt
+          publishedAt: article.publishedAt,
         };
-        
+
         setSelectedPost(transformedPost);
-        
+
         // Find related posts based on tags
         const related = blogPosts
-          .filter(post => 
-            post.id !== article._id && 
-            post.tags.some(tag => article.tags.includes(tag))
+          .filter(
+            (post) =>
+              post.id !== article._id &&
+              post.tags.some((tag) => article.tags.includes(tag))
           )
           .slice(0, 3);
         setRelatedPosts(related);
       }
     } catch (error) {
-      console.error('Error fetching blog post:', error);
+      console.error("Error fetching blog post:", error);
       // Fallback to client-side search if API endpoint doesn't exist
-      const post = blogPosts.find(p => p.id === postId);
+      const post = blogPosts.find((p) => p.id === postId);
       if (post) {
         setSelectedPost(post);
         const related = blogPosts
-          .filter(p => p.id !== postId && p.category === post.category)
+          .filter((p) => p.id !== postId && p.category === post.category)
           .slice(0, 3);
         setRelatedPosts(related);
       }
@@ -172,24 +174,25 @@ export default function Blog() {
   };
 
   const filteredPosts = blogPosts.filter((post) => {
-    const matchesCategory = selectedCategory === "Tous" || 
-      post.tags.includes(selectedCategory) || 
+    const matchesCategory =
+      selectedCategory === "Tous" ||
+      post.tags.includes(selectedCategory) ||
       post.category === selectedCategory;
-    
-    const matchesSearch = 
+
+    const matchesSearch =
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.content.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     return matchesCategory && matchesSearch;
   });
 
   // Format date for display
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
   };
 
@@ -197,13 +200,15 @@ export default function Blog() {
     return (
       <div>
         <Head>
-          <title>{selectedPost.title} - Blog La Fédération Algérienne des Pharmaciens</title>
+          <title>
+            {selectedPost.title} - Blog La Fédération Algérienne des Pharmaciens
+          </title>
           <meta name="description" content={selectedPost.excerpt} />
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
         <Header />
-        
+
         <main className="min-h-screen bg-blue-50 py-12">
           <div className="container mx-auto px-4">
             {/* Back button */}
@@ -227,7 +232,7 @@ export default function Blog() {
                 {/* Tags */}
                 <div className="mb-6 flex flex-wrap gap-2">
                   {selectedPost.tags.map((tag, index) => (
-                    <span 
+                    <span
                       key={index}
                       className="px-3 py-1 bg-blue-800 text-white rounded-full text-sm"
                     >
@@ -262,8 +267,11 @@ export default function Blog() {
                 </div>
 
                 <div className="prose max-w-none text-gray-700 leading-relaxed">
-                  {selectedPost.content.split('\n').map((paragraph, index) => (
-                    <p key={index} className="mb-4">{paragraph}</p>
+                  {/* {selectedPost.excerpt} */}
+                  {selectedPost.content.split("\n").map((paragraph, index) => (
+                    <p key={index} className="mb-4">
+                      {paragraph}
+                    </p>
                   ))}
                 </div>
 
@@ -312,9 +320,12 @@ export default function Blog() {
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-blue-800">{selectedPost.author}</h4>
+                      <h4 className="font-semibold text-blue-800">
+                        {selectedPost.author}
+                      </h4>
                       <p className="text-gray-600">
-                        Passionné par l’innovation pharmaceutique, il contribue au développement de solutions modernes pour la santé.
+                        Passionné par l’innovation pharmaceutique, il contribue
+                        au développement de solutions modernes pour la santé.
                       </p>
                     </div>
                   </div>
@@ -333,19 +344,23 @@ export default function Blog() {
     <div>
       <Head>
         <title>Blog - Association de Cosmétologie</title>
-        <meta name="description" content="Articles et actualités de l'Association de Cosmétologie" />
+        <meta
+          name="description"
+          content="Articles et actualités de l'Association de Cosmétologie"
+        />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <Header />
-      
+
       <main className="min-h-screen bg-blue-50 py-12">
         <div className="container mx-auto px-4">
           {/* Blog Header */}
           <section className="w-full mb-8 text-center">
             <h1 className="text-4xl font-bold text-blue-800 mb-4">Blog</h1>
             <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-              Découvrez les dernières tendances, les conseils d’experts et l’actualité du monde pharmaceutique
+              Découvrez les dernières tendances, les conseils d’experts et
+              l’actualité du monde pharmaceutique
             </p>
           </section>
 
@@ -412,7 +427,9 @@ export default function Blog() {
                         <h3 className="font-semibold text-xl text-blue-800 mb-2 line-clamp-2">
                           {post.title}
                         </h3>
-                        <p className="text-gray-600 mb-4 line-clamp-3">{post.excerpt}</p>
+                        <p className="text-gray-600 mb-4 line-clamp-3">
+                          {post.excerpt}
+                        </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -424,7 +441,9 @@ export default function Blog() {
                               {post.author}
                             </span>
                           </div>
-                          <span className="text-sm text-gray-500">{post.date}</span>
+                          <span className="text-sm text-gray-500">
+                            {post.date}
+                          </span>
                         </div>
                       </div>
                     </div>
