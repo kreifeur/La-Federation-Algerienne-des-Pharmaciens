@@ -96,11 +96,7 @@ npm start
 ---
 
 ## License
-
-MIT License
-
 © 2025 La Fédération Algérienne des Pharmaciens
-
 ---
 
 ## Contact
