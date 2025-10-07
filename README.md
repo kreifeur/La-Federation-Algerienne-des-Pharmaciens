@@ -36,10 +36,12 @@ Le site vise à :
 
 - Page d’accueil avec présentation de la Fédération  
 - Section **À propos** avec missions, valeurs, etc.  
-- Page **Événements** pour afficher les prochains événements  
+- Page **Événements** pour afficher les prochains événements , avec possibilité d’inscription aux événements 
+- E-paiement
 - Galerie d’images  
 - Blog / Actualités  
-- Adhésion (formulaire ou lien pour devenir membre)  
+- Adhésion (formulaire pour devenir membre)  
+- Messagerie interne entre membres pour faciliter la communication au sein de la Fédération
 - Page de contact (adresse, email, téléphone)  
 - Authentification / Connexion pour membres et administrateurs
 - Liens vers les réseaux sociaux  
