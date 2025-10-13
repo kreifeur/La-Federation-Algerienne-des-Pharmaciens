@@ -14,6 +14,8 @@ export default function Contact() {
     message: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,24 +23,55 @@ export default function Contact() {
       ...prevState,
       [name]: value
     }));
+    // Effacer les erreurs quand l'utilisateur modifie le formulaire
+    if (error) setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Ici vous ajouterez la logique pour envoyer le formulaire
-    console.log('Formulaire soumis:', formData);
-    setIsSubmitted(true);
-    
-    // Réinitialiser le formulaire après 3 secondes
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        message: ''
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-    }, 3000);
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Erreur lors de l\'envoi du message');
+      }
+
+      if (result.success) {
+        console.log('Message envoyé avec succès:', result.data);
+        setIsSubmitted(true);
+        
+        // Réinitialiser le formulaire
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+        
+        // Réinitialiser le message de succès après 5 secondes
+        setTimeout(() => {
+          setIsSubmitted(false);
+        }, 5000);
+      } else {
+        throw new Error(result.message || 'Erreur lors de l\'envoi du message');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -63,11 +96,27 @@ export default function Contact() {
             <div className="bg-white rounded-lg shadow-md p-8">
               <h2 className="text-2xl font-semibold text-blue-800 mb-6">Envoyez-nous un message</h2>
               
-              {isSubmitted ? (
-                <div className="bg-green-100 text-green-700 p-4 rounded-lg mb-6">
-                  Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.
+              {isSubmitted && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
+                  <div className="flex items-center">
+                    <div className="text-green-500 mr-2">✓</div>
+                    <div>
+                      <strong>Merci pour votre message !</strong> Nous vous répondrons dans les plus brefs délais.
+                    </div>
+                  </div>
                 </div>
-              ) : null}
+              )}
+              
+              {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+                  <div className="flex items-center">
+                    <div className="text-red-500 mr-2">✕</div>
+                    <div>
+                      <strong>Erreur :</strong> {error}
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -83,6 +132,7 @@ export default function Contact() {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
+                      disabled={isLoading}
                     />
                   </div>
                   
@@ -98,6 +148,7 @@ export default function Contact() {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -113,6 +164,7 @@ export default function Contact() {
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
+                    disabled={isLoading}
                   >
                     <option value="">Sélectionnez un objet</option>
                     <option value="membership">Adhésion à l'association</option>
@@ -135,17 +187,32 @@ export default function Contact() {
                     rows="5"
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
+                    disabled={isLoading}
+                    placeholder="Décrivez votre demande en détail..."
                   ></textarea>
                 </div>
                 
                 <div>
                   <button
                     type="submit"
-                    className="w-full bg-blue-800 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium"
+                    disabled={isLoading}
+                    className="w-full bg-blue-800 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    Envoyer le message
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Envoi en cours...
+                      </>
+                    ) : (
+                      'Envoyer le message'
+                    )}
                   </button>
                 </div>
+                
+                <p className="text-xs text-gray-500 text-center">
+                  En soumettant ce formulaire, vous acceptez que nous traitions vos données personnelles 
+                  conformément à notre politique de confidentialité.
+                </p>
               </form>
             </div>
             
@@ -203,19 +270,19 @@ export default function Contact() {
                 <div className="flex space-x-4">
                   <a href="#" className="h-12 w-12 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
                     <span className="sr-only">Facebook</span>
-                    <FaFacebookF/>
+                    <FaFacebookF className="w-5 h-5" />
                   </a>
                   <a href="#" className="h-12 w-12 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
                     <span className="sr-only">Twitter</span>
-                    <FaTwitter/>
+                    <FaTwitter className="w-5 h-5" />
                   </a>
                   <a href="#" className="h-12 w-12 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
                     <span className="sr-only">LinkedIn</span>
-                    <FaLinkedin/>
+                    <FaLinkedin className="w-5 h-5" />
                   </a>
                   <a href="#" className="h-12 w-12 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
                     <span className="sr-only">Instagram</span>
-                    <FaInstagram/>
+                    <FaInstagram className="w-5 h-5" />
                   </a>
                 </div>
               </div>
