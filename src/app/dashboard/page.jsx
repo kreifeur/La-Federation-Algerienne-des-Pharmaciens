@@ -236,7 +236,7 @@ export default function Dashboard() {
                 <p className="text-gray-600 text-center py-8">Aucun événement à venir</p>
               )}
               <div className="mt-6">
-                <Link href="/events" className="text-blue-600 hover:text-blue-500 font-medium">
+                <Link href="/dashboard/events" className="text-blue-600 hover:text-blue-500 font-medium">
                   Voir tous les événements →
                 </Link>
               </div>
