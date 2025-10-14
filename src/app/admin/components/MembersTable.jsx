@@ -347,12 +347,12 @@ export default function MembersTable({ members, loading, onRefresh }) {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button
+                            {/* <button
                               onClick={() => handleEditMember(member)}
                               className="text-blue-600 hover:text-blue-900"
                             >
                               Modifier
-                            </button>
+                            </button> */}
                             <button
                               onClick={() => handleToggleStatus(member._id, member.isActive)}
                               className={`${
