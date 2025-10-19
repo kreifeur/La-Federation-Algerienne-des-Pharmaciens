@@ -1,4 +1,5 @@
 // components/About.js
+import members from "../../../public/members.png"
 const About = () => {
   return (
     <section id="about" className="py-16 px-6 bg-white">
@@ -55,8 +56,8 @@ const About = () => {
           </div>
 
           <div className="md:w-1/2">
-            <div className="bg-gray-200 rounded-lg h-64 flex items-center justify-center">
-              <span className="text-gray-500">Image de l'équipe ou logo</span>
+            <div className=" rounded-lg h-64 flex items-center justify-center">
+              <img className="rounded-lg" src={members.src} alt="" />
             </div>
           </div>
         </div>

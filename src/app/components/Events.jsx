@@ -2,6 +2,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -11,6 +12,7 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [registrationLoading, setRegistrationLoading] = useState(false);
+  const router = useRouter()
 
   // Fetch events from API
   useEffect(() => {
@@ -115,11 +117,28 @@ const Events = () => {
       setRegistrationLoading(false);
     }
   };
+  
+  const register=async(event,auth)=>{
+    console.log('from register');
+    console.log(event);
+    console.log(auth);
+  }
 
-  const openRegistrationModal = (event) => {
-    setSelectedEvent(event);
-    setShowRegistrationModal(true);
-    setRegistrationSuccess(false);
+  const openRegistrationModal = async(event) => {
+    const authToken = localStorage.getItem("authToken")
+     if (!authToken) {
+        router.push("/login")
+      }
+
+      const response = await fetch(`/api/events/${event._id}/register`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+
+
   };
 
 

@@ -2,7 +2,7 @@
 import Head from "next/head";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-
+import aboutimage from '../../../public/about.png'
 export default function About() {
   // Données de l'équipe
   const teamMembers = [
@@ -116,10 +116,9 @@ export default function About() {
                 </div>
               </div>
               <div className="md:w-1/2">
-                <div className="bg-gray-200 rounded-lg h-80 flex items-center justify-center">
-                  <span className="text-gray-500">
-                    Image historique de l'association
-                  </span>
+                <div className=" rounded-lg h-80 flex items-center justify-center">
+                  <img className="h-80 filter rounded-lg " src={aboutimage.src} alt="" />
+          
                 </div>
               </div>
             </div>
