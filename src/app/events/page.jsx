@@ -26,18 +26,16 @@ export default function Events() {
     { key: "visit", label: "Visites" },
   ];
 
-  // Fetch events from API - maintenant sans filtre dans l'URL
+  // Fetch events from API
   useEffect(() => {
     fetchEvents();
-  }, []); // Supprimé activeFilter des dépendances
+  }, []);
 
   const fetchEvents = async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/events");
       const data = await response.json();
-
-      console.log("API Response:", data);
 
       if (data.success && data.data) {
         setEvents(data.data.events || []);
@@ -52,12 +50,57 @@ export default function Events() {
     }
   };
 
+  // Fonction pour vérifier si un événement est à venir
+  const isUpcomingEvent = (event) => {
+    if (!event.startDate) return false;
+    try {
+      const eventDate = new Date(event.startDate);
+      const today = new Date();
+      return eventDate >= today;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Fonction pour vérifier si un événement est passé
+  const isPastEvent = (event) => {
+    if (!event.startDate) return false;
+    try {
+      const eventDate = new Date(event.startDate);
+      const today = new Date();
+      return eventDate < today;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Filtrer les événements côté frontend
+  const filteredEvents = events.filter((event) => {
+    switch (activeFilter) {
+      case "all":
+        return true;
+      case "upcoming":
+        return isUpcomingEvent(event);
+      case "past":
+        return isPastEvent(event);
+      case "congress":
+      case "workshop":
+      case "training":
+      case "exhibition":
+      case "networking":
+      case "visit":
+        return event.type === activeFilter;
+      default:
+        return true;
+    }
+  });
+
   // Handle event registration
   const handleEventRegistration = async (formData) => {
     try {
       setRegistrationLoading(true);
       const response = await fetch(
-        `https://assback.vercel.app/api/events/${selectedEvent.id}/register`,
+        `https://assback.vercel.app/api/events/${selectedEvent._id}/register`,
         {
           method: "POST",
           headers: {
@@ -81,30 +124,6 @@ export default function Events() {
       setRegistrationLoading(false);
     }
   };
-
-  // Filtrer les événements côté frontend
-  const filteredEvents = events.filter((event) => {
-    const eventDate = new Date(event.date);
-    const today = new Date();
-
-    switch (activeFilter) {
-      case "all":
-        return true;
-      case "upcoming":
-        return eventDate > today;
-      case "past":
-        return eventDate < today;
-      case "congress":
-      case "workshop":
-      case "training":
-      case "exhibition":
-      case "networking":
-      case "visit":
-        return event.type === activeFilter;
-      default:
-        return true;
-    }
-  });
 
   const openRegistrationModal = (event) => {
     setSelectedEvent(event);
@@ -134,7 +153,7 @@ export default function Events() {
 
   // Générer une clé unique pour chaque événement
   const getEventKey = (event, index) => {
-    return event.id ? `event-${event.id}` : `event-${index}-${Date.now()}`;
+    return event._id ? `event-${event._id}` : `event-${index}-${Date.now()}`;
   };
 
   return (
@@ -165,7 +184,7 @@ export default function Events() {
           <div className="flex flex-wrap justify-center gap-3 mb-12">
             {filters.map((filter) => (
               <button
-                key={`filter-${filter.key}`} // Clé unique pour chaque filtre
+                key={`filter-${filter.key}`}
                 onClick={() => setActiveFilter(filter.key)}
                 className={`px-4 py-2 rounded-full transition-colors ${
                   activeFilter === filter.key
@@ -208,7 +227,7 @@ export default function Events() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
               {filteredEvents.map((event, index) => (
                 <div
-                  key={getEventKey(event, index)} // Clé unique pour chaque événement
+                  key={getEventKey(event, index)}
                   className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
                 >
                   {/* Event image */}
@@ -242,7 +261,7 @@ export default function Events() {
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-gray-500">
-                          {formatDate(event.date)}
+                          {formatDate(event.startDate)}
                         </div>
                         {event.endDate && (
                           <div className="text-sm text-gray-500">
@@ -277,13 +296,13 @@ export default function Events() {
                       </div>
                     </div>
 
-                    {event.maxAttendees && (
+                    {/* {event.maxParticipants && (
                       <div className="mb-4">
                         <div className="flex justify-between text-sm text-gray-600 mb-1">
                           <span>Places disponibles:</span>
                           <span>
-                            {event.maxAttendees - (event.currentAttendees || 0)}{" "}
-                            / {event.maxAttendees}
+                            {event.maxParticipants - (event.participants?.length || 0)}{" "}
+                            / {event.maxParticipants}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -291,30 +310,32 @@ export default function Events() {
                             className="bg-blue-600 h-2 rounded-full"
                             style={{
                               width: `${
-                                ((event.currentAttendees || 0) /
-                                  event.maxAttendees) *
+                                ((event.participants?.length || 0) /
+                                  event.maxParticipants) *
                                 100
                               }%`,
                             }}
                           ></div>
                         </div>
                       </div>
-                    )}
+                    )} */}
 
                     <div className="flex justify-between items-center">
                       <button
                         onClick={() => openRegistrationModal(event)}
                         disabled={
-                          event.status === "past" ||
-                          (event.maxAttendees &&
-                            (event.currentAttendees || 0) >= event.maxAttendees)
+                          isPastEvent(event) ||
+                          (event.maxParticipants &&
+                            (event.participants?.length || 0) >=
+                              event.maxParticipants)
                         }
                         className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                       >
-                        {event.status === "past"
+                        {isPastEvent(event)
                           ? "Voir le replay"
-                          : event.maxAttendees &&
-                            (event.currentAttendees || 0) >= event.maxAttendees
+                          : event.maxParticipants &&
+                            (event.participants?.length || 0) >=
+                              event.maxParticipants
                           ? "Complet"
                           : "S'inscrire"}
                       </button>
@@ -359,7 +380,7 @@ export default function Events() {
                     <div className="mb-6">
                       <h4 className="font-medium mb-2">Date et lieu :</h4>
                       <p className="text-gray-700">
-                        {formatDate(selectedEvent.date)}{" "}
+                        {formatDate(selectedEvent.startDate)}{" "}
                         {selectedEvent.endDate &&
                           `au ${formatDate(selectedEvent.endDate)}`}
                       </p>
@@ -373,13 +394,13 @@ export default function Events() {
                       <div className="flex justify-between items-center mb-2">
                         <span>Non-membre :</span>
                         <span className="font-semibold">
-                          {selectedEvent.price || 0}DA
+                          {selectedEvent.nonMemberPrice || 0} DA
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-blue-800">
                         <span>Membre de l'association :</span>
                         <span className="font-semibold">
-                          {selectedEvent.memberPrice || 0}DA
+                          {selectedEvent.memberPrice || 0} DA
                         </span>
                       </div>
                       <a
@@ -399,7 +420,7 @@ export default function Events() {
                           Nom complet *
                         </label>
                         <input
-                          key={`name-${selectedEvent.id}`}
+                          key={`name-${selectedEvent._id}`}
                           name="name"
                           type="text"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -412,7 +433,7 @@ export default function Events() {
                           Email *
                         </label>
                         <input
-                          key={`email-${selectedEvent.id}`}
+                          key={`email-${selectedEvent._id}`}
                           name="email"
                           type="email"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -425,7 +446,7 @@ export default function Events() {
                           Entreprise
                         </label>
                         <input
-                          key={`company-${selectedEvent.id}`}
+                          key={`company-${selectedEvent._id}`}
                           name="company"
                           type="text"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -437,7 +458,7 @@ export default function Events() {
                           Êtes-vous membre ?
                         </label>
                         <select
-                          key={`membership-${selectedEvent.id}`}
+                          key={`membership-${selectedEvent._id}`}
                           name="membership"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         >
