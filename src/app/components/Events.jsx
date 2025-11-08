@@ -12,7 +12,7 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [registrationLoading, setRegistrationLoading] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   // Fetch events from API
   useEffect(() => {
@@ -92,16 +92,19 @@ const Events = () => {
     return types[type] || "Événement";
   };
 
-   const handleEventRegistration = async (formData) => {
+  const handleEventRegistration = async (formData) => {
     try {
       setRegistrationLoading(true);
-      const response = await fetch(`https://assback.vercel.app/api/events/${selectedEvent.id}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `https://assback.vercel.app/api/events/${selectedEvent.id}/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       const data = await response.json();
 
@@ -109,54 +112,48 @@ const Events = () => {
         setRegistrationSuccess(true);
         fetchEvents();
       } else {
-        alert('Erreur: ' + data.message);
+        alert("Erreur: " + data.message);
       }
     } catch (error) {
-      alert('Erreur lors de l\'inscription');
+      alert("Erreur lors de l'inscription");
     } finally {
       setRegistrationLoading(false);
     }
   };
-  
-  const register=async(event,auth)=>{
-    console.log('from register');
+
+  const register = async (event, auth) => {
+    console.log("from register");
     console.log(event);
     console.log(auth);
-  }
-
-  const openRegistrationModal = async(event) => {
-    const authToken = localStorage.getItem("authToken")
-     if (!authToken) {
-        router.push("/login")
-      }
-
-      const response = await fetch(`/api/events/${event._id}/register`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-
-
-
   };
 
+  const openRegistrationModal = async (event) => {
+    const authToken = localStorage.getItem("authToken");
+    if (!authToken) {
+      router.push("/login");
+    }
 
+    const response = await fetch(`/api/events/${event._id}/register`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+  };
 
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
-    
+
     const formData = {
       name: e.target.name.value,
       email: e.target.email.value,
       company: e.target.company.value,
       isMember: e.target.membership.value,
-      notes: e.target.notes?.value || ''
+      notes: e.target.notes?.value || "",
     };
 
     await handleEventRegistration(formData);
   };
-
 
   if (loading) {
     return (
@@ -265,19 +262,17 @@ const Events = () => {
                         ) : (
                           <>
                             <div className="text-gray-500 line-through text-sm">
-                              {event.nonMemberPrice} €
+                              {event.nonMemberPrice} DA
                             </div>
                             <div className="text-blue-800 font-semibold">
-                              {event.memberPrice} € membres
+                              {event.memberPrice} DA membres
                             </div>
                           </>
                         )}
                       </div>
                     </div>
 
-
                     <div className="flex justify-between items-center">
-
                       <button
                         onClick={() => openRegistrationModal(event)}
                         disabled={
@@ -298,7 +293,6 @@ const Events = () => {
                       <button className="px-4 py-2 border border-blue-800 text-blue-800 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium">
                         Détails
                       </button>
-
                     </div>
                   </div>
                 </div>
@@ -317,117 +311,145 @@ const Events = () => {
         )}
       </div>
 
-       {/* Modal d'inscription */}
-          {showRegistrationModal && selectedEvent && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                {registrationSuccess ? (
-                  <div className="text-center">
-                    <div className="text-green-500 text-4xl mb-4">✓</div>
-                    <h3 className="text-xl font-semibold text-green-800 mb-4">Inscription confirmée !</h3>
-                    <p className="text-gray-700 mb-6">
-                      Votre inscription à <strong>{selectedEvent.title}</strong> a été enregistrée avec succès.
-                      Un email de confirmation vous a été envoyé.
-                    </p>
-                    <button 
-                      onClick={() => setShowRegistrationModal(false)}
-                      className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700"
+      {/* Modal d'inscription */}
+      {showRegistrationModal && selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            {registrationSuccess ? (
+              <div className="text-center">
+                <div className="text-green-500 text-4xl mb-4">✓</div>
+                <h3 className="text-xl font-semibold text-green-800 mb-4">
+                  Inscription confirmée !
+                </h3>
+                <p className="text-gray-700 mb-6">
+                  Votre inscription à <strong>{selectedEvent.title}</strong> a
+                  été enregistrée avec succès. Un email de confirmation vous a
+                  été envoyé.
+                </p>
+                <button
+                  onClick={() => setShowRegistrationModal(false)}
+                  className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700"
+                >
+                  Fermer
+                </button>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-xl font-semibold text-blue-800 mb-4">
+                  Inscription à {selectedEvent.title}
+                </h3>
+
+                <div className="mb-6">
+                  <h4 className="font-medium mb-2">Date et lieu :</h4>
+                  <p className="text-gray-700">
+                    {formatDate(selectedEvent.date)}{" "}
+                    {selectedEvent.endDate &&
+                      `au ${formatDate(selectedEvent.endDate)}`}
+                  </p>
+                  <p className="text-gray-700">
+                    {selectedEvent.location || "Lieu à confirmer"}
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <h4 className="font-medium mb-2">Tarifs :</h4>
+                  <div className="flex justify-between items-center mb-2">
+                    <span>Non-membre :</span>
+                    <span className="font-semibold">
+                      {selectedEvent.price || 0}DA
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-blue-800">
+                    <span>Membre de l'association :</span>
+                    <span className="font-semibold">
+                      {selectedEvent.memberPrice || 0}DA
+                    </span>
+                  </div>
+                  <a
+                    href="/membership"
+                    className="text-sm text-blue-600 hover:underline mt-2 inline-block"
+                  >
+                    Devenir membre pour bénéficier du tarif réduit
+                  </a>
+                </div>
+
+                <form onSubmit={handleRegistrationSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nom complet *
+                    </label>
+                    <input
+                      key={`name-${selectedEvent.id}`}
+                      name="name"
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email *
+                    </label>
+                    <input
+                      key={`email-${selectedEvent.id}`}
+                      name="email"
+                      type="email"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Entreprise
+                    </label>
+                    <input
+                      key={`company-${selectedEvent.id}`}
+                      name="company"
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Êtes-vous membre ?
+                    </label>
+                    <select
+                      key={`membership-${selectedEvent.id}`}
+                      name="membership"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     >
-                      Fermer
+                      <option value="no">Non, pas encore membre</option>
+                      <option value="yes">Oui, je suis membre</option>
+                    </select>
+                  </div>
+
+                  <div className="flex justify-between pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowRegistrationModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={registrationLoading}
+                      className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+                    >
+                      {registrationLoading
+                        ? "Inscription..."
+                        : "Finaliser l'inscription"}
                     </button>
                   </div>
-                ) : (
-                  <>
-                    <h3 className="text-xl font-semibold text-blue-800 mb-4">Inscription à {selectedEvent.title}</h3>
-                    
-                    <div className="mb-6">
-                      <h4 className="font-medium mb-2">Date et lieu :</h4>
-                      <p className="text-gray-700">{formatDate(selectedEvent.date)} {selectedEvent.endDate && `au ${formatDate(selectedEvent.endDate)}`}</p>
-                      <p className="text-gray-700">{selectedEvent.location || 'Lieu à confirmer'}</p>
-                    </div>
-                    
-                    <div className="mb-6">
-                      <h4 className="font-medium mb-2">Tarifs :</h4>
-                      <div className="flex justify-between items-center mb-2">
-                        <span>Non-membre :</span>
-                        <span className="font-semibold">{selectedEvent.price || 0}€</span>
-                      </div>
-                      <div className="flex justify-between items-center text-blue-800">
-                        <span>Membre de l'association :</span>
-                        <span className="font-semibold">{selectedEvent.memberPrice || 0}€</span>
-                      </div>
-                      <a href="/membership" className="text-sm text-blue-600 hover:underline mt-2 inline-block">
-                        Devenir membre pour bénéficier du tarif réduit
-                      </a>
-                    </div>
-                    
-                    <form onSubmit={handleRegistrationSubmit} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
-                        <input 
-                          key={`name-${selectedEvent.id}`}
-                          name="name" 
-                          type="text" 
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md" 
-                          required 
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                        <input 
-                          key={`email-${selectedEvent.id}`}
-                          name="email" 
-                          type="email" 
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md" 
-                          required 
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Entreprise</label>
-                        <input 
-                          key={`company-${selectedEvent.id}`}
-                          name="company" 
-                          type="text" 
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md" 
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Êtes-vous membre ?</label>
-                        <select 
-                          key={`membership-${selectedEvent.id}`}
-                          name="membership" 
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        >
-                          <option value="no">Non, pas encore membre</option>
-                          <option value="yes">Oui, je suis membre</option>
-                        </select>
-                      </div>
-                      
-                      <div className="flex justify-between pt-4">
-                        <button 
-                          type="button"
-                          onClick={() => setShowRegistrationModal(false)}
-                          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                        >
-                          Annuler
-                        </button>
-                        <button 
-                          type="submit"
-                          disabled={registrationLoading}
-                          className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-                        >
-                          {registrationLoading ? 'Inscription...' : 'Finaliser l\'inscription'}
-                        </button>
-                      </div>
-                    </form>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 };

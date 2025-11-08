@@ -1,35 +1,35 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import EventEditForm from './EventEditForm';
+import { useState, useCallback } from "react";
+import EventEditForm from "./EventEditForm";
 
 export default function EventsTable({ events, loading, onRefresh }) {
   const [editingEvent, setEditingEvent] = useState(null);
-  const [eventMessage, setEventMessage] = useState('');
+  const [eventMessage, setEventMessage] = useState("");
   const [eventLoading, setEventLoading] = useState(false);
   const [eventForm, setEventForm] = useState({
-    title: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    location: '',
+    title: "",
+    description: "",
+    startDate: "",
+    endDate: "",
+    location: "",
     isOnline: false,
     isMemberOnly: false,
-    maxParticipants: '',
+    maxParticipants: "",
     registrationRequired: true,
-    registrationDeadline: '',
-    memberPrice: '',
-    nonMemberPrice: ''
+    registrationDeadline: "",
+    memberPrice: "",
+    nonMemberPrice: "",
   });
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -38,53 +38,61 @@ export default function EventsTable({ events, loading, onRefresh }) {
     setEventForm({
       title: event.title,
       description: event.description,
-      startDate: event.startDate ? event.startDate.slice(0, 16) : '',
-      endDate: event.endDate ? event.endDate.slice(0, 16) : '',
+      startDate: event.startDate ? event.startDate.slice(0, 16) : "",
+      endDate: event.endDate ? event.endDate.slice(0, 16) : "",
       location: event.location,
       isOnline: event.isOnline,
       isMemberOnly: event.isMemberOnly,
-      maxParticipants: event.maxParticipants || '',
+      maxParticipants: event.maxParticipants || "",
       registrationRequired: event.registrationRequired,
-      registrationDeadline: event.registrationDeadline ? event.registrationDeadline.slice(0, 16) : '',
-      memberPrice: event.memberPrice || '',
-      nonMemberPrice: event.nonMemberPrice || ''
+      registrationDeadline: event.registrationDeadline
+        ? event.registrationDeadline.slice(0, 16)
+        : "",
+      memberPrice: event.memberPrice || "",
+      nonMemberPrice: event.nonMemberPrice || "",
     });
-    setEventMessage('');
+    setEventMessage("");
   }, []);
 
   const handleCancelEdit = useCallback(() => {
     setEditingEvent(null);
     setEventForm({
-      title: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      location: '',
+      title: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      location: "",
       isOnline: false,
       isMemberOnly: false,
-      maxParticipants: '',
+      maxParticipants: "",
       registrationRequired: true,
-      registrationDeadline: '',
-      memberPrice: '',
-      nonMemberPrice: ''
+      registrationDeadline: "",
+      memberPrice: "",
+      nonMemberPrice: "",
     });
-    setEventMessage('');
+    setEventMessage("");
   }, []);
 
   const handleUpdateEvent = async (eventId) => {
     setEventLoading(true);
-    setEventMessage('');
+    setEventMessage("");
 
     try {
-      const authToken = localStorage.getItem('authToken');
-      
+      const authToken = localStorage.getItem("authToken");
+
       if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
+        throw new Error("Token d'authentification manquant");
       }
 
       // Validation des données
-      if (!eventForm.title || !eventForm.description || !eventForm.startDate || !eventForm.endDate || !eventForm.location) {
-        throw new Error('Veuillez remplir tous les champs obligatoires.');
+      if (
+        !eventForm.title ||
+        !eventForm.description ||
+        !eventForm.startDate ||
+        !eventForm.endDate ||
+        !eventForm.location
+      ) {
+        throw new Error("Veuillez remplir tous les champs obligatoires.");
       }
 
       // Préparer les données pour l'API
@@ -96,43 +104,52 @@ export default function EventsTable({ events, loading, onRefresh }) {
         location: eventForm.location,
         isOnline: eventForm.isOnline,
         isMemberOnly: eventForm.isMemberOnly,
-        maxParticipants: eventForm.maxParticipants ? parseInt(eventForm.maxParticipants) : 0,
+        maxParticipants: eventForm.maxParticipants
+          ? parseInt(eventForm.maxParticipants)
+          : 0,
         registrationRequired: eventForm.registrationRequired,
-        registrationDeadline: eventForm.registrationDeadline 
+        registrationDeadline: eventForm.registrationDeadline
           ? new Date(eventForm.registrationDeadline).toISOString()
           : null,
-        memberPrice: eventForm.memberPrice ? parseFloat(eventForm.memberPrice) : 0,
-        nonMemberPrice: eventForm.nonMemberPrice ? parseFloat(eventForm.nonMemberPrice) : 0
+        memberPrice: eventForm.memberPrice
+          ? parseFloat(eventForm.memberPrice)
+          : 0,
+        nonMemberPrice: eventForm.nonMemberPrice
+          ? parseFloat(eventForm.nonMemberPrice)
+          : 0,
       };
 
       const response = await fetch(`/api/events/${eventId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify(eventData)
+        body: JSON.stringify(eventData),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-      
-        throw new Error(result.message || 'Erreur lors de la mise à jour de l\'événement');
+        throw new Error(
+          result.message || "Erreur lors de la mise à jour de l'événement"
+        );
       }
 
       if (result.success) {
-        setEventMessage('✅ Événement mis à jour avec succès !');
+        setEventMessage("✅ Événement mis à jour avec succès !");
         onRefresh();
         setTimeout(() => {
           setEditingEvent(null);
-          setEventMessage('');
+          setEventMessage("");
         }, 2000);
       } else {
-        throw new Error(result.message || 'Erreur lors de la mise à jour de l\'événement');
+        throw new Error(
+          result.message || "Erreur lors de la mise à jour de l'événement"
+        );
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error("Erreur:", error);
       setEventMessage(`❌ ${error.message}`);
     } finally {
       setEventLoading(false);
@@ -140,39 +157,43 @@ export default function EventsTable({ events, loading, onRefresh }) {
   };
 
   const handleDeleteEvent = async (eventId) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cet événement ?")) {
       return;
     }
 
     try {
-      const authToken = localStorage.getItem('authToken');
-      
+      const authToken = localStorage.getItem("authToken");
+
       if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
+        throw new Error("Token d'authentification manquant");
       }
 
       const response = await fetch(`/api/events/${eventId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
+          Authorization: `Bearer ${authToken}`,
+        },
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Erreur lors de la suppression de l\'événement');
+        throw new Error(
+          result.message || "Erreur lors de la suppression de l'événement"
+        );
       }
 
       if (result.success) {
-        setEventMessage('✅ Événement supprimé avec succès !');
+        setEventMessage("✅ Événement supprimé avec succès !");
         onRefresh();
-        setTimeout(() => setEventMessage(''), 2000);
+        setTimeout(() => setEventMessage(""), 2000);
       } else {
-        throw new Error(result.message || 'Erreur lors de la suppression de l\'événement');
+        throw new Error(
+          result.message || "Erreur lors de la suppression de l'événement"
+        );
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error("Erreur:", error);
       setEventMessage(`❌ ${error.message}`);
     }
   };
@@ -181,7 +202,9 @@ export default function EventsTable({ events, loading, onRefresh }) {
     return (
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Tous les Événements</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            Tous les Événements
+          </h2>
         </div>
         <div className="p-6">
           <div className="text-center py-8">
@@ -196,14 +219,20 @@ export default function EventsTable({ events, loading, onRefresh }) {
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-medium text-gray-900">Tous les Événements</h2>
+        <h2 className="text-lg font-medium text-gray-900">
+          Tous les Événements
+        </h2>
       </div>
-      
+
       <div className="p-6">
         {eventMessage && !editingEvent && (
-          <div className={`p-4 rounded-md mb-4 ${
-            eventMessage.includes('✅') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-          }`}>
+          <div
+            className={`p-4 rounded-md mb-4 ${
+              eventMessage.includes("✅")
+                ? "bg-green-50 text-green-700"
+                : "bg-red-50 text-red-700"
+            }`}
+          >
             {eventMessage}
           </div>
         )}
@@ -242,7 +271,7 @@ export default function EventsTable({ events, loading, onRefresh }) {
                   <tr key={event._id} className="hover:bg-gray-50">
                     {editingEvent === event._id ? (
                       <td colSpan="6">
-                        <EventEditForm 
+                        <EventEditForm
                           event={event}
                           eventForm={eventForm}
                           setEventForm={setEventForm}
@@ -286,7 +315,8 @@ export default function EventsTable({ events, loading, onRefresh }) {
                           <div>Fin: {formatDate(event.endDate)}</div>
                           {event.registrationDeadline && (
                             <div className="text-gray-500 text-xs">
-                              Inscription: {formatDate(event.registrationDeadline)}
+                              Inscription:{" "}
+                              {formatDate(event.registrationDeadline)}
                             </div>
                           )}
                         </td>
@@ -294,11 +324,14 @@ export default function EventsTable({ events, loading, onRefresh }) {
                           {event.location}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div>{event.participantsCount || 0} / {event.maxParticipants || '∞'}</div>
+                          <div>
+                            {event.participantsCount || 0} /{" "}
+                            {event.maxParticipants || "∞"}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div>Membre: {event.memberPrice || 0}€</div>
-                          <div>Non-membre: {event.nonMemberPrice || 0}€</div>
+                          <div>Membre: {event.memberPrice || 0}DA</div>
+                          <div>Non-membre: {event.nonMemberPrice || 0}DA</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">

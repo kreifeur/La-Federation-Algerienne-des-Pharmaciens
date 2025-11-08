@@ -267,10 +267,10 @@ export default function Events() {
                         ) : (
                           <>
                             <div className="text-gray-500 line-through text-sm">
-                              {event.nonMemberPrice} €
+                              {event.nonMemberPrice} DA
                             </div>
                             <div className="text-blue-800 font-semibold">
-                              {event.memberPrice} € membres
+                              {event.memberPrice} DA membres
                             </div>
                           </>
                         )}
@@ -373,13 +373,13 @@ export default function Events() {
                       <div className="flex justify-between items-center mb-2">
                         <span>Non-membre :</span>
                         <span className="font-semibold">
-                          {selectedEvent.price || 0}€
+                          {selectedEvent.price || 0}DA
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-blue-800">
                         <span>Membre de l'association :</span>
                         <span className="font-semibold">
-                          {selectedEvent.memberPrice || 0}€
+                          {selectedEvent.memberPrice || 0}DA
                         </span>
                       </div>
                       <a

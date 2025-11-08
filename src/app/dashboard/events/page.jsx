@@ -85,7 +85,7 @@ export default function EventsPage() {
         result.data.events.forEach((event) => {
           const eventDate = new Date(event.startDate);
           const isRegistered = event.participants?.includes(userId);
-          
+
           if (eventDate >= now) {
             upcomingEvents.push({
               ...event,
@@ -127,7 +127,7 @@ export default function EventsPage() {
               "Le plus grand rassemblement de professionnels de la cosmétologie en France.",
             isOnline: false,
             isMemberOnly: false,
-            participants: []
+            participants: [],
           },
           {
             _id: "2",
@@ -140,7 +140,7 @@ export default function EventsPage() {
               "Apprenez à formuler des produits cosmétiques avec des ingrédients naturels.",
             isOnline: false,
             isMemberOnly: true,
-            participants: []
+            participants: [],
           },
         ],
         past: [
@@ -155,7 +155,7 @@ export default function EventsPage() {
               "Tout savoir sur les nouvelles réglementations cosmétiques en 2024.",
             isOnline: true,
             isMemberOnly: false,
-            participants: []
+            participants: [],
           },
         ],
       });
@@ -264,12 +264,12 @@ export default function EventsPage() {
         setEvents((prev) => ({
           ...prev,
           upcoming: prev.upcoming.map((event) =>
-            event._id === eventId 
-              ? { 
-                  ...event, 
+            event._id === eventId
+              ? {
+                  ...event,
                   status: "registered",
-                  participants: [...(event.participants || []), userId]
-                } 
+                  participants: [...(event.participants || []), userId],
+                }
               : event
           ),
         }));
@@ -295,16 +295,24 @@ export default function EventsPage() {
 
     alert(
       `Détails de l'événement:\n\n` +
-      `📌 ${event.title}\n\n` +
-      `📝 ${event.description || "Aucune description"}\n\n` +
-      `📅 Date: ${formatEventDate(event.startDate)}\n` +
-      `📍 Lieu: ${event.location}\n` +
-      `👥 Participants: ${participantsCount}/${maxParticipants}\n` +
-      `💰 Prix membre: ${event.memberPrice || 0}€\n` +
-      `💰 Prix non-membre: ${event.nonMemberPrice || 0}€\n` +
-      `${event.isOnline ? "💻 Événement en ligne" : "🏢 Événement présentiel"}\n` +
-      `${event.isMemberOnly ? "🔒 Réservé aux membres" : "🔓 Ouvert à tous"}\n` +
-      `${isRegistered ? "✅ Vous êtes inscrit à cet événement" : "❌ Vous n'êtes pas inscrit"}`
+        `📌 ${event.title}\n\n` +
+        `📝 ${event.description || "Aucune description"}\n\n` +
+        `📅 Date: ${formatEventDate(event.startDate)}\n` +
+        `📍 Lieu: ${event.location}\n` +
+        `👥 Participants: ${participantsCount}/${maxParticipants}\n` +
+        `💰 Prix membre: ${event.memberPrice || 0}DA\n` +
+        `💰 Prix non-membre: ${event.nonMemberPrice || 0}DA\n` +
+        `${
+          event.isOnline ? "💻 Événement en ligne" : "🏢 Événement présentiel"
+        }\n` +
+        `${
+          event.isMemberOnly ? "🔒 Réservé aux membres" : "🔓 Ouvert à tous"
+        }\n` +
+        `${
+          isRegistered
+            ? "✅ Vous êtes inscrit à cet événement"
+            : "❌ Vous n'êtes pas inscrit"
+        }`
     );
   };
 
@@ -425,7 +433,9 @@ export default function EventsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {events[activeTab].map((event) => {
                 const isRegistered = isUserRegistered(event);
-                const status = getEventStatus(isRegistered ? "registered" : event.status);
+                const status = getEventStatus(
+                  isRegistered ? "registered" : event.status
+                );
                 const isRegistering = registeringEvent === event._id;
                 const participantsCount = event.participants?.length || 0;
                 const maxParticipants = event.maxParticipants || "Illimité";
@@ -463,13 +473,25 @@ export default function EventsPage() {
                     <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                       {event.description || "Description non disponible"}
                     </p>
-                    
+
                     {/* Informations sur les participants */}
                     <div className="flex items-center text-sm text-gray-500 mb-2">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
                       </svg>
-                      <span>{participantsCount}/{maxParticipants} participants</span>
+                      <span>
+                        {participantsCount}/{maxParticipants} participants
+                      </span>
                     </div>
 
                     <div className="flex items-center text-sm text-gray-500 mb-2">

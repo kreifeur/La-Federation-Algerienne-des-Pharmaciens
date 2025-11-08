@@ -1,23 +1,23 @@
-"use client"
+"use client";
 // pages/register.js
-import { useState } from 'react';
-import Head from 'next/head';
-import Link from 'next/link';
-import logo from "../../../public/logo.png"
+import { useState } from "react";
+import Head from "next/head";
+import Link from "next/link";
+import logo from "../../../public/logo.png";
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-    profession: '',
-    company: '',
-    membershipType: 'individual',
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    profession: "",
+    company: "",
+    membershipType: "individual",
     acceptTerms: false,
-    newsletter: true
+    newsletter: true,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -26,42 +26,44 @@ export default function Register() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-    
+
     // Clear error when field is updated
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
 
   const validateStep1 = () => {
     const newErrors = {};
-    
-    if (!formData.firstName.trim()) newErrors.firstName = 'Le prénom est requis';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Le nom est requis';
+
+    if (!formData.firstName.trim())
+      newErrors.firstName = "Le prénom est requis";
+    if (!formData.lastName.trim()) newErrors.lastName = "Le nom est requis";
     if (!formData.email.trim()) {
-      newErrors.email = 'L\'email est requis';
+      newErrors.email = "L'email est requis";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Format d\'email invalide';
+      newErrors.email = "Format d'email invalide";
     }
     if (!formData.password) {
-      newErrors.password = 'Le mot de passe est requis';
+      newErrors.password = "Le mot de passe est requis";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 8 caractères';
+      newErrors.password =
+        "Le mot de passe doit contenir au moins 8 caractères";
     }
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Veuillez confirmer votre mot de passe';
+      newErrors.confirmPassword = "Veuillez confirmer votre mot de passe";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+      newErrors.confirmPassword = "Les mots de passe ne correspondent pas";
     }
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = 'Vous devez accepter les conditions générales';
+      newErrors.acceptTerms = "Vous devez accepter les conditions générales";
     }
 
     setErrors(newErrors);
@@ -70,22 +72,21 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateStep1()) return;
-    
+
     setIsLoading(true);
 
     try {
       // Simulation d'enregistrement
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Inscription réussie:', formData);
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      console.log("Inscription réussie:", formData);
+
       // Afficher le message de succès
       setIsSuccess(true);
-      
     } catch (error) {
-      setErrors({ submit: 'Une erreur est survenue lors de l\'inscription' });
+      setErrors({ submit: "Une erreur est survenue lors de l'inscription" });
     } finally {
       setIsLoading(false);
     }
@@ -102,9 +103,24 @@ export default function Register() {
   };
 
   const membershipTypes = [
-    { id: 'student', label: 'Étudiant', price: '25€/an', description: 'Pour les étudiants en cosmétologie' },
-    { id: 'individual', label: 'Individuel', price: '80€/an', description: 'Pour les professionnels indépendants' },
-    { id: 'corporate', label: 'Entreprise', price: '350€/an', description: 'Pour les entreprises et institutions' }
+    {
+      id: "student",
+      label: "Étudiant",
+      price: "25DA/an",
+      description: "Pour les étudiants en cosmétologie",
+    },
+    {
+      id: "individual",
+      label: "Individuel",
+      price: "80DA/an",
+      description: "Pour les professionnels indépendants",
+    },
+    {
+      id: "corporate",
+      label: "Entreprise",
+      price: "350DA/an",
+      description: "Pour les entreprises et institutions",
+    },
   ];
 
   // Afficher la page de succès
@@ -112,18 +128,25 @@ export default function Register() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4">
         <Head>
-          <title>Inscription réussie - La Fédération Algérienne des Pharmaciens</title>
+          <title>
+            Inscription réussie - La Fédération Algérienne des Pharmaciens
+          </title>
         </Head>
 
         <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
           <div className="text-green-500 text-5xl mb-4">✓</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Inscription réussie !</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Inscription réussie !
+          </h1>
           <p className="text-gray-600 mb-6">
-            Bienvenue dans La Fédération Algérienne des Pharmaciens. Un email de confirmation a été envoyé à votre adresse.
+            Bienvenue dans La Fédération Algérienne des Pharmaciens. Un email de
+            confirmation a été envoyé à votre adresse.
           </p>
-          
+
           <div className="bg-blue-50 p-4 rounded-lg mb-6 text-left">
-            <h3 className="font-semibold text-blue-800 mb-2">Prochaines étapes :</h3>
+            <h3 className="font-semibold text-blue-800 mb-2">
+              Prochaines étapes :
+            </h3>
             <ul className="text-sm text-blue-600 space-y-1">
               <li>• Vérifiez votre email pour confirmer votre compte</li>
               <li>• Accédez à votre espace membre</li>
@@ -155,14 +178,17 @@ export default function Register() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
       <Head>
         <title>Inscription - Association de Cosmétologie</title>
-        <meta name="description" content="Rejoignez l'Association de Cosmétologie" />
+        <meta
+          name="description"
+          content="Rejoignez l'Association de Cosmétologie"
+        />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="flex justify-center">
-           <img className='w-[200px] ' src={logo.src} alt="logo" srcSet="" />
+            <img className="w-[200px] " src={logo.src} alt="logo" srcSet="" />
           </div>
           <p className="mt-2 text-center text-sm text-gray-600">
             Rejoignez notre communauté de professionnels
@@ -173,19 +199,35 @@ export default function Register() {
           {/* Progress bar */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <div className={`flex flex-col items-center ${step >= 1 ? 'text-blue-800' : 'text-gray-400'}`}>
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                  step >= 1 ? 'bg-blue-800 text-white' : 'bg-gray-200'
-                }`}>
+              <div
+                className={`flex flex-col items-center ${
+                  step >= 1 ? "text-blue-800" : "text-gray-400"
+                }`}
+              >
+                <div
+                  className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                    step >= 1 ? "bg-blue-800 text-white" : "bg-gray-200"
+                  }`}
+                >
                   1
                 </div>
                 <span className="mt-2 text-sm font-medium">Informations</span>
               </div>
-              <div className={`h-1 flex-1 mx-2 ${step >= 2 ? 'bg-blue-800' : 'bg-gray-200'}`}></div>
-              <div className={`flex flex-col items-center ${step >= 2 ? 'text-blue-800' : 'text-gray-400'}`}>
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                  step >= 2 ? 'bg-blue-800 text-white' : 'bg-gray-200'
-                }`}>
+              <div
+                className={`h-1 flex-1 mx-2 ${
+                  step >= 2 ? "bg-blue-800" : "bg-gray-200"
+                }`}
+              ></div>
+              <div
+                className={`flex flex-col items-center ${
+                  step >= 2 ? "text-blue-800" : "text-gray-400"
+                }`}
+              >
+                <div
+                  className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                    step >= 2 ? "bg-blue-800 text-white" : "bg-gray-200"
+                  }`}
+                >
                   2
                 </div>
                 <span className="mt-2 text-sm font-medium">Formule</span>
@@ -206,7 +248,10 @@ export default function Register() {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="firstName"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Prénom *
                       </label>
                       <input
@@ -216,14 +261,23 @@ export default function Register() {
                         value={formData.firstName}
                         onChange={handleChange}
                         className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                          errors.firstName ? 'border-red-300' : 'border-gray-300'
+                          errors.firstName
+                            ? "border-red-300"
+                            : "border-gray-300"
                         }`}
                       />
-                      {errors.firstName && <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>}
+                      {errors.firstName && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.firstName}
+                        </p>
+                      )}
                     </div>
 
                     <div>
-                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="lastName"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Nom *
                       </label>
                       <input
@@ -233,15 +287,22 @@ export default function Register() {
                         value={formData.lastName}
                         onChange={handleChange}
                         className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                          errors.lastName ? 'border-red-300' : 'border-gray-300'
+                          errors.lastName ? "border-red-300" : "border-gray-300"
                         }`}
                       />
-                      {errors.lastName && <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>}
+                      {errors.lastName && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.lastName}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Adresse email *
                     </label>
                     <input
@@ -251,15 +312,22 @@ export default function Register() {
                       value={formData.email}
                       onChange={handleChange}
                       className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                        errors.email ? 'border-red-300' : 'border-gray-300'
+                        errors.email ? "border-red-300" : "border-gray-300"
                       }`}
                     />
-                    {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                    {errors.email && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="password"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Mot de passe *
                       </label>
                       <input
@@ -269,14 +337,21 @@ export default function Register() {
                         value={formData.password}
                         onChange={handleChange}
                         className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                          errors.password ? 'border-red-300' : 'border-gray-300'
+                          errors.password ? "border-red-300" : "border-gray-300"
                         }`}
                       />
-                      {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                      {errors.password && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.password}
+                        </p>
+                      )}
                     </div>
 
                     <div>
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="confirmPassword"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Confirmer le mot de passe *
                       </label>
                       <input
@@ -286,10 +361,16 @@ export default function Register() {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                          errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                          errors.confirmPassword
+                            ? "border-red-300"
+                            : "border-gray-300"
                         }`}
                       />
-                      {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
+                      {errors.confirmPassword && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.confirmPassword}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -302,19 +383,30 @@ export default function Register() {
                       onChange={handleChange}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-700">
-                      J'accepte les{' '}
-                      <Link href="/terms" className="text-blue-600 hover:text-blue-500">
+                    <label
+                      htmlFor="acceptTerms"
+                      className="ml-2 block text-sm text-gray-700"
+                    >
+                      J'accepte les{" "}
+                      <Link
+                        href="/terms"
+                        className="text-blue-600 hover:text-blue-500"
+                      >
                         conditions générales
-                      </Link>{' '}
-                      et la{' '}
-                      <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
+                      </Link>{" "}
+                      et la{" "}
+                      <Link
+                        href="/privacy"
+                        className="text-blue-600 hover:text-blue-500"
+                      >
                         politique de confidentialité
-                      </Link>{' '}
+                      </Link>{" "}
                       *
                     </label>
                   </div>
-                  {errors.acceptTerms && <p className="text-sm text-red-600">{errors.acceptTerms}</p>}
+                  {errors.acceptTerms && (
+                    <p className="text-sm text-red-600">{errors.acceptTerms}</p>
+                  )}
 
                   <div className="flex items-center">
                     <input
@@ -325,8 +417,12 @@ export default function Register() {
                       onChange={handleChange}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="newsletter" className="ml-2 block text-sm text-gray-700">
-                      Je souhaite recevoir la newsletter et les actualités de l'association
+                    <label
+                      htmlFor="newsletter"
+                      className="ml-2 block text-sm text-gray-700"
+                    >
+                      Je souhaite recevoir la newsletter et les actualités de
+                      l'association
                     </label>
                   </div>
 
@@ -344,18 +440,25 @@ export default function Register() {
               {step === 2 && (
                 <>
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Choisissez votre formule d'adhésion</h3>
-                    
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Choisissez votre formule d'adhésion
+                    </h3>
+
                     <div className="grid grid-cols-1 gap-4">
                       {membershipTypes.map((type) => (
                         <div
                           key={type.id}
                           className={`border rounded-lg p-4 cursor-pointer transition-all ${
                             formData.membershipType === type.id
-                              ? 'border-blue-500 ring-2 ring-blue-500'
-                              : 'border-gray-300 hover:border-blue-300'
+                              ? "border-blue-500 ring-2 ring-blue-500"
+                              : "border-gray-300 hover:border-blue-300"
                           }`}
-                          onClick={() => setFormData(prev => ({ ...prev, membershipType: type.id }))}
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              membershipType: type.id,
+                            }))
+                          }
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex items-center">
@@ -371,9 +474,13 @@ export default function Register() {
                                 {type.label}
                               </label>
                             </div>
-                            <span className="text-lg font-semibold text-blue-800">{type.price}</span>
+                            <span className="text-lg font-semibold text-blue-800">
+                              {type.price}
+                            </span>
                           </div>
-                          <p className="mt-1 text-sm text-gray-600 ml-7">{type.description}</p>
+                          <p className="mt-1 text-sm text-gray-600 ml-7">
+                            {type.description}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -392,7 +499,9 @@ export default function Register() {
                       disabled={isLoading}
                       className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-800 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                     >
-                      {isLoading ? 'Inscription en cours...' : 'Finaliser l\'inscription'}
+                      {isLoading
+                        ? "Inscription en cours..."
+                        : "Finaliser l'inscription"}
                     </button>
                   </div>
                 </>
@@ -405,7 +514,9 @@ export default function Register() {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Déjà membre ?</span>
+                  <span className="px-2 bg-white text-gray-500">
+                    Déjà membre ?
+                  </span>
                 </div>
               </div>
 
