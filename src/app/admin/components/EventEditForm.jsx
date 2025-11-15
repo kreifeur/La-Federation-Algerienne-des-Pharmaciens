@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 export default function EventEditForm({
   event,
@@ -11,6 +11,9 @@ export default function EventEditForm({
   onCancel,
   onUpdate,
 }) {
+  const [imagePreview, setImagePreview] = useState(event?.imageUrl || null);
+  const [newImage, setNewImage] = useState(null);
+
   const handleInputChange = useCallback(
     (e) => {
       const { name, value, type, checked } = e.target;
@@ -35,9 +38,54 @@ export default function EventEditForm({
     [setEventForm]
   );
 
+  const handleImageChange = useCallback((e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Vérifier la taille du fichier (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("❌ L'image ne doit pas dépasser 5MB");
+        return;
+      }
+      
+      // Vérifier le type de fichier
+      if (!file.type.startsWith('image/')) {
+        alert("❌ Veuillez sélectionner un fichier image valide (JPG, PNG, GIF)");
+        return;
+      }
+      
+      // Créer un aperçu de l'image
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+      
+      setNewImage(file);
+    }
+  }, []);
+
+  const removeImage = useCallback(() => {
+    setNewImage(null);
+    setImagePreview(null);
+    // Set a flag to indicate image should be removed
+    setEventForm((prev) => ({
+      ...prev,
+      removeImage: true,
+    }));
+  }, [setEventForm]);
+
+  const restoreOriginalImage = useCallback(() => {
+    setNewImage(null);
+    setImagePreview(event?.imageUrl || null);
+    setEventForm((prev) => ({
+      ...prev,
+      removeImage: false,
+    }));
+  }, [event?.imageUrl, setEventForm]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onUpdate(event._id);
+    onUpdate(event._id, newImage);
   };
 
   return (
@@ -59,6 +107,82 @@ export default function EventEditForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Image Upload Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Image de l'événement
+          </label>
+          
+          {imagePreview ? (
+            <div className="relative mb-3">
+              <img
+                src={imagePreview}
+                alt="Aperçu de l'événement"
+                className="w-full h-48 object-cover rounded-md border border-gray-300"
+              />
+              <div className="absolute top-2 right-2 flex space-x-2">
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                  title="Supprimer l'image"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                {newImage && (
+                  <button
+                    type="button"
+                    onClick={restoreOriginalImage}
+                    className="bg-gray-500 text-white rounded-full p-1 hover:bg-gray-600 transition-colors"
+                    title="Restaurer l'image originale"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1 text-center">
+                {newImage ? "Nouvelle image sélectionnée" : "Image actuelle"}
+              </p>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center hover:border-gray-400 transition-colors">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="mt-1 text-sm text-gray-600">
+                Cliquez pour télécharger une image
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                PNG, JPG, GIF jusqu'à 5MB
+              </p>
+            </div>
+          )}
+          
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+            id="event-edit-image-upload"
+          />
+          <label
+            htmlFor="event-edit-image-upload"
+            className="block w-full mt-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 cursor-pointer text-center transition-colors"
+          >
+            {imagePreview ? "Changer l'image" : "Choisir une image"}
+          </label>
+          
+          {event?.imageUrl && !imagePreview && (
+            <p className="text-xs text-orange-600 mt-1 text-center">
+              ⚠️ L'image actuelle sera supprimée si vous n'en sélectionnez pas une nouvelle
+            </p>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -253,9 +377,12 @@ export default function EventEditForm({
           <button
             type="submit"
             disabled={eventLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
           >
-            {eventLoading ? "Mise à jour..." : "Mettre à jour"}
+            {eventLoading && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            )}
+            <span>{eventLoading ? "Mise à jour..." : "Mettre à jour"}</span>
           </button>
         </div>
       </form>
