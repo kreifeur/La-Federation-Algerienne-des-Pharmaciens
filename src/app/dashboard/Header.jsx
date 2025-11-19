@@ -41,9 +41,10 @@ export default function Header({ user }) {
                 <a href="/dashboard/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Mon profil
                 </a>
-                <a href="/dashboard/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                {/*NOTIMPORTATNT*/}
+                {/* <a href="/dashboard/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Paramètres
-                </a>
+                </a> */}
                 <div className="border-t border-gray-100"></div>
                 <button 
                   onClick={() => {
