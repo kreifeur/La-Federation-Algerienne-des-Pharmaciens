@@ -11,6 +11,8 @@ export default function Events() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
+  const [registeringEvent, setRegisteringEvent] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const router = useRouter();
 
   // Filtres disponibles
@@ -26,6 +28,44 @@ export default function Events() {
     { key: "visit", label: "Visites" },
   ];
 
+  // Fonction pour récupérer le profil utilisateur
+  const fetchUserProfile = async () => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+
+      if (!authToken) {
+        console.log("Utilisateur non connecté");
+        return null;
+      }
+
+      const response = await fetch("/api/profile", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.log("Erreur de profil, utilisateur probablement non connecté");
+        return null;
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data._id) {
+        const userId = result.data.userId || result.data._id;
+        setCurrentUserId(userId);
+        console.log("Utilisateur connecté, ID:", userId);
+        return userId;
+      }
+      console.log("Profil incomplet, utilisateur non connecté");
+      return null;
+    } catch (error) {
+      console.error("Erreur lors du chargement du profil:", error);
+      return null;
+    }
+  };
+
   // Fetch events from API
   useEffect(() => {
     fetchEvents();
@@ -34,11 +74,24 @@ export default function Events() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
+
+      // Essayer de récupérer le profil utilisateur
+      const userId = await fetchUserProfile();
+
       const response = await fetch("/api/events");
       const data = await response.json();
 
       if (data.success && data.data) {
-        setEvents(data.data.events || []);
+        // Ajouter le statut à chaque événement
+        const eventsWithStatus = data.data.events.map(event => {
+          const isRegistered = userId ? event.participants?.includes(userId) : false;
+          return {
+            ...event,
+            status: isRegistered ? "registered" : "available"
+          };
+        });
+        
+        setEvents(eventsWithStatus || []);
       } else {
         setEvents([]);
       }
@@ -95,17 +148,39 @@ export default function Events() {
     }
   });
 
-  const openRegistrationModal = async (event) => {
-    const authToken = localStorage.getItem("authToken");
-    if (!authToken) {
-      // Afficher la popup d'alerte avant la redirection
-      setSelectedEvent(event);
-      setShowLoginAlert(true);
-      return;
+  const getEventStatus = (status) => {
+    switch (status) {
+      case "registered":
+        return { text: "Inscrit", color: "bg-green-100 text-green-800" };
+      case "available":
+        return { text: "Disponible", color: "bg-blue-100 text-blue-800" };
+      default:
+        return { text: "Disponible", color: "bg-blue-100 text-blue-800" };
     }
+  };
 
-    // Si l'utilisateur est connecté, procéder à l'inscription
+  const handleRegister = async (event) => {
     try {
+      setRegisteringEvent(event._id);
+
+      const authToken = localStorage.getItem("authToken");
+
+      if (!authToken) {
+        setSelectedEvent(event);
+        setShowLoginAlert(true);
+        return;
+      }
+
+      // S'assurer que nous avons l'ID utilisateur
+      let userId = currentUserId;
+      if (!userId) {
+        userId = await fetchUserProfile();
+      }
+
+      if (!userId) {
+        throw new Error("Impossible de récupérer l'ID utilisateur");
+      }
+
       const response = await fetch(`/api/events/${event._id}/register`, {
         method: "POST",
         headers: {
@@ -113,16 +188,35 @@ export default function Events() {
         },
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (data.success) {
-        alert("Inscription réussie !");
-        fetchEvents(); // Rafraîchir la liste des événements
+      if (!response.ok) {
+        throw new Error(result.message || "Erreur lors de l'inscription");
+      }
+
+      if (result.success) {
+        // Mettre à jour le statut de l'événement localement
+        setEvents((prev) =>
+          prev.map((ev) =>
+            ev._id === event._id
+              ? {
+                  ...ev,
+                  status: "registered",
+                  participants: [...(ev.participants || []), userId],
+                }
+              : ev
+          )
+        );
+
+        alert("✅ Inscription réussie ! Vous êtes maintenant inscrit à cet événement.");
       } else {
-        alert("Erreur: " + data.message);
+        throw new Error(result.message || "Erreur lors de l'inscription");
       }
     } catch (error) {
-      alert("Erreur lors de l'inscription");
+      console.error("Erreur:", error);
+      alert(`❌ Erreur: ${error.message}`);
+    } finally {
+      setRegisteringEvent(null);
     }
   };
 
@@ -131,10 +225,57 @@ export default function Events() {
     router.push("/login");
   };
 
+  const handleViewDetails = (event) => {
+    const isRegistered = event.status === "registered";
+    const isConnected = currentUserId !== null;
+    const participantsCount = event.participants?.length || 0;
+    const maxParticipants = event.maxParticipants || "Illimité";
+
+    alert(
+      `Détails de l'événement:\n\n` +
+        `📌 ${event.title}\n\n` +
+        `📝 ${event.description || "Aucune description"}\n\n` +
+        `📅 Date: ${formatDate(event.startDate)}\n` +
+        `📍 Lieu: ${event.location || "Lieu à confirmer"}\n` +
+        `👥 Participants: ${participantsCount}/${maxParticipants}\n` +
+        `💰 Prix membre: ${event.memberPrice || 0}DA\n` +
+        `💰 Prix non-membre: ${event.nonMemberPrice || 0}DA\n` +
+        `${
+          isConnected
+            ? isRegistered
+              ? "✅ Vous êtes inscrit à cet événement"
+              : "❌ Vous n'êtes pas inscrit - Statut: Disponible"
+            : "🔐 Connectez-vous pour vous inscrire - Statut: Disponible"
+        }`
+    );
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "Date à confirmer";
     const options = { day: "numeric", month: "long", year: "numeric" };
     return new Date(dateString).toLocaleDateString("fr-FR", options);
+  };
+
+  // Obtenir le texte du bouton en fonction du statut
+  const getButtonText = (event) => {
+    if (isPastEvent(event)) {
+      return "Voir le replay";
+    }
+    if (event.status === "registered") {
+      return "Inscrit";
+    }
+    if (event.maxParticipants && (event.participants?.length || 0) >= event.maxParticipants) {
+      return "Complet";
+    }
+    return "S'inscrire";
+  };
+
+  // Vérifier si le bouton doit être désactivé
+  const isButtonDisabled = (event) => {
+    return isPastEvent(event) || 
+           event.status === "registered" || 
+           (event.maxParticipants && (event.participants?.length || 0) >= event.maxParticipants) ||
+           registeringEvent === event._id;
   };
 
   // Générer une clé unique pour chaque événement
@@ -211,103 +352,137 @@ export default function Events() {
           {/* Liste des événements */}
           {!loading && filteredEvents.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-              {filteredEvents.map((event, index) => (
-                <div
-                  key={getEventKey(event, index)}
-                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
-                >
-                  {/* Event image */}
-                  <div className="h-48 bg-gray-200 flex items-center justify-center">
-                    {event.image ? (
-                      <img
-                        src={event.image}
-                        alt={event.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-gray-500">Image {event.title}</span>
-                    )}
-                  </div>
+              {filteredEvents.map((event, index) => {
+                const status = getEventStatus(event.status);
+                const isRegistering = registeringEvent === event._id;
+                const buttonText = getButtonText(event);
+                const isDisabled = isButtonDisabled(event);
+                const participantsCount = event.participants?.length || 0;
+                const maxParticipants = event.maxParticipants || "Illimité";
 
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-2">
-                          {event.type === "congress" && "Congrès"}
-                          {event.type === "workshop" && "Atelier"}
-                          {event.type === "training" && "Formation"}
-                          {event.type === "exhibition" && "Salon"}
-                          {event.type === "networking" && "Networking"}
-                          {event.type === "visit" && "Visite"}
-                          {!event.type && "Événement"}
-                        </span>
-                        <h3 className="text-xl font-semibold text-blue-800 mb-1">
-                          {event.title}
-                        </h3>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500">
-                          {formatDate(event.startDate)}
-                        </div>
-                        {event.endDate && (
-                          <div className="text-sm text-gray-500">
-                            au {formatDate(event.endDate)}
+                return (
+                  <div
+                    key={getEventKey(event, index)}
+                    className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    {/* Event image */}
+                    <div className="h-48 bg-gray-200 flex items-center justify-center">
+                      {event.image ? (
+                        <img
+                          src={event.image}
+                          alt={event.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-500">Image {event.title}</span>
+                      )}
+                    </div>
+
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                              {event.type === "congress" && "Congrès"}
+                              {event.type === "workshop" && "Atelier"}
+                              {event.type === "training" && "Formation"}
+                              {event.type === "exhibition" && "Salon"}
+                              {event.type === "networking" && "Networking"}
+                              {event.type === "visit" && "Visite"}
+                              {!event.type && "Événement"}
+                            </span>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
+                              {status.text}
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <p className="text-gray-700 mb-4">{event.description}</p>
-
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <span className="mr-2">📍</span>
-                        {event.location || "Lieu à confirmer"}
-                      </div>
-                      <div className="text-right">
-                        {event.nonMemberPrice === 0 ? (
-                          <span className="text-green-600 font-semibold">
-                            Gratuit
-                          </span>
-                        ) : (
-                          <>
-                            <div className="text-gray-500 line-through text-sm">
-                              {event.nonMemberPrice} DA
+                          <h3 className="text-xl font-semibold text-blue-800 mb-1">
+                            {event.title}
+                          </h3>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-500">
+                            {formatDate(event.startDate)}
+                          </div>
+                          {event.endDate && (
+                            <div className="text-sm text-gray-500">
+                              au {formatDate(event.endDate)}
                             </div>
-                            <div className="text-blue-800 font-semibold">
-                              {event.memberPrice} DA membres
-                            </div>
-                          </>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex justify-between items-center">
-                      <button
-                        onClick={() => openRegistrationModal(event)}
-                        disabled={
-                          isPastEvent(event) ||
-                          (event.maxParticipants &&
-                            (event.participants?.length || 0) >=
-                              event.maxParticipants)
-                        }
-                        className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        {isPastEvent(event)
-                          ? "Voir le replay"
-                          : event.maxParticipants &&
-                            (event.participants?.length || 0) >=
-                              event.maxParticipants
-                          ? "Complet"
-                          : "S'inscrire"}
-                      </button>
-                      <button className="px-4 py-2 border border-blue-800 text-blue-800 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium">
-                        Détails
-                      </button>
+                      <p className="text-gray-700 mb-4">{event.description}</p>
+
+                      {/* Informations sur les participants */}
+                      <div className="flex items-center text-sm text-gray-500 mb-2">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span>{participantsCount}/{maxParticipants} participants</span>
+                      </div>
+
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center text-sm text-gray-600">
+                          <span className="mr-2">📍</span>
+                          {event.location || "Lieu à confirmer"}
+                        </div>
+                        <div className="text-right">
+                          {event.nonMemberPrice === 0 ? (
+                            <span className="text-green-600 font-semibold">
+                              Gratuit
+                            </span>
+                          ) : (
+                            <>
+                              <div className="text-gray-500 line-through text-sm">
+                                {event.nonMemberPrice} DA
+                              </div>
+                              <div className="text-blue-800 font-semibold">
+                                {event.memberPrice} DA membres
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <button
+                          onClick={() => isPastEvent(event) ? handleViewDetails(event) : handleRegister(event)}
+                          disabled={isDisabled}
+                          className={`px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center ${
+                            isPastEvent(event)
+                              ? "bg-gray-600 text-white hover:bg-gray-700"
+                              : event.status === "registered"
+                              ? "bg-green-600 text-white"
+                              : "bg-blue-800 text-white hover:bg-blue-700"
+                          } transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed`}
+                        >
+                          {isRegistering ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                              Inscription...
+                            </>
+                          ) : (
+                            <>
+                              {event.status === "registered" && (
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                              {buttonText}
+                            </>
+                          )}
+                        </button>
+                        <button 
+                          onClick={() => handleViewDetails(event)}
+                          className="px-4 py-2 border border-blue-800 text-blue-800 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
+                        >
+                          Détails
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

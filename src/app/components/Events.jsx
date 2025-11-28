@@ -6,142 +6,295 @@ import { useRouter } from "next/navigation";
 
 const Events = () => {
   const [events, setEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [registrationLoading, setRegistrationLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [registeringEvent, setRegisteringEvent] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const router = useRouter();
 
-  // Fetch events from API
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/events");
-        const data = await response.json();
+  // Fonction pour récupérer le profil utilisateur
+  const fetchUserProfile = async () => {
+    try {
+      const authToken = localStorage.getItem("authToken");
 
-        console.log("Events API Response:", data);
-
-        if (data.success && data.data) {
-          // Prendre seulement les 3 premiers événements pour l'affichage
-          const upcomingEvents = data.data.events
-            ? data.data.events.slice(0, 3)
-            : [];
-          setEvents(upcomingEvents);
-        } else {
-          setEvents([]);
-        }
-      } catch (err) {
-        console.error("Error fetching events:", err);
-        setError("Erreur lors du chargement des événements");
-        // Fallback aux événements statiques en cas d'erreur
-        setEvents([
-          {
-            id: 1,
-            title: "Congrès Annuel de Cosmétologie",
-            date: "2023-09-15",
-            description:
-              "Notre événement phare réunissant les experts du secteur pour échanger sur les dernières innovations.",
-            image: "/placeholder-event1.jpg",
-            type: "congress",
-          },
-          {
-            id: 2,
-            title: "Atelier : Cosmétiques naturels",
-            date: "2023-10-05",
-            description:
-              "Formation pratique sur la formulation et la production de cosmétiques naturels et bio.",
-            image: "/placeholder-event2.jpg",
-            type: "workshop",
-          },
-          {
-            id: 3,
-            title: "Salon des Innovations Cosmétiques",
-            date: "2023-11-20",
-            description:
-              "Découvrez les dernières innovations produits et technologies lors de ce salon professionnel.",
-            image: "/placeholder-event3.jpg",
-            type: "exhibition",
-          },
-        ]);
-      } finally {
-        setLoading(false);
+      if (!authToken) {
+        console.log("Utilisateur non connecté");
+        return null; // Pas d'erreur, juste pas connecté
       }
-    };
 
+      const response = await fetch("/api/profile", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.log("Erreur de profil, utilisateur probablement non connecté");
+        return null;
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data && result.data._id) {
+        // Utiliser userId depuis les données du profil
+        const userId = result.data.userId || result.data._id;
+        setCurrentUserId(userId);
+        console.log("Utilisateur connecté, ID:", userId);
+        return userId;
+      }
+      console.log("Profil incomplet, utilisateur non connecté");
+      return null;
+    } catch (error) {
+      console.error("Erreur lors du chargement du profil:", error);
+      return null;
+    }
+  };
+
+  // Fonction pour récupérer les événements
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // Essayer de récupérer le profil utilisateur (peut retourner null si non connecté)
+      const userId = await fetchUserProfile();
+
+      const response = await fetch("/api/events", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors du chargement des événements");
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Séparer les événements en "à venir"
+        const now = new Date();
+        const upcomingEvents = [];
+
+        result.data.events.forEach((event) => {
+          const eventDate = new Date(event.startDate);
+
+          if (eventDate >= now) {
+            // Si l'utilisateur est connecté, vérifier s'il est inscrit
+            // Sinon, le statut est toujours "available"
+            const isRegistered = userId ? event.participants?.includes(userId) : false;
+
+            upcomingEvents.push({
+              ...event,
+              status: isRegistered ? "registered" : "available", // Toujours "available" si pas connecté
+              type: getEventTypeFromData(event),
+            });
+          }
+        });
+
+        // Prendre seulement les 3 premiers événements à venir pour l'affichage
+        setEvents(upcomingEvents.slice(0, 3));
+      } else {
+        throw new Error(
+          result.message || "Erreur lors du chargement des événements"
+        );
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      setError(error.message);
+      // Données de démonstration en cas d'erreur
+      const demoEvents = [
+        {
+          _id: "1",
+          title: "Congrès Annuel de Cosmétologie",
+          startDate: "2024-09-15T09:00:00Z",
+          location: "Paris, France",
+          type: "congress",
+          status: "available", // Toujours "available" pour les démos
+          description:
+            "Le plus grand rassemblement de professionnels de la cosmétologie en France.",
+          isOnline: false,
+          isMemberOnly: false,
+          participants: [],
+          memberPrice: 0,
+          nonMemberPrice: 5000,
+          maxParticipants: 200,
+        },
+        {
+          _id: "2",
+          title: "Atelier Formulation Naturelle",
+          startDate: "2024-10-05T14:00:00Z",
+          location: "Lyon, France",
+          type: "workshop",
+          status: "available", // Toujours "available" pour les démos
+          description:
+            "Apprenez à formuler des produits cosmétiques avec des ingrédients naturels.",
+          isOnline: false,
+          isMemberOnly: true,
+          participants: [],
+          memberPrice: 0,
+          nonMemberPrice: 3000,
+          maxParticipants: 50,
+        },
+        {
+          _id: "3",
+          title: "Salon des Innovations Cosmétiques",
+          startDate: "2024-11-20T10:00:00Z",
+          location: "Marseille, France",
+          type: "exhibition",
+          status: "available", // Toujours "available" pour les démos
+          description:
+            "Découvrez les dernières innovations produits et technologies lors de ce salon professionnel.",
+          isOnline: false,
+          isMemberOnly: false,
+          participants: [],
+          memberPrice: 0,
+          nonMemberPrice: 2000,
+          maxParticipants: 100,
+        },
+      ];
+      setEvents(demoEvents);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Déterminer le type d'événement basé sur les données
+  const getEventTypeFromData = (event) => {
+    if (event.isOnline) return "webinar";
+    if (
+      event.title?.toLowerCase().includes("congrès") ||
+      event.title?.toLowerCase().includes("congres")
+    )
+      return "congress";
+    if (
+      event.title?.toLowerCase().includes("atelier") ||
+      event.title?.toLowerCase().includes("workshop")
+    )
+      return "workshop";
+    if (event.title?.toLowerCase().includes("formation")) return "workshop";
+    return "congress"; // défaut
+  };
+
+  // Charger les événements au montage du composant
+  useEffect(() => {
     fetchEvents();
   }, []);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "Date à confirmer";
-    const options = { day: "numeric", month: "long", year: "numeric" };
-    return new Date(dateString).toLocaleDateString("fr-FR", options);
+  const getEventStatus = (status) => {
+    switch (status) {
+      case "registered":
+        return { text: "Inscrit", color: "bg-green-100 text-green-800" };
+      case "available":
+        return { text: "Disponible", color: "bg-blue-100 text-blue-800" };
+      case "pending":
+        return { text: "En attente", color: "bg-yellow-100 text-yellow-800" };
+      case "completed":
+        return { text: "Terminé", color: "bg-gray-100 text-gray-800" };
+      default:
+        return { text: "Disponible", color: "bg-blue-100 text-blue-800" }; // Par défaut "Disponible"
+    }
   };
 
-  const getEventTypeLabel = (type) => {
-    const types = {
-      congress: "Congrès",
-      workshop: "Atelier",
-      training: "Formation",
-      exhibition: "Salon",
-      networking: "Networking",
-      visit: "Visite",
-    };
-    return types[type] || "Événement";
+  const getEventTypeIcon = (type) => {
+    switch (type) {
+      case "congress":
+        return "🎤";
+      case "workshop":
+        return "🔬";
+      case "webinar":
+        return "💻";
+      default:
+        return "📅";
+    }
   };
 
-  const handleEventRegistration = async (formData) => {
+  const formatEventDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("fr-FR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleDateString("fr-FR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleRegister = async (eventId) => {
     try {
-      setRegistrationLoading(true);
-      const response = await fetch(
-        `https://assback.vercel.app/api/events/${selectedEvent.id}/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      setRegisteringEvent(eventId);
 
-      const data = await response.json();
+      const authToken = localStorage.getItem("authToken");
 
-      if (data.success) {
-        setRegistrationSuccess(true);
-        fetchEvents();
+      if (!authToken) {
+        setSelectedEvent(events.find(event => event._id === eventId));
+        setShowLoginAlert(true);
+        return;
+      }
+
+      // S'assurer que nous avons l'ID utilisateur
+      let userId = currentUserId;
+      if (!userId) {
+        userId = await fetchUserProfile();
+      }
+
+      if (!userId) {
+        throw new Error("Impossible de récupérer l'ID utilisateur");
+      }
+
+      console.log("Inscription à l'événement:", eventId);
+      console.log("User ID:", userId);
+
+      const response = await fetch(`/api/events/${eventId}/register`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      const result = await response.json();
+      console.log("Réponse de l'API:", result);
+
+      if (!response.ok) {
+        throw new Error(result.message || "Erreur lors de l'inscription");
+      }
+
+      if (result.success) {
+        // Mettre à jour le statut de l'événement localement
+        setEvents((prev) =>
+          prev.map((event) =>
+            event._id === eventId
+              ? {
+                  ...event,
+                  status: "registered", // Change le statut à "registered"
+                  participants: [...(event.participants || []), userId],
+                }
+              : event
+          )
+        );
+
+        alert(
+          "✅ Inscription réussie ! Vous êtes maintenant inscrit à cet événement."
+        );
       } else {
-        alert("Erreur: " + data.message);
+        throw new Error(result.message || "Erreur lors de l'inscription");
       }
     } catch (error) {
-      alert("Erreur lors de l'inscription");
+      console.error("Erreur:", error);
+      alert(`❌ Erreur: ${error.message}`);
     } finally {
-      setRegistrationLoading(false);
+      setRegisteringEvent(null);
     }
-  };
-
-  const register = async (event, auth) => {
-    console.log("from register");
-    console.log(event);
-    console.log(auth);
-  };
-
-  const openRegistrationModal = async (event) => {
-    const authToken = localStorage.getItem("authToken");
-    if (!authToken) {
-      // Afficher la popup d'alerte avant la redirection
-      setShowLoginAlert(true);
-      return;
-    }
-
-    const response = await fetch(`/api/events/${event._id}/register`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
   };
 
   const handleLoginRedirect = () => {
@@ -149,18 +302,40 @@ const Events = () => {
     router.push("/login");
   };
 
-  const handleRegistrationSubmit = async (e) => {
-    e.preventDefault();
+  const handleViewDetails = (event) => {
+    const isRegistered = event.status === "registered";
+    const isConnected = currentUserId !== null;
+    const participantsCount = event.participants?.length || 0;
+    const maxParticipants = event.maxParticipants || "Illimité";
 
-    const formData = {
-      name: e.target.name.value,
-      email: e.target.email.value,
-      company: e.target.company.value,
-      isMember: e.target.membership.value,
-      notes: e.target.notes?.value || "",
-    };
+    alert(
+      `Détails de l'événement:\n\n` +
+        `📌 ${event.title}\n\n` +
+        `📝 ${event.description || "Aucune description"}\n\n` +
+        `📅 Date: ${formatDateTime(event.startDate)}\n` +
+        `📍 Lieu: ${event.location}\n` +
+        `👥 Participants: ${participantsCount}/${maxParticipants}\n` +
+        `💰 Prix membre: ${event.memberPrice || 0}DA\n` +
+        `💰 Prix non-membre: ${event.nonMemberPrice || 0}DA\n` +
+        `${
+          event.isOnline ? "💻 Événement en ligne" : "🏢 Événement présentiel"
+        }\n` +
+        `${
+          event.isMemberOnly ? "🔒 Réservé aux membres" : "🔓 Ouvert à tous"
+        }\n` +
+        `${
+          isConnected
+            ? isRegistered
+              ? "✅ Vous êtes inscrit à cet événement"
+              : "❌ Vous n'êtes pas inscrit - Statut: Disponible"
+            : "🔐 Connectez-vous pour vous inscrire - Statut: Disponible"
+        }`
+    );
+  };
 
-    await handleEventRegistration(formData);
+  // Vérifier si l'utilisateur est déjà inscrit à un événement
+  const isUserRegistered = (event) => {
+    return event.status === "registered";
   };
 
   if (loading) {
@@ -223,88 +398,191 @@ const Events = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {events.map((event) => (
-                <div
-                  key={event.id || event._id}
-                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
-                >
-                  <div className="h-48 bg-gray-200 flex items-center justify-center">
-                    {event.image ? (
-                      <img
-                        src={event.image}
-                        alt={event.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-gray-500">Image événement</span>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-yellow-600 font-medium text-sm">
-                        {formatDate(event.date)}
-                      </span>
-                      {event.type && (
-                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                          {getEventTypeLabel(event.type)}
-                        </span>
+              {events.map((event) => {
+                const isRegistered = isUserRegistered(event);
+                const status = getEventStatus(event.status); // Utilise directement event.status
+                const isRegistering = registeringEvent === event._id;
+                const participantsCount = event.participants?.length || 0;
+                const maxParticipants = event.maxParticipants || "Illimité";
+                const isConnected = currentUserId !== null;
+
+                return (
+                  <div
+                    key={event._id}
+                    className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    <div className="h-48 bg-gray-200 flex items-center justify-center">
+                      {event.image ? (
+                        <img
+                          src={event.image}
+                          alt={event.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-4xl">
+                          {/* {getEventTypeIcon(event.type)} */}
+                          <div className="text-gray-600">Image événement</div>
+                        </div>
                       )}
                     </div>
-                    <h3 className="text-xl font-semibold mb-3 text-blue-800">
-                      {event.title}
-                    </h3>
-                    <p className="text-gray-700 mb-4 line-clamp-3">
-                      {event.description}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      {event.location && (
-                        <span className="text-sm text-gray-600">
-                          📍 {event.location}
-                        </span>
-                      )}
-                      <div className="text-right">
-                        {event.nonMemberPrice === 0 ? (
-                          <span className="text-green-600 font-semibold">
-                            Gratuit
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                       {/*  <div className="text-2xl">
+                          {getEventTypeIcon(event.type)}
+                        </div> */}
+                        <div className="flex flex-col items-end space-y-1">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${status.color}`}
+                          >
+                            {status.text} {/* Affiche "Disponible" si pas connecté */}
                           </span>
+                          {event.isMemberOnly && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              Membres
+                            </span>
+                          )}
+                          {event.isOnline && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              En ligne
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-blue-800">
+                        {event.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {event.description || "Description non disponible"}
+                      </p>
+
+                      {/* Informations sur les participants */}
+                     {/*  <div className="flex items-center text-sm text-gray-500 mb-2">
+                        <svg
+                          className="w-4 h-4 mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        <span>
+                          {participantsCount}/{maxParticipants} participants
+                        </span>
+                      </div> */}
+
+                      <div className="flex items-center text-sm text-gray-500 mb-2">
+                        <svg
+                          className="w-4 h-4 mr-1 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span className="truncate">
+                          {formatEventDate(event.startDate)}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500 mb-4">
+                        <svg
+                          className="w-4 h-4 mr-1 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                        <span className="truncate">{event.location}</span>
+                      </div>
+
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="text-right">
+                          {event.nonMemberPrice === 0 ? (
+                            <span className="text-green-600 font-semibold">
+                              Gratuit
+                            </span>
+                          ) : (
+                            <>
+                              {/* <div className="text-gray-500 line-through text-sm">
+                                {event.nonMemberPrice} DA
+                              </div> */}
+                              <div className="text-blue-800 font-semibold">
+                                {event.memberPrice} DA membres
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-2">
+                        {isRegistered ? (
+                          <button
+                            className="flex-1 py-2 bg-green-600 text-white rounded-md text-sm flex items-center justify-center"
+                            disabled
+                          >
+                            <svg
+                              className="w-4 h-4 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            Inscrit
+                          </button>
                         ) : (
-                          <>
-                            <div className="text-gray-500 line-through text-sm">
-                              {event.nonMemberPrice} DA
-                            </div>
-                            <div className="text-blue-800 font-semibold">
-                              {event.memberPrice} DA membres
-                            </div>
-                          </>
+                          <button
+                            onClick={() => handleRegister(event._id)}
+                            disabled={isRegistering}
+                            className="flex-1 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-sm flex items-center justify-center"
+                          >
+                            {isRegistering ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                                Inscription...
+                              </>
+                            ) : (
+                              "S'inscrire"
+                            )}
+                          </button>
                         )}
+                        <button
+                          onClick={() => handleViewDetails(event)}
+                          className="px-3 py-2 border border-blue-800 text-blue-800 rounded-md hover:bg-blue-50 text-sm"
+                        >
+                          Détails
+                        </button>
                       </div>
                     </div>
-
-                    <div className="flex justify-between items-center">
-                      <button
-                        onClick={() => openRegistrationModal(event)}
-                        disabled={
-                          event.status === "past" ||
-                          (event.maxAttendees &&
-                            (event.currentAttendees || 0) >= event.maxAttendees)
-                        }
-                        className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        {event.status === "past"
-                          ? "Voir le replay"
-                          : event.maxAttendees &&
-                            (event.currentAttendees || 0) >= event.maxAttendees
-                          ? "Complet"
-                          : "S'inscrire"}
-                      </button>
-
-                      <button className="px-4 py-2 border border-blue-800 text-blue-800 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium">
-                        Détails
-                      </button>
-                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="text-center mt-10">
@@ -319,146 +597,6 @@ const Events = () => {
         )}
       </div>
 
-      {/* Modal d'inscription */}
-      {showRegistrationModal && selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            {registrationSuccess ? (
-              <div className="text-center">
-                <div className="text-green-500 text-4xl mb-4">✓</div>
-                <h3 className="text-xl font-semibold text-green-800 mb-4">
-                  Inscription confirmée !
-                </h3>
-                <p className="text-gray-700 mb-6">
-                  Votre inscription à <strong>{selectedEvent.title}</strong> a
-                  été enregistrée avec succès. Un email de confirmation vous a
-                  été envoyé.
-                </p>
-                <button
-                  onClick={() => setShowRegistrationModal(false)}
-                  className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700"
-                >
-                  Fermer
-                </button>
-              </div>
-            ) : (
-              <>
-                <h3 className="text-xl font-semibold text-blue-800 mb-4">
-                  Inscription à {selectedEvent.title}
-                </h3>
-
-                <div className="mb-6">
-                  <h4 className="font-medium mb-2">Date et lieu :</h4>
-                  <p className="text-gray-700">
-                    {formatDate(selectedEvent.date)}{" "}
-                    {selectedEvent.endDate &&
-                      `au ${formatDate(selectedEvent.endDate)}`}
-                  </p>
-                  <p className="text-gray-700">
-                    {selectedEvent.location || "Lieu à confirmer"}
-                  </p>
-                </div>
-
-                <div className="mb-6">
-                  <h4 className="font-medium mb-2">Tarifs :</h4>
-                  <div className="flex justify-between items-center mb-2">
-                    <span>Non-membre :</span>
-                    <span className="font-semibold">
-                      {selectedEvent.price || 0}DA
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-blue-800">
-                    <span>Membre de l'association :</span>
-                    <span className="font-semibold">
-                      {selectedEvent.memberPrice || 0}DA
-                    </span>
-                  </div>
-                  <a
-                    href="/membership"
-                    className="text-sm text-blue-600 hover:underline mt-2 inline-block"
-                  >
-                    Devenir membre pour bénéficier du tarif réduit
-                  </a>
-                </div>
-
-                <form onSubmit={handleRegistrationSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nom complet *
-                    </label>
-                    <input
-                      key={`name-${selectedEvent.id}`}
-                      name="name"
-                      type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email *
-                    </label>
-                    <input
-                      key={`email-${selectedEvent.id}`}
-                      name="email"
-                      type="email"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Entreprise
-                    </label>
-                    <input
-                      key={`company-${selectedEvent.id}`}
-                      name="company"
-                      type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Êtes-vous membre ?
-                    </label>
-                    <select
-                      key={`membership-${selectedEvent.id}`}
-                      name="membership"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="no">Non, pas encore membre</option>
-                      <option value="yes">Oui, je suis membre</option>
-                    </select>
-                  </div>
-
-                  <div className="flex justify-between pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowRegistrationModal(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={registrationLoading}
-                      className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-                    >
-                      {registrationLoading
-                        ? "Inscription..."
-                        : "Finaliser l'inscription"}
-                    </button>
-                  </div>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Popup d'alerte connexion requise */}
       {showLoginAlert && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -469,7 +607,8 @@ const Events = () => {
                 Connexion requise
               </h3>
               <p className="text-gray-700 mb-6">
-                Vous devez être connecté pour vous inscrire à cet événement.
+                Vous devez être connecté pour vous inscrire à{" "}
+                <strong>{selectedEvent?.title}</strong>.
               </p>
               <div className="flex justify-center space-x-4">
                 <button

@@ -96,6 +96,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
         );
       }
 
+      // Validation des champs obligatoires
       if (
         !eventForm.title ||
         !eventForm.description ||
@@ -106,43 +107,52 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
         throw new Error("Veuillez remplir tous les champs obligatoires.");
       }
 
-      // Create FormData object to handle file upload
-      const formData = new FormData();
-      formData.append("title", eventForm.title);
-      formData.append("description", eventForm.description);
-      formData.append("startDate", new Date(eventForm.startDate).toISOString());
-      formData.append("endDate", new Date(eventForm.endDate).toISOString());
-      formData.append("location", eventForm.location);
-      formData.append("isOnline", eventForm.isOnline.toString());
-      formData.append("isMemberOnly", eventForm.isMemberOnly.toString());
-      formData.append("maxParticipants", eventForm.maxParticipants ? parseInt(eventForm.maxParticipants) : "0");
-      formData.append("registrationRequired", eventForm.registrationRequired.toString());
+      // Validation des dates
+      const startDate = new Date(eventForm.startDate);
+      const endDate = new Date(eventForm.endDate);
       
+      if (startDate >= endDate) {
+        throw new Error("La date de fin doit être postérieure à la date de début.");
+      }
+
+      // Préparer les données pour l'API
+      const eventData = {
+        title: eventForm.title,
+        description: eventForm.description,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        location: eventForm.location,
+        isOnline: eventForm.isOnline,
+        isMemberOnly: eventForm.isMemberOnly,
+        maxParticipants: eventForm.maxParticipants ? parseInt(eventForm.maxParticipants) : 0,
+        registrationRequired: eventForm.registrationRequired,
+        memberPrice: eventForm.memberPrice ? parseFloat(eventForm.memberPrice) : 0,
+        nonMemberPrice: eventForm.nonMemberPrice ? parseFloat(eventForm.nonMemberPrice) : 0,
+      };
+
+      // Ajouter la date limite d'inscription si elle est définie
       if (eventForm.registrationDeadline) {
-        formData.append("registrationDeadline", new Date(eventForm.registrationDeadline).toISOString());
+        eventData.registrationDeadline = new Date(eventForm.registrationDeadline).toISOString();
       }
-      
-      formData.append("memberPrice", eventForm.memberPrice ? parseFloat(eventForm.memberPrice).toString() : "0");
-      formData.append("nonMemberPrice", eventForm.nonMemberPrice ? parseFloat(eventForm.nonMemberPrice).toString() : "0");
-      
-      // Append image file if selected
-      if (eventForm.image) {
-        formData.append("image", eventForm.image);
-      }
+
+      console.log("Données envoyées à l'API:", eventData);
 
       const response = await fetch("/api/events", {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${authToken}`,
         },
-        body: formData,
+        body: JSON.stringify(eventData),
       });
 
       const result = await response.json();
 
+      console.log("Réponse de l'API:", result);
+
       if (!response.ok) {
         throw new Error(
-          result.message || "Erreur lors de la création de l'événement"
+          result.message || `Erreur ${response.status} lors de la création de l'événement`
         );
       }
 
@@ -167,8 +177,12 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
         });
         setImagePreview(null);
 
-        onEventCreated();
+        // Appeler le callback pour rafraîchir la liste des événements
+        if (onEventCreated) {
+          onEventCreated();
+        }
 
+        // Fermer le modal après 2 secondes
         setTimeout(() => {
           onClose();
           setEventMessage("");
@@ -179,7 +193,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
         );
       }
     } catch (error) {
-      console.error("Erreur:", error);
+      console.error("Erreur détaillée:", error);
       setEventMessage(`❌ ${error.message}`);
     } finally {
       setEventLoading(false);
@@ -197,6 +211,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 text-2xl"
+              disabled={eventLoading}
             >
               ✕
             </button>
@@ -206,8 +221,8 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
             <div
               className={`p-4 rounded-md mb-6 ${
                 eventMessage.includes("✅")
-                  ? "bg-green-50 text-green-700"
-                  : "bg-red-50 text-red-700"
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
               }`}
             >
               {eventMessage}
@@ -215,10 +230,10 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
           )}
 
           <form onSubmit={handleCreateEvent} className="space-y-6">
-            {/* Image Upload */}
+            {/* Image Upload - Temporairement désactivé */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Image de l'événement
+                Image de l'événement (Optionnel)
               </label>
               
               {imagePreview ? (
@@ -239,15 +254,15 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   </button>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center hover:border-gray-400 transition-colors">
+                <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
                   <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <p className="mt-1 text-sm text-gray-600">
-                    Cliquez pour télécharger une image
+                    Fonctionnalité image bientôt disponible
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, GIF jusqu'à 1MB (Firestore)
+                    L'upload d'image sera ajouté dans une prochaine mise à jour
                   </p>
                 </div>
               )}
@@ -258,16 +273,16 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                 onChange={handleImageChange}
                 className="hidden"
                 id="event-image-upload"
+                disabled
               />
               <label
                 htmlFor="event-image-upload"
-                className="block w-full mt-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 cursor-pointer text-center transition-colors"
+                className="block w-full mt-2 px-4 py-2 bg-gray-100 text-gray-500 rounded-md cursor-not-allowed text-center transition-colors"
               >
-                {imagePreview ? "Changer l'image" : "Choisir une image"}
+                Upload d'image temporairement désactivé
               </label>
             </div>
 
-            {/* Rest of the form remains the same */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -281,6 +296,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Congrès International de Cosmétologie 2024"
+                  disabled={eventLoading}
                 />
               </div>
 
@@ -296,11 +312,10 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Centre de Congrès de Paris"
+                  disabled={eventLoading}
                 />
               </div>
             </div>
-
-            {/* ... rest of your existing form fields ... */}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -314,6 +329,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                 rows="3"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Description détaillée de l'événement..."
+                disabled={eventLoading}
               />
             </div>
 
@@ -329,6 +345,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   value={eventForm.startDate}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={eventLoading}
                 />
               </div>
 
@@ -343,6 +360,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   value={eventForm.endDate}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={eventLoading}
                 />
               </div>
             </div>
@@ -359,7 +377,8 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   value={eventForm.maxParticipants}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="500"
+                  placeholder="0 pour illimité"
+                  disabled={eventLoading}
                 />
               </div>
 
@@ -373,6 +392,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   value={eventForm.registrationDeadline}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={eventLoading}
                 />
               </div>
             </div>
@@ -391,6 +411,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="0.00"
+                  disabled={eventLoading}
                 />
               </div>
 
@@ -407,6 +428,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="0.00"
+                  disabled={eventLoading}
                 />
               </div>
             </div>
@@ -419,6 +441,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   checked={eventForm.isOnline}
                   onChange={handleInputChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  disabled={eventLoading}
                 />
                 <label className="ml-2 text-sm text-gray-700">
                   Événement en ligne
@@ -432,6 +455,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   checked={eventForm.isMemberOnly}
                   onChange={handleInputChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  disabled={eventLoading}
                 />
                 <label className="ml-2 text-sm text-gray-700">
                   Réservé aux membres
@@ -445,6 +469,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   checked={eventForm.registrationRequired}
                   onChange={handleInputChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  disabled={eventLoading}
                 />
                 <label className="ml-2 text-sm text-gray-700">
                   Inscription requise
