@@ -268,7 +268,7 @@ export default function Contact() {
                 <h2 className="text-2xl font-semibold text-blue-800 mb-6">Suivez-nous</h2>
                 
                 <div className="flex space-x-4">
-                  <a href="#" className="h-12 w-12 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
+                  <a href="https://web.facebook.com/fapdz/" className="h-12 w-12 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
                     <span className="sr-only">Facebook</span>
                     <FaFacebookF className="w-5 h-5" />
                   </a>

@@ -9,7 +9,7 @@ const Footer = () => {
             <h3 className="text-xl font-semibold mb-4">La Fédération Algérienne des Pharmaciens</h3>
             <p className="mb-4">organisation professionnelle qui regroupe et représente les pharmaciens exerçant dans différents secteurs</p>
             <div className="flex space-x-4">
-              <a href="#" className="h-10 w-10 bg-blue-800 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
+              <a href="https://web.facebook.com/fapdz/" className="h-10 w-10 bg-blue-800 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
                 <span className="sr-only">Facebook</span>
                 <FaFacebookF/>
               </a>
@@ -31,11 +31,11 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-semibold mb-4">Liens rapides</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-yellow-300 transition-colors">Accueil</a></li>
-              <li><a href="#about" className="hover:text-yellow-300 transition-colors">À propos</a></li>
-              <li><a href="#events" className="hover:text-yellow-300 transition-colors">Événements</a></li>
-              <li><a href="#gallery" className="hover:text-yellow-300 transition-colors">Galerie</a></li>
-              <li><a href="#membership" className="hover:text-yellow-300 transition-colors">Adhésion</a></li>
+              <li><a href="/" className="hover:text-yellow-300 transition-colors">Accueil</a></li>
+              <li><a href="/about" className="hover:text-yellow-300 transition-colors">À propos</a></li>
+              <li><a href="/events" className="hover:text-yellow-300 transition-colors">Événements</a></li>
+              <li><a href="/gallery" className="hover:text-yellow-300 transition-colors">Galerie</a></li>
+              <li><a href="/membership" className="hover:text-yellow-300 transition-colors">Adhésion</a></li>
             </ul>
           </div>
           
