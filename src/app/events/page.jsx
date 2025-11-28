@@ -3,15 +3,15 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { useRouter } from "next/navigation";
 
 export default function Events() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [registrationLoading, setRegistrationLoading] = useState(false);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
+  const router = useRouter();
 
   // Filtres disponibles
   const filters = [
@@ -95,60 +95,46 @@ export default function Events() {
     }
   });
 
-  // Handle event registration
-  const handleEventRegistration = async (formData) => {
+  const openRegistrationModal = async (event) => {
+    const authToken = localStorage.getItem("authToken");
+    if (!authToken) {
+      // Afficher la popup d'alerte avant la redirection
+      setSelectedEvent(event);
+      setShowLoginAlert(true);
+      return;
+    }
+
+    // Si l'utilisateur est connecté, procéder à l'inscription
     try {
-      setRegistrationLoading(true);
-      const response = await fetch(
-        `https://assback.vercel.app/api/events/${selectedEvent._id}/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`/api/events/${event._id}/register`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
 
       const data = await response.json();
 
       if (data.success) {
-        setRegistrationSuccess(true);
-        fetchEvents();
+        alert("Inscription réussie !");
+        fetchEvents(); // Rafraîchir la liste des événements
       } else {
         alert("Erreur: " + data.message);
       }
     } catch (error) {
       alert("Erreur lors de l'inscription");
-    } finally {
-      setRegistrationLoading(false);
     }
   };
 
-  const openRegistrationModal = (event) => {
-    setSelectedEvent(event);
-    setShowRegistrationModal(true);
-    setRegistrationSuccess(false);
+  const handleLoginRedirect = () => {
+    setShowLoginAlert(false);
+    router.push("/login");
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date à confirmer";
     const options = { day: "numeric", month: "long", year: "numeric" };
     return new Date(dateString).toLocaleDateString("fr-FR", options);
-  };
-
-  const handleRegistrationSubmit = async (e) => {
-    e.preventDefault();
-
-    const formData = {
-      name: e.target.name.value,
-      email: e.target.email.value,
-      company: e.target.company.value,
-      isMember: e.target.membership.value,
-      notes: e.target.notes?.value || "",
-    };
-
-    await handleEventRegistration(formData);
   };
 
   // Générer une clé unique pour chaque événement
@@ -296,30 +282,6 @@ export default function Events() {
                       </div>
                     </div>
 
-                    {/* {event.maxParticipants && (
-                      <div className="mb-4">
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
-                          <span>Places disponibles:</span>
-                          <span>
-                            {event.maxParticipants - (event.participants?.length || 0)}{" "}
-                            / {event.maxParticipants}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{
-                              width: `${
-                                ((event.participants?.length || 0) /
-                                  event.maxParticipants) *
-                                100
-                              }%`,
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    )} */}
-
                     <div className="flex justify-between items-center">
                       <button
                         onClick={() => openRegistrationModal(event)}
@@ -349,145 +311,34 @@ export default function Events() {
             </div>
           )}
 
-          {/* Modal d'inscription */}
-          {showRegistrationModal && selectedEvent && (
+          {/* Popup d'alerte connexion requise */}
+          {showLoginAlert && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                {registrationSuccess ? (
-                  <div className="text-center">
-                    <div className="text-green-500 text-4xl mb-4">✓</div>
-                    <h3 className="text-xl font-semibold text-green-800 mb-4">
-                      Inscription confirmée !
-                    </h3>
-                    <p className="text-gray-700 mb-6">
-                      Votre inscription à <strong>{selectedEvent.title}</strong>{" "}
-                      a été enregistrée avec succès. Un email de confirmation
-                      vous a été envoyé.
-                    </p>
+              <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+                <div className="text-center">
+                  <div className="text-yellow-500 text-4xl mb-4">⚠️</div>
+                  <h3 className="text-xl font-semibold text-blue-800 mb-4">
+                    Connexion requise
+                  </h3>
+                  <p className="text-gray-700 mb-6">
+                    Vous devez être connecté pour vous inscrire à{" "}
+                    <strong>{selectedEvent?.title}</strong>.
+                  </p>
+                  <div className="flex justify-center space-x-4">
                     <button
-                      onClick={() => setShowRegistrationModal(false)}
-                      className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700"
+                      onClick={() => setShowLoginAlert(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
                     >
-                      Fermer
+                      Annuler
+                    </button>
+                    <button
+                      onClick={handleLoginRedirect}
+                      className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Se connecter
                     </button>
                   </div>
-                ) : (
-                  <>
-                    <h3 className="text-xl font-semibold text-blue-800 mb-4">
-                      Inscription à {selectedEvent.title}
-                    </h3>
-
-                    <div className="mb-6">
-                      <h4 className="font-medium mb-2">Date et lieu :</h4>
-                      <p className="text-gray-700">
-                        {formatDate(selectedEvent.startDate)}{" "}
-                        {selectedEvent.endDate &&
-                          `au ${formatDate(selectedEvent.endDate)}`}
-                      </p>
-                      <p className="text-gray-700">
-                        {selectedEvent.location || "Lieu à confirmer"}
-                      </p>
-                    </div>
-
-                    <div className="mb-6">
-                      <h4 className="font-medium mb-2">Tarifs :</h4>
-                      <div className="flex justify-between items-center mb-2">
-                        <span>Non-membre :</span>
-                        <span className="font-semibold">
-                          {selectedEvent.nonMemberPrice || 0} DA
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-blue-800">
-                        <span>Membre de l'association :</span>
-                        <span className="font-semibold">
-                          {selectedEvent.memberPrice || 0} DA
-                        </span>
-                      </div>
-                      <a
-                        href="/membership"
-                        className="text-sm text-blue-600 hover:underline mt-2 inline-block"
-                      >
-                        Devenir membre pour bénéficier du tarif réduit
-                      </a>
-                    </div>
-
-                    <form
-                      onSubmit={handleRegistrationSubmit}
-                      className="space-y-4"
-                    >
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Nom complet *
-                        </label>
-                        <input
-                          key={`name-${selectedEvent._id}`}
-                          name="name"
-                          type="text"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email *
-                        </label>
-                        <input
-                          key={`email-${selectedEvent._id}`}
-                          name="email"
-                          type="email"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Entreprise
-                        </label>
-                        <input
-                          key={`company-${selectedEvent._id}`}
-                          name="company"
-                          type="text"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Êtes-vous membre ?
-                        </label>
-                        <select
-                          key={`membership-${selectedEvent._id}`}
-                          name="membership"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        >
-                          <option value="no">Non, pas encore membre</option>
-                          <option value="yes">Oui, je suis membre</option>
-                        </select>
-                      </div>
-
-                      <div className="flex justify-between pt-4">
-                        <button
-                          type="button"
-                          onClick={() => setShowRegistrationModal(false)}
-                          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                        >
-                          Annuler
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={registrationLoading}
-                          className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-                        >
-                          {registrationLoading
-                            ? "Inscription..."
-                            : "Finaliser l'inscription"}
-                        </button>
-                      </div>
-                    </form>
-                  </>
-                )}
+                </div>
               </div>
             </div>
           )}

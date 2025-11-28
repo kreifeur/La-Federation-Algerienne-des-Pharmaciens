@@ -12,6 +12,7 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [registrationLoading, setRegistrationLoading] = useState(false);
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
   const router = useRouter();
 
   // Fetch events from API
@@ -130,7 +131,9 @@ const Events = () => {
   const openRegistrationModal = async (event) => {
     const authToken = localStorage.getItem("authToken");
     if (!authToken) {
-      router.push("/login");
+      // Afficher la popup d'alerte avant la redirection
+      setShowLoginAlert(true);
+      return;
     }
 
     const response = await fetch(`/api/events/${event._id}/register`, {
@@ -139,6 +142,11 @@ const Events = () => {
         Authorization: `Bearer ${authToken}`,
       },
     });
+  };
+
+  const handleLoginRedirect = () => {
+    setShowLoginAlert(false);
+    router.push("/login");
   };
 
   const handleRegistrationSubmit = async (e) => {
@@ -447,6 +455,37 @@ const Events = () => {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Popup d'alerte connexion requise */}
+      {showLoginAlert && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+            <div className="text-center">
+              <div className="text-yellow-500 text-4xl mb-4">⚠️</div>
+              <h3 className="text-xl font-semibold text-blue-800 mb-4">
+                Connexion requise
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Vous devez être connecté pour vous inscrire à cet événement.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setShowLoginAlert(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleLoginRedirect}
+                  className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Se connecter
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
