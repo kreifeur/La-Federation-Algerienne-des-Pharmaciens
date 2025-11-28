@@ -19,7 +19,7 @@ export default function Membership() {
     address: "",
     city: "",
     postalCode: "",
-    country: "France",
+    country: "Algerie",
     membershipType: "individual",
     plan: "annual",
     acceptTerms: false,
@@ -690,6 +690,7 @@ export default function Membership() {
                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         >
+                          <option value="Algerie">Algerie</option>
                           <option value="France">France</option>
                           <option value="Belgique">Belgique</option>
                           <option value="Suisse">Suisse</option>
