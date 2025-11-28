@@ -248,6 +248,8 @@ const Header = () => {
               Contact
             </Link>
           </nav>
+          <br />
+          <hr />
 
           <div className="flex flex-col space-y-3 mt-4">
             {isConnected ? (
@@ -259,14 +261,14 @@ const Header = () => {
                   <span className="text-sm truncate">{userName}</span>
                 </div>
                 <Link
-                  href="/profile"
+                  href="/dashboard/profile"
                   className="block px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Mon Profil
                 </Link>
                 <Link
-                  href="/my-events"
+                  href="/dashboard/events"
                   className="block px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
