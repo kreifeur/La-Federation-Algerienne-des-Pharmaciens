@@ -1,4 +1,4 @@
-/* "use client";
+"use client";
 
 import { useState, useCallback } from "react";
 
@@ -610,4 +610,4 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
       </div>
     </div>
   );
-} */
+}

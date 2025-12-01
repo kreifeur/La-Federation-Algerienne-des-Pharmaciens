@@ -1,4 +1,4 @@
-"use client";
+/* "use client";
 
 import { useCallback, useState, useEffect } from "react";
 
@@ -150,7 +150,6 @@ export default function EventEditForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Image Upload Section */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Image de l'événement
@@ -470,4 +469,4 @@ export default function EventEditForm({
       </form>
     </div>
   );
-}
+} */
