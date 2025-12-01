@@ -1,4 +1,4 @@
-"use client";
+/* "use client";
 
 import { useState, useCallback } from "react";
 
@@ -301,7 +301,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
           )}
 
           <form onSubmit={handleCreateEvent} className="space-y-6">
-            {/* Image Upload */}
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Image de l'événement (Optionnel)
@@ -610,4 +610,4 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
       </div>
     </div>
   );
-}
+} */
