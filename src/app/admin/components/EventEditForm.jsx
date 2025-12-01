@@ -1,4 +1,4 @@
-/* "use client";
+"use client";
 
 import { useCallback, useState, useEffect } from "react";
 
@@ -469,4 +469,4 @@ export default function EventEditForm({
       </form>
     </div>
   );
-} */
+}
