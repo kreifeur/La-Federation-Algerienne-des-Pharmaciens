@@ -506,7 +506,7 @@ export default function Events() {
                           ) : (
                             <>
                               <div className="text-blue-800 font-semibold">
-                                {event.memberPrice || 0} DA (membres)
+                                {event.memberPrice || 0} DA 
                               </div>
                             </>
                           )}
