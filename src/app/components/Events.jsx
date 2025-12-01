@@ -83,7 +83,9 @@ const Events = () => {
           if (eventDate >= now) {
             // Si l'utilisateur est connecté, vérifier s'il est inscrit
             // Sinon, le statut est toujours "available"
-            const isRegistered = userId ? event.participants?.includes(userId) : false;
+            const isRegistered = userId
+              ? event.participants?.includes(userId)
+              : false;
 
             upcomingEvents.push({
               ...event,
@@ -237,7 +239,7 @@ const Events = () => {
       const authToken = localStorage.getItem("authToken");
 
       if (!authToken) {
-        setSelectedEvent(events.find(event => event._id === eventId));
+        setSelectedEvent(events.find((event) => event._id === eventId));
         setShowLoginAlert(true);
         return;
       }
@@ -412,12 +414,13 @@ const Events = () => {
                     className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
                   >
                     <div className="h-48 bg-gray-200 flex items-center justify-center">
-                      {event.image ? (
-                        <img
-                          src={event.image}
-                          alt={event.title}
-                          className="w-full h-full object-cover"
-                        />
+                      {event.imgUrl ? (
+                        <div
+                          className="w-full h-full bg-cover bg-center"
+                          style={{
+                            backgroundImage: `url(${event.imgUrl})`,
+                          }}
+                        ></div>
                       ) : (
                         <div className="text-4xl">
                           {/* {getEventTypeIcon(event.type)} */}
@@ -427,14 +430,15 @@ const Events = () => {
                     </div>
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-3">
-                       {/*  <div className="text-2xl">
+                        {/*  <div className="text-2xl">
                           {getEventTypeIcon(event.type)}
                         </div> */}
                         <div className="flex flex-col items-end space-y-1">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${status.color}`}
                           >
-                            {status.text} {/* Affiche "Disponible" si pas connecté */}
+                            {status.text}{" "}
+                            {/* Affiche "Disponible" si pas connecté */}
                           </span>
                           {event.isMemberOnly && (
                             <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
@@ -456,7 +460,7 @@ const Events = () => {
                       </p>
 
                       {/* Informations sur les participants */}
-                     {/*  <div className="flex items-center text-sm text-gray-500 mb-2">
+                      {/*  <div className="flex items-center text-sm text-gray-500 mb-2">
                         <svg
                           className="w-4 h-4 mr-1"
                           fill="none"

@@ -52,7 +52,7 @@ export default function Events() {
 
       const result = await response.json();
 
-      if (result.success && result.data && result.data._id) {
+      if (result.success && result.data && (result.data.userId || result.data._id)) {
         const userId = result.data.userId || result.data._id;
         setCurrentUserId(userId);
         console.log("Utilisateur connecté, ID:", userId);
@@ -82,16 +82,24 @@ export default function Events() {
       const data = await response.json();
 
       if (data.success && data.data) {
+        // CORRECTION: data.data peut être un tableau ou un objet avec une propriété events
+        const eventsArray = Array.isArray(data.data) ? data.data : (data.data.events || []);
+        
         // Ajouter le statut à chaque événement
-        const eventsWithStatus = data.data.events.map(event => {
-          const isRegistered = userId ? event.participants?.includes(userId) : false;
+        const eventsWithStatus = eventsArray.map(event => {
+          // Vérifier si l'utilisateur est dans participants
+          const isRegistered = userId ? 
+            (event.participants?.some(p => 
+              (typeof p === 'object' ? p.userId || p._id : p) === userId
+            ) || false) : false;
+          
           return {
             ...event,
             status: isRegistered ? "registered" : "available"
           };
         });
         
-        setEvents(eventsWithStatus || []);
+        setEvents(eventsWithStatus);
       } else {
         setEvents([]);
       }
@@ -109,6 +117,7 @@ export default function Events() {
     try {
       const eventDate = new Date(event.startDate);
       const today = new Date();
+      today.setHours(0, 0, 0, 0); // Ignorer l'heure pour comparer seulement les dates
       return eventDate >= today;
     } catch (error) {
       return false;
@@ -121,6 +130,7 @@ export default function Events() {
     try {
       const eventDate = new Date(event.startDate);
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       return eventDate < today;
     } catch (error) {
       return false;
@@ -142,7 +152,11 @@ export default function Events() {
       case "exhibition":
       case "networking":
       case "visit":
-        return event.type === activeFilter;
+        // CORRECTION: Normaliser la catégorie pour la comparaison
+        const eventCategory = (event.category || "").toLowerCase();
+        const filterCategory = activeFilter.toLowerCase();
+        return eventCategory.includes(filterCategory) || 
+               filterCategory.includes(eventCategory);
       default:
         return true;
     }
@@ -184,8 +198,10 @@ export default function Events() {
       const response = await fetch(`/api/events/${event._id}/register`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${authToken}`,
         },
+        body: JSON.stringify({ userId }),
       });
 
       const result = await response.json();
@@ -202,7 +218,7 @@ export default function Events() {
               ? {
                   ...ev,
                   status: "registered",
-                  participants: [...(ev.participants || []), userId],
+                  participants: [...(ev.participants || []), { userId }],
                 }
               : ev
           )
@@ -235,11 +251,16 @@ export default function Events() {
       `Détails de l'événement:\n\n` +
         `📌 ${event.title}\n\n` +
         `📝 ${event.description || "Aucune description"}\n\n` +
-        `📅 Date: ${formatDate(event.startDate)}\n` +
+        `📅 Date de début: ${formatDate(event.startDate)}\n` +
+        (event.endDate ? `📅 Date de fin: ${formatDate(event.endDate)}\n` : '') +
+        `⏰ Heure: ${formatTime(event.startDate)}\n` +
         `📍 Lieu: ${event.location || "Lieu à confirmer"}\n` +
+        (event.isOnline ? `🌐 Événement en ligne\n` : '') +
+        (event.isMemberOnly ? `🔒 Réservé aux membres seulement\n` : '') +
         `👥 Participants: ${participantsCount}/${maxParticipants}\n` +
         `💰 Prix membre: ${event.memberPrice || 0}DA\n` +
         `💰 Prix non-membre: ${event.nonMemberPrice || 0}DA\n` +
+        `📋 Catégorie: ${formatCategory(event.category)}\n` +
         `${
           isConnected
             ? isRegistered
@@ -252,8 +273,48 @@ export default function Events() {
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date à confirmer";
-    const options = { day: "numeric", month: "long", year: "numeric" };
-    return new Date(dateString).toLocaleDateString("fr-FR", options);
+    try {
+      const options = { 
+        weekday: 'long',
+        day: "numeric", 
+        month: "long", 
+        year: "numeric" 
+      };
+      return new Date(dateString).toLocaleDateString("fr-FR", options);
+    } catch (error) {
+      return "Date invalide";
+    }
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return "Heure à confirmer";
+    try {
+      const options = { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZone: 'UTC'
+      };
+      return new Date(dateString).toLocaleTimeString("fr-FR", options);
+    } catch (error) {
+      return "Heure invalide";
+    }
+  };
+
+  const formatCategory = (category) => {
+    if (!category) return "Non spécifiée";
+    const categoryMap = {
+      'congress': 'Congrès',
+      'workshop': 'Atelier',
+      'training': 'Formation',
+      'exhibition': 'Salon/Exposition',
+      'networking': 'Networking',
+      'visit': 'Visite',
+      'Conference': 'Conférence',
+      'Seminar': 'Séminaire',
+      'Social': 'Événement Social',
+      'Other': 'Autre'
+    };
+    return categoryMap[category] || category;
   };
 
   // Obtenir le texte du bouton en fonction du statut
@@ -275,7 +336,8 @@ export default function Events() {
     return isPastEvent(event) || 
            event.status === "registered" || 
            (event.maxParticipants && (event.participants?.length || 0) >= event.maxParticipants) ||
-           registeringEvent === event._id;
+           registeringEvent === event._id ||
+           (event.isMemberOnly && !currentUserId); // Ajout: vérifier si réservé aux membres
   };
 
   // Générer une clé unique pour chaque événement
@@ -283,8 +345,13 @@ export default function Events() {
     return event._id ? `event-${event._id}` : `event-${index}-${Date.now()}`;
   };
 
+  // Fonction pour rafraîchir la liste des événements
+  const refreshEvents = () => {
+    fetchEvents();
+  };
+
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">
       <Head>
         <title>Événements - La Fédération Algérienne des Pharmaciens</title>
         <meta
@@ -296,7 +363,7 @@ export default function Events() {
 
       <Header />
 
-      <main className="min-h-screen bg-blue-50 py-12">
+      <main className="flex-grow bg-blue-50 py-12">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-center text-blue-800 mb-4">
             Événements
@@ -313,7 +380,7 @@ export default function Events() {
               <button
                 key={`filter-${filter.key}`}
                 onClick={() => setActiveFilter(filter.key)}
-                className={`px-4 py-2 rounded-full transition-colors ${
+                className={`px-4 py-2 rounded-full transition-colors text-sm md:text-base ${
                   activeFilter === filter.key
                     ? "bg-blue-800 text-white"
                     : "bg-white text-blue-800 hover:bg-blue-100"
@@ -367,14 +434,17 @@ export default function Events() {
                   >
                     {/* Event image */}
                     <div className="h-48 bg-gray-200 flex items-center justify-center">
-                      {event.image ? (
+                      {event.imgUrl ? (
                         <img
-                          src={event.image}
+                          src={event.imgUrl}
                           alt={event.title}
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-gray-500">Image {event.title}</span>
+                        <div className="text-gray-500 flex flex-col items-center">
+                          <span className="text-4xl mb-2">📅</span>
+                          <span className="text-sm">Image non disponible</span>
+                        </div>
                       )}
                     </div>
 
@@ -383,19 +453,13 @@ export default function Events() {
                         <div>
                           <div className="flex items-center gap-2 mb-2">
                             <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                              {event.type === "congress" && "Congrès"}
-                              {event.type === "workshop" && "Atelier"}
-                              {event.type === "training" && "Formation"}
-                              {event.type === "exhibition" && "Salon"}
-                              {event.type === "networking" && "Networking"}
-                              {event.type === "visit" && "Visite"}
-                              {!event.type && "Événement"}
+                              {formatCategory(event.category)}
                             </span>
                             <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
                               {status.text}
                             </span>
                           </div>
-                          <h3 className="text-xl font-semibold text-blue-800 mb-1">
+                          <h3 className="text-xl font-semibold text-blue-800 mb-1 line-clamp-1">
                             {event.title}
                           </h3>
                         </div>
@@ -403,7 +467,7 @@ export default function Events() {
                           <div className="text-sm text-gray-500">
                             {formatDate(event.startDate)}
                           </div>
-                          {event.endDate && (
+                          {event.endDate && event.endDate !== event.startDate && (
                             <div className="text-sm text-gray-500">
                               au {formatDate(event.endDate)}
                             </div>
@@ -411,33 +475,38 @@ export default function Events() {
                         </div>
                       </div>
 
-                      <p className="text-gray-700 mb-4">{event.description}</p>
+                      <p className="text-gray-700 mb-4 line-clamp-2">{event.description}</p>
 
-                      {/* Informations sur les participants */}
-                     {/*  <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <span>{participantsCount}/{maxParticipants} participants</span>
-                      </div> */}
+                      {/* Badges pour événement spécial */}
+                      <div className="flex gap-2 mb-4">
+                        {event.isOnline && (
+                          <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
+                            🌐 En ligne
+                          </span>
+                        )}
+                        {event.isMemberOnly && (
+                          <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                            🔒 Membres seulement
+                          </span>
+                        )}
+                      </div>
 
                       <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center text-sm text-gray-600">
                           <span className="mr-2">📍</span>
-                          {event.location || "Lieu à confirmer"}
+                          <span className="truncate max-w-[150px]">
+                            {event.location || "Lieu à confirmer"}
+                          </span>
                         </div>
                         <div className="text-right">
-                          {event.nonMemberPrice === 0 ? (
+                          {event.nonMemberPrice === 0 && event.memberPrice === 0 ? (
                             <span className="text-green-600 font-semibold">
                               Gratuit
                             </span>
                           ) : (
                             <>
-                              {/* <div className="text-gray-500 line-through text-sm">
-                                {event.nonMemberPrice} DA
-                              </div> */}
                               <div className="text-blue-800 font-semibold">
-                                {event.memberPrice} DA membres
+                                {event.memberPrice || 0} DA (membres)
                               </div>
                             </>
                           )}
@@ -448,11 +517,11 @@ export default function Events() {
                         <button
                           onClick={() => isPastEvent(event) ? handleViewDetails(event) : handleRegister(event)}
                           disabled={isDisabled}
-                          className={`px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center ${
+                          className={`px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center min-w-[120px] ${
                             isPastEvent(event)
                               ? "bg-gray-600 text-white hover:bg-gray-700"
                               : event.status === "registered"
-                              ? "bg-green-600 text-white"
+                              ? "bg-green-600 text-white hover:bg-green-700"
                               : "bg-blue-800 text-white hover:bg-blue-700"
                           } transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed`}
                         >
@@ -486,39 +555,49 @@ export default function Events() {
             </div>
           )}
 
-          {/* Popup d'alerte connexion requise */}
-          {showLoginAlert && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
-                <div className="text-center">
-                  <div className="text-yellow-500 text-4xl mb-4">⚠️</div>
-                  <h3 className="text-xl font-semibold text-blue-800 mb-4">
-                    Connexion requise
-                  </h3>
-                  <p className="text-gray-700 mb-6">
-                    Vous devez être connecté pour vous inscrire à{" "}
-                    <strong>{selectedEvent?.title}</strong>.
-                  </p>
-                  <div className="flex justify-center space-x-4">
-                    <button
-                      onClick={() => setShowLoginAlert(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      onClick={handleLoginRedirect}
-                      className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      Se connecter
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Bouton pour rafraîchir */}
+          <div className="text-center">
+            <button
+              onClick={refreshEvents}
+              className="px-6 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors text-sm font-medium"
+            >
+              🔄 Rafraîchir la liste
+            </button>
+          </div>
         </div>
       </main>
+
+      {/* Popup d'alerte connexion requise */}
+      {showLoginAlert && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+            <div className="text-center">
+              <div className="text-yellow-500 text-4xl mb-4">⚠️</div>
+              <h3 className="text-xl font-semibold text-blue-800 mb-4">
+                Connexion requise
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Vous devez être connecté pour vous inscrire à{" "}
+                <strong>{selectedEvent?.title}</strong>.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setShowLoginAlert(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleLoginRedirect}
+                  className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Se connecter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

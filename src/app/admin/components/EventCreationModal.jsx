@@ -16,16 +16,17 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
     registrationDeadline: "",
     memberPrice: "",
     nonMemberPrice: "",
-    image: null,
+    category: "",
   });
 
   const [eventLoading, setEventLoading] = useState(false);
   const [eventMessage, setEventMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
-
     if (type === "checkbox") {
       setEventForm((prev) => ({
         ...prev,
@@ -47,49 +48,74 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
   const handleImageChange = useCallback((e) => {
     const file = e.target.files[0];
     if (file) {
-      // Vérifier la taille du fichier (max 1MB for Firestore)
-      if (file.size > 1 * 1024 * 1024) {
-        setEventMessage("❌ L'image ne doit pas dépasser 1MB pour le stockage Firestore");
+      // Vérifier la taille du fichier
+      if (file.size > 5 * 1024 * 1024) {
+        setEventMessage("❌ L'image ne doit pas dépasser 5MB");
         return;
       }
-      
+
       // Vérifier le type de fichier
-      if (!file.type.startsWith('image/')) {
-        setEventMessage("❌ Veuillez sélectionner un fichier image valide (JPG, PNG, GIF)");
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setEventMessage("❌ Veuillez sélectionner un fichier image valide (JPG, PNG, GIF, WebP)");
         return;
       }
-      
+
       // Créer un aperçu de l'image
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target.result);
       };
       reader.readAsDataURL(file);
-      
-      setEventForm((prev) => ({
-        ...prev,
-        image: file,
-      }));
+
+      setSelectedImage(file);
       setEventMessage(""); // Clear any previous error messages
     }
   }, []);
 
   const removeImage = useCallback(() => {
-    setEventForm((prev) => ({
-      ...prev,
-      image: null,
-    }));
+    setSelectedImage(null);
     setImagePreview(null);
   }, []);
+
+  // Fonction pour uploader l'image
+  const uploadImage = async (file) => {
+    const authToken = localStorage.getItem("authToken");
+    
+    const formData = new FormData();
+    formData.append("image", file);
+    
+    // Simuler la progression (optionnel)
+    setUploadProgress(30);
+    
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: formData,
+    });
+    
+    setUploadProgress(70);
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || "Erreur lors de l'upload de l'image");
+    }
+    
+    setUploadProgress(100);
+    return result.imgUrl;
+  };
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
     setEventLoading(true);
     setEventMessage("");
+    setUploadProgress(0);
 
     try {
       const authToken = localStorage.getItem("authToken");
-
       if (!authToken) {
         throw new Error(
           "Token d'authentification manquant. Veuillez vous reconnecter."
@@ -102,20 +128,34 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
         !eventForm.description ||
         !eventForm.startDate ||
         !eventForm.endDate ||
-        !eventForm.location
+        !eventForm.location ||
+        !eventForm.category
       ) {
-        throw new Error("Veuillez remplir tous les champs obligatoires.");
+        throw new Error("Veuillez remplir tous les champs obligatoires (*).");
       }
 
       // Validation des dates
       const startDate = new Date(eventForm.startDate);
       const endDate = new Date(eventForm.endDate);
-      
       if (startDate >= endDate) {
         throw new Error("La date de fin doit être postérieure à la date de début.");
       }
 
-      // Préparer les données pour l'API
+      let imgUrl = null;
+      
+      // Uploader l'image si elle existe
+      if (selectedImage) {
+        try {
+          setEventMessage("📤 Upload de l'image en cours...");
+          imgUrl = await uploadImage(selectedImage);
+          setEventMessage("✅ Image uploadée avec succès !");
+        } catch (uploadError) {
+          console.error("Erreur upload image:", uploadError);
+          throw new Error("Échec de l'upload de l'image: " + uploadError.message);
+        }
+      }
+
+      // Préparer les données pour l'API au format JSON
       const eventData = {
         title: eventForm.title,
         description: eventForm.description,
@@ -128,6 +168,8 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
         registrationRequired: eventForm.registrationRequired,
         memberPrice: eventForm.memberPrice ? parseFloat(eventForm.memberPrice) : 0,
         nonMemberPrice: eventForm.nonMemberPrice ? parseFloat(eventForm.nonMemberPrice) : 0,
+        category: eventForm.category,
+        imgUrl: imgUrl, // URL de l'image uploadée
       };
 
       // Ajouter la date limite d'inscription si elle est définie
@@ -147,7 +189,6 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
       });
 
       const result = await response.json();
-
       console.log("Réponse de l'API:", result);
 
       if (!response.ok) {
@@ -173,9 +214,11 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
           registrationDeadline: "",
           memberPrice: "",
           nonMemberPrice: "",
-          image: null,
+          category: "",
         });
+        setSelectedImage(null);
         setImagePreview(null);
+        setUploadProgress(0);
 
         // Appeler le callback pour rafraîchir la liste des événements
         if (onEventCreated) {
@@ -197,8 +240,21 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
       setEventMessage(`❌ ${error.message}`);
     } finally {
       setEventLoading(false);
+      setUploadProgress(0);
     }
   };
+
+  // Options pour les catégories
+  const categoryOptions = [
+    { value: "", label: "Sélectionner une catégorie" },
+    { value: "Workshop", label: "Workshop" },
+    { value: "Conference", label: "Conférence" },
+    { value: "Seminar", label: "Séminaire" },
+    { value: "Networking", label: "Networking" },
+    { value: "Training", label: "Formation" },
+    { value: "Social", label: "Événement Social" },
+    { value: "Other", label: "Autre" },
+  ];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -220,22 +276,36 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
           {eventMessage && (
             <div
               className={`p-4 rounded-md mb-6 ${
-                eventMessage.includes("✅")
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-red-50 text-red-700 border border-red-200"
+                eventMessage.includes("✅") || eventMessage.includes("📤")
+                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                  : eventMessage.includes("❌")
+                  ? "bg-red-50 text-red-700 border border-red-200"
+                  : "bg-green-50 text-green-700 border border-green-200"
               }`}
             >
-              {eventMessage}
+              <div className="flex items-center justify-between">
+                <span>{eventMessage}</span>
+                {uploadProgress > 0 && (
+                  <span className="text-sm font-medium">{uploadProgress}%</span>
+                )}
+              </div>
+              {uploadProgress > 0 && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
           )}
 
           <form onSubmit={handleCreateEvent} className="space-y-6">
-            {/* Image Upload - Temporairement désactivé */}
+            {/* Image Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Image de l'événement (Optionnel)
               </label>
-              
               {imagePreview ? (
                 <div className="relative mb-3">
                   <img
@@ -247,39 +317,63 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                     type="button"
                     onClick={removeImage}
                     className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                    disabled={eventLoading}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center hover:border-blue-400 transition-colors">
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                   <p className="mt-1 text-sm text-gray-600">
-                    Fonctionnalité image bientôt disponible
+                    Cliquez pour télécharger une image
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    L'upload d'image sera ajouté dans une prochaine mise à jour
+                    JPG, PNG, GIF, WebP jusqu'à 5MB
                   </p>
                 </div>
               )}
-              
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 onChange={handleImageChange}
                 className="hidden"
                 id="event-image-upload"
-                disabled
+                disabled={eventLoading}
               />
               <label
                 htmlFor="event-image-upload"
-                className="block w-full mt-2 px-4 py-2 bg-gray-100 text-gray-500 rounded-md cursor-not-allowed text-center transition-colors"
+                className={`block w-full mt-2 px-4 py-2 rounded-md text-center transition-colors ${
+                  eventLoading
+                    ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"
+                }`}
               >
-                Upload d'image temporairement désactivé
+                {eventLoading ? "Chargement..." : "Télécharger une image"}
               </label>
             </div>
 
@@ -294,26 +388,29 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   required
                   value={eventForm.title}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="Congrès International de Cosmétologie 2024"
                   disabled={eventLoading}
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lieu *
+                  Catégorie *
                 </label>
-                <input
-                  type="text"
-                  name="location"
+                <select
+                  name="category"
                   required
-                  value={eventForm.location}
+                  value={eventForm.category}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Centre de Congrès de Paris"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   disabled={eventLoading}
-                />
+                >
+                  {categoryOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -327,8 +424,24 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                 value={eventForm.description}
                 onChange={handleInputChange}
                 rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                 placeholder="Description détaillée de l'événement..."
+                disabled={eventLoading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lieu *
+              </label>
+              <input
+                type="text"
+                name="location"
+                required
+                value={eventForm.location}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                placeholder="Centre de Congrès de Paris"
                 disabled={eventLoading}
               />
             </div>
@@ -344,11 +457,10 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   required
                   value={eventForm.startDate}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   disabled={eventLoading}
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Date de fin *
@@ -359,7 +471,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   required
                   value={eventForm.endDate}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   disabled={eventLoading}
                 />
               </div>
@@ -376,12 +488,11 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   min="0"
                   value={eventForm.maxParticipants}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="0 pour illimité"
                   disabled={eventLoading}
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Date limite d'inscription
@@ -391,7 +502,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   name="registrationDeadline"
                   value={eventForm.registrationDeadline}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   disabled={eventLoading}
                 />
               </div>
@@ -409,12 +520,11 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   min="0"
                   value={eventForm.memberPrice}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="0.00"
                   disabled={eventLoading}
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Prix non-membre (DA)
@@ -426,7 +536,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   min="0"
                   value={eventForm.nonMemberPrice}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="0.00"
                   disabled={eventLoading}
                 />
@@ -440,35 +550,33 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   name="isOnline"
                   checked={eventForm.isOnline}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
                   disabled={eventLoading}
                 />
                 <label className="ml-2 text-sm text-gray-700">
                   Événement en ligne
                 </label>
               </div>
-
               <div className="flex items-center">
                 <input
                   type="checkbox"
                   name="isMemberOnly"
                   checked={eventForm.isMemberOnly}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
                   disabled={eventLoading}
                 />
                 <label className="ml-2 text-sm text-gray-700">
                   Réservé aux membres
                 </label>
               </div>
-
               <div className="flex items-center">
                 <input
                   type="checkbox"
                   name="registrationRequired"
                   checked={eventForm.registrationRequired}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
                   disabled={eventLoading}
                 />
                 <label className="ml-2 text-sm text-gray-700">
@@ -481,7 +589,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
                 disabled={eventLoading}
               >
                 Annuler

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 
 export default function EventEditForm({
   event,
@@ -11,8 +11,35 @@ export default function EventEditForm({
   onCancel,
   onUpdate,
 }) {
-  const [imagePreview, setImagePreview] = useState(event?.imageUrl || null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [newImage, setNewImage] = useState(null);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+
+  // Initialiser l'image preview quand l'événement change
+  useEffect(() => {
+    if (event?.imgUrl) {
+      setImagePreview(event.imgUrl);
+    } else {
+      setImagePreview(null);
+    }
+  }, [event]);
+
+  // Options pour les catégories
+  useEffect(() => {
+    setCategoryOptions([
+      { value: "", label: "Sélectionner une catégorie" },
+      { value: "Workshop", label: "Workshop" },
+      { value: "Conference", label: "Conférence" },
+      { value: "Seminar", label: "Séminaire" },
+      { value: "Networking", label: "Networking" },
+      { value: "Training", label: "Formation" },
+      { value: "Social", label: "Événement Social" },
+      { value: "congress", label: "Congrès" },
+      { value: "exhibition", label: "Salon/Exposition" },
+      { value: "visit", label: "Visite" },
+      { value: "Other", label: "Autre" },
+    ]);
+  }, []);
 
   const handleInputChange = useCallback(
     (e) => {
@@ -48,8 +75,9 @@ export default function EventEditForm({
       }
       
       // Vérifier le type de fichier
-      if (!file.type.startsWith('image/')) {
-        alert("❌ Veuillez sélectionner un fichier image valide (JPG, PNG, GIF)");
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        alert("❌ Veuillez sélectionner un fichier image valide (JPG, PNG, GIF, WebP)");
         return;
       }
       
@@ -76,16 +104,31 @@ export default function EventEditForm({
 
   const restoreOriginalImage = useCallback(() => {
     setNewImage(null);
-    setImagePreview(event?.imageUrl || null);
+    setImagePreview(event?.imgUrl || null);
     setEventForm((prev) => ({
       ...prev,
       removeImage: false,
     }));
-  }, [event?.imageUrl, setEventForm]);
+  }, [event?.imgUrl, setEventForm]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onUpdate(event._id, newImage);
+  };
+
+  // Formater la date pour l'input datetime-local
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      // Ajouter le décalage timezone
+      const timezoneOffset = date.getTimezoneOffset() * 60000;
+      const localDate = new Date(date.getTime() - timezoneOffset);
+      return localDate.toISOString().slice(0, 16);
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
   };
 
   return (
@@ -97,9 +140,9 @@ export default function EventEditForm({
       {eventMessage && (
         <div
           className={`p-3 rounded-md mb-4 ${
-            eventMessage.includes("✅")
-              ? "bg-green-50 text-green-700"
-              : "bg-red-50 text-red-700"
+            eventMessage.includes("✅") || eventMessage.includes("succès")
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
           }`}
         >
           {eventMessage}
@@ -126,6 +169,7 @@ export default function EventEditForm({
                   onClick={removeImage}
                   className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                   title="Supprimer l'image"
+                  disabled={eventLoading}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -137,6 +181,7 @@ export default function EventEditForm({
                     onClick={restoreOriginalImage}
                     className="bg-gray-500 text-white rounded-full p-1 hover:bg-gray-600 transition-colors"
                     title="Restaurer l'image originale"
+                    disabled={eventLoading}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -157,26 +202,31 @@ export default function EventEditForm({
                 Cliquez pour télécharger une image
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                PNG, JPG, GIF jusqu'à 5MB
+                PNG, JPG, GIF, WebP jusqu'à 5MB
               </p>
             </div>
           )}
           
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
             onChange={handleImageChange}
             className="hidden"
             id="event-edit-image-upload"
+            disabled={eventLoading}
           />
           <label
             htmlFor="event-edit-image-upload"
-            className="block w-full mt-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 cursor-pointer text-center transition-colors"
+            className={`block w-full mt-2 px-4 py-2 rounded-md text-center transition-colors cursor-pointer ${
+              eventLoading
+                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+            }`}
           >
             {imagePreview ? "Changer l'image" : "Choisir une image"}
           </label>
           
-          {event?.imageUrl && !imagePreview && (
+          {event?.imgUrl && !imagePreview && (
             <p className="text-xs text-orange-600 mt-1 text-center">
               ⚠️ L'image actuelle sera supprimée si vous n'en sélectionnez pas une nouvelle
             </p>
@@ -192,26 +242,32 @@ export default function EventEditForm({
               type="text"
               name="title"
               required
-              value={eventForm.title}
+              value={eventForm.title || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
               placeholder="Titre de l'événement"
+              disabled={eventLoading}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Lieu *
+              Catégorie *
             </label>
-            <input
-              type="text"
-              name="location"
+            <select
+              name="category"
               required
-              value={eventForm.location}
+              value={eventForm.category || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Lieu de l'événement"
-            />
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+              disabled={eventLoading}
+            >
+              {categoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -222,11 +278,28 @@ export default function EventEditForm({
           <textarea
             name="description"
             required
-            value={eventForm.description}
+            value={eventForm.description || ""}
             onChange={handleInputChange}
             rows="3"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="Description de l'événement"
+            disabled={eventLoading}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Lieu *
+          </label>
+          <input
+            type="text"
+            name="location"
+            required
+            value={eventForm.location || ""}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            placeholder="Lieu de l'événement"
+            disabled={eventLoading}
           />
         </div>
 
@@ -239,9 +312,10 @@ export default function EventEditForm({
               type="datetime-local"
               name="startDate"
               required
-              value={eventForm.startDate}
+              value={formatDateForInput(eventForm.startDate) || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+              disabled={eventLoading}
             />
           </div>
 
@@ -253,9 +327,10 @@ export default function EventEditForm({
               type="datetime-local"
               name="endDate"
               required
-              value={eventForm.endDate}
+              value={formatDateForInput(eventForm.endDate) || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+              disabled={eventLoading}
             />
           </div>
         </div>
@@ -269,10 +344,11 @@ export default function EventEditForm({
               type="number"
               name="maxParticipants"
               min="0"
-              value={eventForm.maxParticipants}
+              value={eventForm.maxParticipants || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+              placeholder="0 pour illimité"
+              disabled={eventLoading}
             />
           </div>
 
@@ -283,9 +359,10 @@ export default function EventEditForm({
             <input
               type="datetime-local"
               name="registrationDeadline"
-              value={eventForm.registrationDeadline}
+              value={formatDateForInput(eventForm.registrationDeadline) || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+              disabled={eventLoading}
             />
           </div>
         </div>
@@ -300,10 +377,11 @@ export default function EventEditForm({
               name="memberPrice"
               step="0.01"
               min="0"
-              value={eventForm.memberPrice}
+              value={eventForm.memberPrice || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
               placeholder="0.00"
+              disabled={eventLoading}
             />
           </div>
 
@@ -316,10 +394,11 @@ export default function EventEditForm({
               name="nonMemberPrice"
               step="0.01"
               min="0"
-              value={eventForm.nonMemberPrice}
+              value={eventForm.nonMemberPrice || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
               placeholder="0.00"
+              disabled={eventLoading}
             />
           </div>
         </div>
@@ -329,9 +408,10 @@ export default function EventEditForm({
             <input
               type="checkbox"
               name="isOnline"
-              checked={eventForm.isOnline}
+              checked={eventForm.isOnline || false}
               onChange={handleInputChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+              disabled={eventLoading}
             />
             <label className="ml-2 text-sm text-gray-700">
               Événement en ligne
@@ -342,9 +422,10 @@ export default function EventEditForm({
             <input
               type="checkbox"
               name="isMemberOnly"
-              checked={eventForm.isMemberOnly}
+              checked={eventForm.isMemberOnly || false}
               onChange={handleInputChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+              disabled={eventLoading}
             />
             <label className="ml-2 text-sm text-gray-700">
               Réservé aux membres
@@ -355,9 +436,10 @@ export default function EventEditForm({
             <input
               type="checkbox"
               name="registrationRequired"
-              checked={eventForm.registrationRequired}
+              checked={eventForm.registrationRequired || false}
               onChange={handleInputChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+              disabled={eventLoading}
             />
             <label className="ml-2 text-sm text-gray-700">
               Inscription requise
@@ -369,7 +451,7 @@ export default function EventEditForm({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
             disabled={eventLoading}
           >
             Annuler
