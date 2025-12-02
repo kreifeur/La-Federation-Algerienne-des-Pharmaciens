@@ -14,6 +14,11 @@ export default function EventEditForm({
   const [imagePreview, setImagePreview] = useState(null);
   const [newImage, setNewImage] = useState(null);
   const [categoryOptions, setCategoryOptions] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Configuration Cloudinary - À PERSONNALISER
+  const CLOUDINARY_CLOUD_NAME = "dlr034bds"; // Remplacez par votre cloud name
+  const CLOUDINARY_UPLOAD_PRESET = "FAPKREIFEUR"; // Remplacez par votre upload preset
 
   // Initialiser l'image preview quand l'événement change
   useEffect(() => {
@@ -111,9 +116,55 @@ export default function EventEditForm({
     }));
   }, [event?.imgUrl, setEventForm]);
 
-  const handleSubmit = (e) => {
+  // Fonction pour uploader l'image vers Cloudinary
+  const uploadImageToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    formData.append("cloud_name", CLOUDINARY_CLOUD_NAME);
+    
+    // Simuler la progression
+    setUploadProgress(30);
+    
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+    
+    setUploadProgress(70);
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.error?.message || "Erreur lors de l'upload de l'image vers Cloudinary");
+    }
+    
+    setUploadProgress(100);
+    return result.secure_url; // URL de l'image uploadée sur Cloudinary
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onUpdate(event._id, newImage);
+    
+    let newImageUrl = null;
+    
+    // Si une nouvelle image est sélectionnée, l'uploader vers Cloudinary
+    if (newImage) {
+      try {
+        newImageUrl = await uploadImageToCloudinary(newImage);
+      } catch (error) {
+        alert(`❌ Erreur lors de l'upload de l'image: ${error.message}`);
+        setUploadProgress(0);
+        return;
+      }
+    }
+    
+    // Passer l'URL de la nouvelle image à la fonction de mise à jour
+    onUpdate(event._id, newImage, newImageUrl);
+    setUploadProgress(0);
   };
 
   // Formater la date pour l'input datetime-local
@@ -149,6 +200,21 @@ export default function EventEditForm({
         </div>
       )}
 
+      {uploadProgress > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 text-blue-700 border border-blue-200 rounded-md">
+          <div className="flex items-center justify-between mb-2">
+            <span>📤 Upload de l'image vers Cloudinary...</span>
+            <span className="text-sm font-medium">{uploadProgress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -168,7 +234,7 @@ export default function EventEditForm({
                   onClick={removeImage}
                   className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                   title="Supprimer l'image"
-                  disabled={eventLoading}
+                  disabled={eventLoading || uploadProgress > 0}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -180,7 +246,7 @@ export default function EventEditForm({
                     onClick={restoreOriginalImage}
                     className="bg-gray-500 text-white rounded-full p-1 hover:bg-gray-600 transition-colors"
                     title="Restaurer l'image originale"
-                    disabled={eventLoading}
+                    disabled={eventLoading || uploadProgress > 0}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -191,6 +257,11 @@ export default function EventEditForm({
               <p className="text-xs text-gray-500 mt-1 text-center">
                 {newImage ? "Nouvelle image sélectionnée" : "Image actuelle"}
               </p>
+              {newImage && (
+                <p className="text-xs text-blue-500 mt-1 text-center">
+                  (Upload direct vers Cloudinary)
+                </p>
+              )}
             </div>
           ) : (
             <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center hover:border-gray-400 transition-colors">
@@ -203,6 +274,9 @@ export default function EventEditForm({
               <p className="text-xs text-gray-500 mt-1">
                 PNG, JPG, GIF, WebP jusqu'à 5MB
               </p>
+              <p className="text-xs text-blue-500 mt-1">
+                (Upload direct vers Cloudinary)
+              </p>
             </div>
           )}
           
@@ -212,12 +286,12 @@ export default function EventEditForm({
             onChange={handleImageChange}
             className="hidden"
             id="event-edit-image-upload"
-            disabled={eventLoading}
+            disabled={eventLoading || uploadProgress > 0}
           />
           <label
             htmlFor="event-edit-image-upload"
             className={`block w-full mt-2 px-4 py-2 rounded-md text-center transition-colors cursor-pointer ${
-              eventLoading
+              eventLoading || uploadProgress > 0
                 ? "bg-gray-100 text-gray-500 cursor-not-allowed"
                 : "bg-blue-50 text-blue-700 hover:bg-blue-100"
             }`}
@@ -245,7 +319,7 @@ export default function EventEditForm({
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
               placeholder="Titre de l'événement"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
           </div>
 
@@ -259,7 +333,7 @@ export default function EventEditForm({
               value={eventForm.category || ""}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             >
               {categoryOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -282,7 +356,7 @@ export default function EventEditForm({
             rows="3"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="Description de l'événement"
-            disabled={eventLoading}
+            disabled={eventLoading || uploadProgress > 0}
           />
         </div>
 
@@ -298,7 +372,7 @@ export default function EventEditForm({
             onChange={handleInputChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="Lieu de l'événement"
-            disabled={eventLoading}
+            disabled={eventLoading || uploadProgress > 0}
           />
         </div>
 
@@ -314,7 +388,7 @@ export default function EventEditForm({
               value={formatDateForInput(eventForm.startDate) || ""}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
           </div>
 
@@ -329,7 +403,7 @@ export default function EventEditForm({
               value={formatDateForInput(eventForm.endDate) || ""}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
           </div>
         </div>
@@ -347,7 +421,7 @@ export default function EventEditForm({
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
               placeholder="0 pour illimité"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
           </div>
 
@@ -361,7 +435,7 @@ export default function EventEditForm({
               value={formatDateForInput(eventForm.registrationDeadline) || ""}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
           </div>
         </div>
@@ -380,7 +454,7 @@ export default function EventEditForm({
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
               placeholder="0.00"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
           </div>
 
@@ -397,7 +471,7 @@ export default function EventEditForm({
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
               placeholder="0.00"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
           </div>
         </div>
@@ -410,7 +484,7 @@ export default function EventEditForm({
               checked={eventForm.isOnline || false}
               onChange={handleInputChange}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
             <label className="ml-2 text-sm text-gray-700">
               Événement en ligne
@@ -424,7 +498,7 @@ export default function EventEditForm({
               checked={eventForm.isMemberOnly || false}
               onChange={handleInputChange}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
             <label className="ml-2 text-sm text-gray-700">
               Réservé aux membres
@@ -438,7 +512,7 @@ export default function EventEditForm({
               checked={eventForm.registrationRequired || false}
               onChange={handleInputChange}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-              disabled={eventLoading}
+              disabled={eventLoading || uploadProgress > 0}
             />
             <label className="ml-2 text-sm text-gray-700">
               Inscription requise
@@ -451,13 +525,13 @@ export default function EventEditForm({
             type="button"
             onClick={onCancel}
             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
-            disabled={eventLoading}
+            disabled={eventLoading || uploadProgress > 0}
           >
             Annuler
           </button>
           <button
             type="submit"
-            disabled={eventLoading}
+            disabled={eventLoading || uploadProgress > 0}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
           >
             {eventLoading && (

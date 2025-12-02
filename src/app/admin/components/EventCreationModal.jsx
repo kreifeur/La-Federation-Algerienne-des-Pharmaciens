@@ -25,6 +25,10 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
+  // Configuration Cloudinary - À PERSONNALISER
+  const CLOUDINARY_CLOUD_NAME = "dlr034bds"; // Remplacez par votre cloud name
+  const CLOUDINARY_UPLOAD_PRESET = "FAPKREIFEUR"; // Remplacez par votre upload preset
+
   const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     if (type === "checkbox") {
@@ -78,34 +82,34 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
     setImagePreview(null);
   }, []);
 
-  // Fonction pour uploader l'image
-  const uploadImage = async (file) => {
-    const authToken = localStorage.getItem("authToken");
-    
+  // Fonction pour uploader l'image vers Cloudinary
+  const uploadImageToCloudinary = async (file) => {
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    formData.append("cloud_name", CLOUDINARY_CLOUD_NAME);
     
     // Simuler la progression (optionnel)
     setUploadProgress(30);
     
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-      body: formData,
-    });
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
     
     setUploadProgress(70);
     
     const result = await response.json();
     
     if (!response.ok) {
-      throw new Error(result.message || "Erreur lors de l'upload de l'image");
+      throw new Error(result.error?.message || "Erreur lors de l'upload de l'image vers Cloudinary");
     }
     
     setUploadProgress(100);
-    return result.imgUrl;
+    return result.secure_url; // URL de l'image uploadée sur Cloudinary
   };
 
   const handleCreateEvent = async (e) => {
@@ -143,14 +147,14 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
 
       let imgUrl = null;
       
-      // Uploader l'image si elle existe
+      // Uploader l'image vers Cloudinary si elle existe
       if (selectedImage) {
         try {
-          setEventMessage("📤 Upload de l'image en cours...");
-          imgUrl = await uploadImage(selectedImage);
-          setEventMessage("✅ Image uploadée avec succès !");
+          setEventMessage("📤 Upload de l'image vers Cloudinary...");
+          imgUrl = await uploadImageToCloudinary(selectedImage);
+          setEventMessage("✅ Image uploadée avec succès sur Cloudinary !");
         } catch (uploadError) {
-          console.error("Erreur upload image:", uploadError);
+          console.error("Erreur upload image Cloudinary:", uploadError);
           throw new Error("Échec de l'upload de l'image: " + uploadError.message);
         }
       }
@@ -169,7 +173,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
         memberPrice: eventForm.memberPrice ? parseFloat(eventForm.memberPrice) : 0,
         nonMemberPrice: eventForm.nonMemberPrice ? parseFloat(eventForm.nonMemberPrice) : 0,
         category: eventForm.category,
-        imgUrl: imgUrl, // URL de l'image uploadée
+        imgUrl: imgUrl, // URL de l'image uploadée sur Cloudinary
       };
 
       // Ajouter la date limite d'inscription si elle est définie
