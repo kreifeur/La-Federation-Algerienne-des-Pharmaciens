@@ -13,20 +13,45 @@ export default function Events() {
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [registeringEvent, setRegisteringEvent] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [categories, setCategories] = useState([]); // New state for categories
   const router = useRouter();
 
-  // Filtres disponibles
-  const filters = [
+  // Filtres disponibles - Will be populated from API
+  const [filters, setFilters] = useState([
     { key: "all", label: "Tous les événements" },
     { key: "upcoming", label: "Événements à venir" },
-    { key: "past", label: "Événements passés" },
-    { key: "congress", label: "Congrès" },
-    { key: "workshop", label: "Ateliers" },
-    { key: "training", label: "Formations" },
-    { key: "exhibition", label: "Salons" },
-    { key: "networking", label: "Networking" },
-    { key: "visit", label: "Visites" },
-  ];
+    { key: "past", label: "Événements passés" }
+  ]);
+
+  // Fetch categories from API
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("/api/categories");
+      const data = await response.json();
+
+      if (data.success && data.data && data.data.categories) {
+        const categoriesData = data.data.categories;
+        setCategories(categoriesData);
+        
+        // Update filters with categories from API
+        const categoryFilters = categoriesData.map(category => ({
+          key: category.name.toLowerCase().replace(/\s+/g, '-'),
+          label: category.name
+        }));
+        
+        setFilters(prev => [
+          ...prev.filter(f => f.key === "all" || f.key === "upcoming" || f.key === "past"),
+          ...categoryFilters
+        ]);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   // Fonction pour récupérer le profil utilisateur
   const fetchUserProfile = async () => {
@@ -82,6 +107,7 @@ export default function Events() {
       const data = await response.json();
 
       if (data.success && data.data) {
+        console.log(data);
         // CORRECTION: data.data peut être un tableau ou un objet avec une propriété events
         const eventsArray = Array.isArray(data.data) ? data.data : (data.data.events || []);
         
@@ -146,19 +172,16 @@ export default function Events() {
         return isUpcomingEvent(event);
       case "past":
         return isPastEvent(event);
-      case "congress":
-      case "workshop":
-      case "training":
-      case "exhibition":
-      case "networking":
-      case "visit":
-        // CORRECTION: Normaliser la catégorie pour la comparaison
-        const eventCategory = (event.category || "").toLowerCase();
-        const filterCategory = activeFilter.toLowerCase();
-        return eventCategory.includes(filterCategory) || 
-               filterCategory.includes(eventCategory);
       default:
-        return true;
+        // For category filters, check if event category matches the filter
+        if (!event.category) return false;
+        
+        // Find the category filter that matches the active filter key
+        const categoryFilter = filters.find(f => f.key === activeFilter);
+        if (!categoryFilter) return false;
+        
+        // Check if event category name matches the filter label
+        return event.category.toLowerCase() === categoryFilter.label.toLowerCase();
     }
   });
 
@@ -302,19 +325,15 @@ export default function Events() {
 
   const formatCategory = (category) => {
     if (!category) return "Non spécifiée";
-    const categoryMap = {
-      'congress': 'Congrès',
-      'workshop': 'Atelier',
-      'training': 'Formation',
-      'exhibition': 'Salon/Exposition',
-      'networking': 'Networking',
-      'visit': 'Visite',
-      'Conference': 'Conférence',
-      'Seminar': 'Séminaire',
-      'Social': 'Événement Social',
-      'Other': 'Autre'
-    };
-    return categoryMap[category] || category;
+    
+    // Try to find the category in our categories list
+    const foundCategory = categories.find(cat => cat.name === category);
+    if (foundCategory) {
+      return foundCategory.name;
+    }
+    
+    // Fallback to the category name as is
+    return category;
   };
 
   // Obtenir le texte du bouton en fonction du statut
