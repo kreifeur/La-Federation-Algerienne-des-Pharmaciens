@@ -10,6 +10,7 @@ import ContentTab from "./components/ContentTab";
 import FinancesTab from "./components/FinancesTab";
 import ReportsTab from "./components/ReportsTab";
 import UserMenu from "./components/UserMenu";
+import GalleryTab from "./components/GalleryTab"
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
   const router = useRouter();
 
   // Vérifier que nous sommes côté client
@@ -150,12 +152,15 @@ export default function AdminDashboard() {
   }, []);
 
   const renderTabContent = () => {
+    
     const commonProps = {
       stats,
       recentActivities,
       pendingApprovals,
       showEventModal,
       setShowEventModal,
+      showGalleryModal,
+      setShowGalleryModal,
       setStats,
       isClient, // Passer isClient aux composants enfants
     };
@@ -163,6 +168,10 @@ export default function AdminDashboard() {
     switch (activeTab) {
       case "members":
         return <MembersTab {...commonProps} />;
+      case "gallery":
+        return <GalleryTab 
+        {...commonProps}
+      />
       case "content":
         return <ContentTab {...commonProps} />;
       case "events":
