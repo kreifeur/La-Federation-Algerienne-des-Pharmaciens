@@ -8,58 +8,51 @@ export default function GalleryTable({
   onRefresh, 
   onUpdateGalleryItem, 
   onDeleteGalleryItem,
-  onToggleGalleryItemStatus,
-  onToggleFeaturedStatus
+  onToggleFeaturedStatus,
+  onToggleMemberOnlyStatus
 }) {
   const [editingItem, setEditingItem] = useState(null);
   const [editFormData, setEditFormData] = useState({});
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedFileType, setSelectedFileType] = useState('all');
+  const [selectedAccess, setSelectedAccess] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('uploadDate');
+  const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
 
-  const categories = [
-    'all',
-    'logos',
-    'events',
-    'workshops',
-    'conferences',
-    'members',
-    'projects',
-    'other'
+  const fileTypeOptions = [
+    { value: 'all', label: 'Tous' },
+    { value: 'image', label: 'Images' },
+    { value: 'video', label: 'Vidéos' },
+    { value: 'document', label: 'Documents' },
+    { value: 'audio', label: 'Audio' }
   ];
 
-  const getCategoryLabel = (category) => {
+  const accessOptions = [
+    { value: 'all', label: 'Tous' },
+    { value: 'public', label: 'Public' },
+    { value: 'memberOnly', label: 'Membres uniquement' }
+  ];
+
+  const getFileTypeLabel = (fileType) => {
     const labels = {
-      logos: 'Logos',
-      events: 'Événements',
-      workshops: 'Ateliers',
-      conferences: 'Conférences',
-      members: 'Membres',
-      projects: 'Projets',
-      other: 'Autre',
-      all: 'Toutes'
+      image: 'Image',
+      video: 'Vidéo',
+      document: 'Document',
+      audio: 'Audio'
     };
-    return labels[category] || category;
+    return labels[fileType] || fileType;
   };
 
-  const getStatusLabel = (status) => {
-    const labels = {
-      draft: 'Brouillon',
-      published: 'Publié',
-      all: 'Tous'
-    };
-    return labels[status] || status;
+  const getAccessLabel = (isMemberOnly) => {
+    return isMemberOnly ? 'Membres uniquement' : 'Public';
   };
 
   const handleEditClick = (item) => {
     setEditingItem(item._id);
     setEditFormData({
       title: item.title,
-      description: item.description,
-      category: item.category,
-      tags: [...item.tags]
+      description: item.description || '',
+      tags: [...(item.tags || [])]
     });
   };
 
@@ -80,6 +73,7 @@ export default function GalleryTable({
   };
 
   const handleSaveEdit = async (itemId) => {
+    console.log(itemId);
     await onUpdateGalleryItem(itemId, editFormData);
     setEditingItem(null);
     setEditFormData({});
@@ -90,7 +84,7 @@ export default function GalleryTable({
     setEditFormData({});
   };
 
-  const handleImageUpdate = async (itemId, e) => {
+  const handleFileUpdate = async (itemId, e) => {
     const file = e.target.files[0];
     if (file) {
       await onUpdateGalleryItem(itemId, {}, file);
@@ -109,14 +103,15 @@ export default function GalleryTable({
   // Filter and sort gallery items
   const filteredAndSortedItems = galleryItems
     .filter(item => {
-      // Filter by category
-      if (selectedCategory !== 'all' && item.category !== selectedCategory) {
+      // Filter by file type
+      if (selectedFileType !== 'all' && item.fileType !== selectedFileType) {
         return false;
       }
       
-      // Filter by status
-      if (selectedStatus !== 'all' && item.status !== selectedStatus) {
-        return false;
+      // Filter by access
+      if (selectedAccess !== 'all') {
+        if (selectedAccess === 'memberOnly' && !item.isMemberOnly) return false;
+        if (selectedAccess === 'public' && item.isMemberOnly) return false;
       }
       
       // Filter by search term
@@ -124,8 +119,8 @@ export default function GalleryTable({
         const searchLower = searchTerm.toLowerCase();
         return (
           item.title.toLowerCase().includes(searchLower) ||
-          item.description.toLowerCase().includes(searchLower) ||
-          item.tags.some(tag => tag.toLowerCase().includes(searchLower))
+          (item.description && item.description.toLowerCase().includes(searchLower)) ||
+          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchLower)))
         );
       }
       
@@ -136,13 +131,13 @@ export default function GalleryTable({
       let bValue = b[sortBy];
       
       // Handle dates
-      if (sortBy === 'uploadDate') {
+      if (sortBy === 'createdAt' || sortBy === 'updatedAt') {
         aValue = new Date(aValue);
         bValue = new Date(bValue);
       }
       
       // Handle numbers
-      if (sortBy === 'viewCount') {
+      if (sortBy === 'views') {
         aValue = aValue || 0;
         bValue = bValue || 0;
       }
@@ -158,13 +153,10 @@ export default function GalleryTable({
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
-  };
-
-  const formatFileSize = (size) => {
-    if (!size) return '-';
-    return size;
   };
 
   if (loading) {
@@ -188,30 +180,32 @@ export default function GalleryTable({
         <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
           <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Catégorie:</label>
+              <label className="text-sm font-medium text-gray-700">Type:</label>
               <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                value={selectedFileType}
+                onChange={(e) => setSelectedFileType(e.target.value)}
                 className="p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
               >
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {getCategoryLabel(category)}
+                {fileTypeOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>
             </div>
             
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Statut:</label>
+              <label className="text-sm font-medium text-gray-700">Accès:</label>
               <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
+                value={selectedAccess}
+                onChange={(e) => setSelectedAccess(e.target.value)}
                 className="p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">Tous</option>
-                <option value="draft">Brouillon</option>
-                <option value="published">Publié</option>
+                {accessOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -249,7 +243,7 @@ export default function GalleryTable({
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Image
+                Prévisualisation
               </th>
               <th 
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -265,21 +259,18 @@ export default function GalleryTable({
                 </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Catégorie
+                Type
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Tags
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Infos
-              </th>
               <th 
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('uploadDate')}
+                onClick={() => handleSort('createdAt')}
               >
                 <div className="flex items-center">
-                  Date
-                  {sortBy === 'uploadDate' && (
+                  Date d'ajout
+                  {sortBy === 'createdAt' && (
                     <svg className={`ml-1 w-4 h-4 ${sortOrder === 'asc' ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -288,11 +279,11 @@ export default function GalleryTable({
               </th>
               <th 
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('viewCount')}
+                onClick={() => handleSort('views')}
               >
                 <div className="flex items-center">
                   Vues
-                  {sortBy === 'viewCount' && (
+                  {sortBy === 'views' && (
                     <svg className={`ml-1 w-4 h-4 ${sortOrder === 'asc' ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -300,7 +291,7 @@ export default function GalleryTable({
                 </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Statut
+                Accès
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -310,25 +301,43 @@ export default function GalleryTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredAndSortedItems.length === 0 ? (
               <tr>
-                <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
+                <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                   <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <p className="mt-2">Aucun élément trouvé dans la galerie</p>
+                  <p className="mt-2">Aucun média trouvé</p>
                 </td>
               </tr>
             ) : (
               filteredAndSortedItems.map((item) => (
                 <tr key={item._id} className="hover:bg-gray-50">
-                  {/* Image */}
+                  {/* Preview */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="relative group">
-                      <img
-                        src={item.imageUrl || '/placeholder-image.jpg'}
-                        alt={item.title}
-                        className="h-16 w-16 object-cover rounded-md border"
-                      />
-                      {editingItem === item._id ? (
+                      {item.fileType === 'image' ? (
+                        <img
+                          src={item.thumbnailUrl || item.fileUrl || '/placeholder-image.jpg'}
+                          alt={item.title}
+                          className="h-16 w-16 object-cover rounded-md border"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 flex items-center justify-center bg-gray-100 rounded-md border">
+                          {item.fileType === 'video' ? (
+                            <svg className="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          ) : item.fileType === 'audio' ? (
+                            <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          )}
+                        </div>
+                      )}
+                      {editingItem === item._id && item.fileType === 'image' ? (
                         <div className="absolute inset-0 bg-black bg-opacity-50 rounded-md flex items-center justify-center">
                           <label className="cursor-pointer text-white text-xs p-1 bg-blue-600 rounded hover:bg-blue-700">
                             Changer
@@ -336,7 +345,7 @@ export default function GalleryTable({
                               type="file"
                               accept="image/*"
                               className="sr-only"
-                              onChange={(e) => handleImageUpdate(item._id, e)}
+                              onChange={(e) => handleFileUpdate(item._id, e)}
                             />
                           </label>
                         </div>
@@ -353,46 +362,36 @@ export default function GalleryTable({
                           name="title"
                           value={editFormData.title}
                           onChange={handleEditInputChange}
-                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
                         />
                         <textarea
                           name="description"
                           value={editFormData.description}
                           onChange={handleEditInputChange}
                           rows="2"
-                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                     ) : (
                       <div>
                         <div className="font-medium text-gray-900">{item.title}</div>
                         <div className="text-sm text-gray-500 truncate max-w-xs">
-                          {item.description}
+                          {item.description || 'Pas de description'}
                         </div>
                       </div>
                     )}
                   </td>
 
-                  {/* Category */}
+                  {/* File Type */}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {editingItem === item._id ? (
-                      <select
-                        name="category"
-                        value={editFormData.category}
-                        onChange={handleEditInputChange}
-                        className="p-2 border border-gray-300 rounded-md text-sm"
-                      >
-                        {categories.filter(cat => cat !== 'all').map(category => (
-                          <option key={category} value={category}>
-                            {getCategoryLabel(category)}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {getCategoryLabel(item.category)}
-                      </span>
-                    )}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      item.fileType === 'image' ? 'bg-blue-100 text-blue-800' :
+                      item.fileType === 'video' ? 'bg-purple-100 text-purple-800' :
+                      item.fileType === 'document' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {getFileTypeLabel(item.fileType)}
+                    </span>
                   </td>
 
                   {/* Tags */}
@@ -402,7 +401,7 @@ export default function GalleryTable({
                         type="text"
                         value={editFormData.tags?.join(', ') || ''}
                         onChange={handleEditTagsChange}
-                        className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                        className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
                         placeholder="tag1, tag2, tag3"
                       />
                     ) : (
@@ -420,45 +419,34 @@ export default function GalleryTable({
                             +{item.tags.length - 3}
                           </span>
                         )}
+                        {(!item.tags || item.tags.length === 0) && (
+                          <span className="text-xs text-gray-400">Aucun tag</span>
+                        )}
                       </div>
                     )}
                   </td>
 
-                  {/* Info */}
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    <div className="space-y-1">
-                      <div>{formatFileSize(item.fileSize)}</div>
-                      <div>{item.dimensions || '-'}</div>
-                      <div className="flex items-center">
-                        <svg className={`w-4 h-4 mr-1 ${item.isFeatured ? 'text-yellow-500' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span>{item.isFeatured ? 'En vedette' : '-'}</span>
-                      </div>
-                    </div>
-                  </td>
-
                   {/* Date */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(item.uploadDate)}
+                    {formatDate(item.createdAt)}
                   </td>
 
                   {/* Views */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.viewCount?.toLocaleString() || 0}
+                    {item.views?.toLocaleString() || 0}
                   </td>
 
-                  {/* Status */}
+                  {/* Access Status */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
-                      onClick={() => onToggleGalleryItemStatus(item._id, item.status)}
+                      onClick={() => onToggleMemberOnlyStatus && onToggleMemberOnlyStatus(item._id, item.isMemberOnly)}
                       className={`px-3 py-1 text-xs font-medium rounded-full ${
-                        item.status === 'published'
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                        item.isMemberOnly
+                          ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+                          : 'bg-green-100 text-green-800 hover:bg-green-200'
                       }`}
                     >
-                      {item.status === 'published' ? 'Publié' : 'Brouillon'}
+                      {getAccessLabel(item.isMemberOnly)}
                     </button>
                   </td>
 
@@ -468,7 +456,8 @@ export default function GalleryTable({
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleSaveEdit(item._id)}
-                          className="text-green-600 hover:text-green-900"
+                          className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded"
+                          title="Enregistrer"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -476,7 +465,8 @@ export default function GalleryTable({
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
+                          title="Annuler"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -487,7 +477,7 @@ export default function GalleryTable({
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEditClick(item)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
                           title="Modifier"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -495,19 +485,23 @@ export default function GalleryTable({
                           </svg>
                         </button>
                         
-                        <button
-                          onClick={() => onToggleFeaturedStatus(item._id, item.isFeatured)}
-                          className={`${item.isFeatured ? 'text-yellow-600 hover:text-yellow-800' : 'text-gray-400 hover:text-gray-600'}`}
-                          title={item.isFeatured ? "Retirer des vedettes" : "Mettre en vedette"}
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        </button>
+                        {/* {onToggleFeaturedStatus && (
+                          <button
+                            onClick={() => onToggleFeaturedStatus(item._id, item.isFeatured)}
+                            className={`p-1 hover:bg-gray-50 rounded ${
+                              item.isFeatured ? 'text-yellow-600 hover:text-yellow-800' : 'text-gray-400 hover:text-gray-600'
+                            }`}
+                            title={item.isFeatured ? "Retirer des vedettes" : "Mettre en vedette"}
+                          >
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          </button>
+                        )} */}
                         
                         <button
                           onClick={() => onDeleteGalleryItem(item._id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
                           title="Supprimer"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -535,7 +529,7 @@ export default function GalleryTable({
             </div>
             <div className="text-sm text-gray-700">
               Trié par: <span className="font-medium">
-                {sortBy === 'title' ? 'Titre' : sortBy === 'uploadDate' ? 'Date' : 'Vues'}
+                {sortBy === 'title' ? 'Titre' : sortBy === 'createdAt' ? 'Date' : 'Vues'}
               </span>{' '}
               ({sortOrder === 'asc' ? 'Croissant' : 'Décroissant'})
             </div>

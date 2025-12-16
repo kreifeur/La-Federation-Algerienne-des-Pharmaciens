@@ -1,13 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import GalleryItemModal from './GalleryItemModal';
-import GalleryTable from './GalleryTable';
+import { useState, useEffect } from "react";
+import GalleryItemModal from "./GalleryItemModal";
+import GalleryTable from "./GalleryTable";
 
-export default function GalleryTab({ stats, showGalleryModal, setShowGalleryModal }) {
+export default function GalleryTab({
+  stats,
+  showGalleryModal,
+  setShowGalleryModal,
+}) {
   const [galleryItems, setGalleryItems] = useState([]);
   const [galleryLoading, setGalleryLoading] = useState(false);
-  const [galleryMessage, setGalleryMessage] = useState('');
+  const [galleryMessage, setGalleryMessage] = useState("");
 
   // Charger les éléments de la galerie
   useEffect(() => {
@@ -17,99 +21,94 @@ export default function GalleryTab({ stats, showGalleryModal, setShowGalleryModa
   const fetchGalleryItems = async () => {
     setGalleryLoading(true);
     try {
-      const authToken = localStorage.getItem('authToken');
-      
+      const authToken = localStorage.getItem("authToken");
+
       if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
+        throw new Error("Token d'authentification manquant");
       }
 
-      const response = await fetch('/api/gallery', {
-        method: 'GET',
+      const response = await fetch("/api/media", {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors du chargement de la galerie');
+        throw new Error("Erreur lors du chargement de la galerie");
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
-        setGalleryItems(result.data.galleryItems || []);
+        console.log(result);
+        setGalleryItems(result.data.media || []);
       } else {
-        throw new Error(result.message || 'Erreur lors du chargement de la galerie');
+        throw new Error(
+          result.message || "Erreur lors du chargement de la galerie"
+        );
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
-      // Fallback data
+      // Fallback data matching your API structure
       setGalleryItems([
         {
-          _id: '1',
-          title: 'Logo de l\'Association',
-          description: 'Logo officiel de notre association',
-          category: 'logos',
-          imageUrl: '/images/logo.jpg',
-          fileName: 'logo-association.jpg',
-          fileSize: '250 KB',
-          dimensions: '800x800',
-          isFeatured: true,
-          status: 'published',
-          uploadDate: '2024-01-15T10:30:00Z',
-          uploadedBy: 'Admin',
-          tags: ['logo', 'officiel', 'association'],
-          viewCount: 1245
+          _id: "1",
+          title: "Logo de l'Association",
+          description: "Logo officiel de notre association",
+          fileUrl: "/images/logo.jpg",
+          thumbnailUrl: "/images/logo-thumb.jpg",
+          fileType: "image",
+          isMemberOnly: false,
+          uploadedBy: "68dc23a5a4dc2af908c4f95f",
+          tags: ["logo", "officiel", "association"],
+          views: 1245,
+          createdAt: "2024-01-15T10:30:00Z",
+          updatedAt: "2024-01-15T10:30:00Z",
         },
         {
-          _id: '2',
-          title: 'Événement de Lancement',
-          description: 'Photos du dernier événement de lancement',
-          category: 'events',
-          imageUrl: '/images/event-launch.jpg',
-          fileName: 'lancement-2024.jpg',
-          fileSize: '1.2 MB',
-          dimensions: '1920x1080',
-          isFeatured: true,
-          status: 'published',
-          uploadDate: '2024-02-20T14:45:00Z',
-          uploadedBy: 'Admin',
-          tags: ['événement', 'lancement', 'réunion'],
-          viewCount: 876
+          _id: "2",
+          title: "Événement de Lancement",
+          description: "Photos du dernier événement de lancement",
+          fileUrl: "/images/event-launch.jpg",
+          thumbnailUrl: "/images/event-launch-thumb.jpg",
+          fileType: "image",
+          isMemberOnly: true,
+          uploadedBy: "68dc23a5a4dc2af908c4f95f",
+          tags: ["événement", "lancement", "réunion"],
+          views: 876,
+          createdAt: "2024-02-20T14:45:00Z",
+          updatedAt: "2024-02-20T14:45:00Z",
         },
         {
-          _id: '3',
-          title: 'Atelier de Formation',
-          description: 'Session de formation pour les membres',
-          category: 'workshops',
-          imageUrl: '/images/workshop.jpg',
-          fileName: 'atelier-formation.jpg',
-          fileSize: '980 KB',
-          dimensions: '1600x1200',
-          isFeatured: false,
-          status: 'published',
-          uploadDate: '2024-02-28T09:15:00Z',
-          uploadedBy: 'Modérateur',
-          tags: ['formation', 'atelier', 'membres'],
-          viewCount: 543
+          _id: "3",
+          title: "Atelier de Formation",
+          description: "Session de formation pour les membres",
+          fileUrl: "/images/workshop.jpg",
+          thumbnailUrl: "/images/workshop-thumb.jpg",
+          fileType: "image",
+          isMemberOnly: false,
+          uploadedBy: "68dc23a5a4dc2af908c4f95f",
+          tags: ["formation", "atelier", "membres"],
+          views: 543,
+          createdAt: "2024-02-28T09:15:00Z",
+          updatedAt: "2024-02-28T09:15:00Z",
         },
         {
-          _id: '4',
-          title: 'Conférence Annuelle',
-          description: 'Keynote speaker lors de la conférence',
-          category: 'conferences',
-          imageUrl: '/images/conference.jpg',
-          fileName: 'conference-2024.jpg',
-          fileSize: '1.5 MB',
-          dimensions: '2048x1365',
-          isFeatured: true,
-          status: 'draft',
-          uploadDate: '2024-03-05T16:20:00Z',
-          uploadedBy: 'Admin',
-          tags: ['conférence', 'keynote', 'annuelle'],
-          viewCount: 321
-        }
+          _id: "4",
+          title: "Conférence Annuelle",
+          description: "Keynote speaker lors de la conférence",
+          fileUrl: "/images/conference.jpg",
+          thumbnailUrl: "/images/conference-thumb.jpg",
+          fileType: "video",
+          isMemberOnly: false,
+          uploadedBy: "68dc23a5a4dc2af908c4f95f",
+          tags: ["conférence", "keynote", "annuelle"],
+          views: 321,
+          createdAt: "2024-03-05T16:20:00Z",
+          updatedAt: "2024-03-05T16:20:00Z",
+        },
       ]);
     } finally {
       setGalleryLoading(false);
@@ -117,44 +116,42 @@ export default function GalleryTab({ stats, showGalleryModal, setShowGalleryModa
   };
 
   const handleUpdateGalleryItem = async (itemId, updates, newImage = null) => {
-    try {
-      setGalleryMessage('');
-      const authToken = localStorage.getItem('authToken');
+  try {
+    setGalleryMessage("");
+    const authToken = localStorage.getItem("authToken");
 
-      if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
-      }
+    if (!authToken) {
+      throw new Error("Token d'authentification manquant");
+    }
 
-      const itemToUpdate = galleryItems.find(item => item._id === itemId);
-      if (!itemToUpdate) {
-        throw new Error('Élément non trouvé');
-      }
-
+    // Prepare the update data
+    const updateData = {};
+    
+    // Only include fields that are in the updates object
+    if (updates.title !== undefined) updateData.title = updates.title;
+    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.tags !== undefined) updateData.tags = updates.tags;
+    
+    // If newImage is provided, use FormData
+    if (newImage) {
       const formData = new FormData();
       
-      // Append all update fields
-      Object.keys(updates).forEach(key => {
-        if (key !== '_id' && key !== 'imageUrl' && key !== 'fileName' && key !== '__v') {
-          const value = updates[key];
-          if (value !== null && value !== undefined) {
-            if (key === 'tags' && Array.isArray(value)) {
-              formData.append(key, JSON.stringify(value));
-            } else {
-              formData.append(key, value.toString());
-            }
-          }
-        }
-      });
-
-      // Append new image if provided
-      if (newImage) {
-        formData.append('image', newImage);
+      // Append the update fields
+      if (updates.title !== undefined) formData.append("title", updates.title);
+      if (updates.description !== undefined) formData.append("description", updates.description);
+      if (updates.tags !== undefined && Array.isArray(updates.tags)) {
+        formData.append("tags", JSON.stringify(updates.tags));
       }
-
-      const response = await fetch(`/api/gallery/${itemId}`, {
-        method: 'PUT',
+      
+      // Append the new image file
+      formData.append("file", newImage);
+      
+      console.log("Updating media with file:", itemId);
+      
+      const response = await fetch(`/api/media/${itemId}`, {
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: formData,
       });
@@ -162,126 +159,176 @@ export default function GalleryTab({ stats, showGalleryModal, setShowGalleryModa
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Erreur lors de la mise à jour de l\'élément');
+        throw new Error(
+          result.message || "Erreur lors de la mise à jour de l'élément"
+        );
       }
 
       if (result.success) {
-        setGalleryMessage('✅ Élément mis à jour avec succès !');
+        setGalleryMessage("✅ Élément mis à jour avec succès !");
         fetchGalleryItems(); // Refresh the gallery items list
-        
+
         // Clear success message after 3 seconds
         setTimeout(() => {
-          setGalleryMessage('');
+          setGalleryMessage("");
         }, 3000);
       } else {
-        throw new Error(result.message || 'Erreur lors de la mise à jour de l\'élément');
+        throw new Error(
+          result.message || "Erreur lors de la mise à jour de l'élément"
+        );
       }
-    } catch (error) {
-      console.error('Erreur:', error);
-      setGalleryMessage(`❌ ${error.message}`);
-    }
-  };
+    } else {
+      // If no new image, use JSON for the update
+      console.log("Updating media metadata:", itemId, updateData);
+      
+      const response = await fetch(`/api/media/${itemId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(updateData),
+      });
 
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message || "Erreur lors de la mise à jour de l'élément"
+        );
+      }
+
+      if (result.success) {
+        setGalleryMessage("✅ Élément mis à jour avec succès !");
+        fetchGalleryItems(); // Refresh the gallery items list
+
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setGalleryMessage("");
+        }, 3000);
+      } else {
+        throw new Error(
+          result.message || "Erreur lors de la mise à jour de l'élément"
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Erreur:", error);
+    setGalleryMessage(`❌ ${error.message}`);
+  }
+};
   const handleDeleteGalleryItem = async (itemId) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.')) {
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible."
+      )
+    ) {
       return;
     }
 
     try {
-      setGalleryMessage('');
-      const authToken = localStorage.getItem('authToken');
+      setGalleryMessage("");
+      const authToken = localStorage.getItem("authToken");
 
       if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
+        throw new Error("Token d'authentification manquant");
       }
 
-      const response = await fetch(`/api/gallery/${itemId}`, {
-        method: 'DELETE',
+      const response = await fetch(`/api/media/${itemId}`, {
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${authToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Erreur lors de la suppression de l\'élément');
+        throw new Error(
+          result.message || "Erreur lors de la suppression de l'élément"
+        );
       }
 
       if (result.success) {
-        setGalleryMessage('✅ Élément supprimé avec succès !');
+        setGalleryMessage("✅ Élément supprimé avec succès !");
         fetchGalleryItems(); // Refresh the gallery items list
-        
+
         // Clear success message after 3 seconds
         setTimeout(() => {
-          setGalleryMessage('');
+          setGalleryMessage("");
         }, 3000);
       } else {
-        throw new Error(result.message || 'Erreur lors de la suppression de l\'élément');
+        throw new Error(
+          result.message || "Erreur lors de la suppression de l'élément"
+        );
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
     }
   };
 
-  const handleToggleGalleryItemStatus = async (itemId, currentStatus) => {
+  const handleToggleMemberOnlyStatus = async (itemId, currentStatus) => {
     try {
-      setGalleryMessage('');
-      const authToken = localStorage.getItem('authToken');
+      setGalleryMessage("");
+      const authToken = localStorage.getItem("authToken");
 
       if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
+        throw new Error("Token d'authentification manquant");
       }
 
-      const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+      const newStatus = !currentStatus;
 
-      const response = await fetch(`/api/gallery/${itemId}/status`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/media/${itemId}/member-only`, {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ isMemberOnly: newStatus }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Erreur lors du changement de statut');
+        throw new Error(result.message || "Erreur lors du changement d'accès");
       }
 
       if (result.success) {
-        setGalleryMessage(`✅ Élément ${newStatus === 'published' ? 'publié' : 'désactivé'} avec succès !`);
+        setGalleryMessage(
+          `✅ Élément ${
+            newStatus ? "réservé aux membres" : "rendu public"
+          } avec succès !`
+        );
         fetchGalleryItems(); // Refresh the gallery items list
-        
+
         // Clear success message after 3 seconds
         setTimeout(() => {
-          setGalleryMessage('');
+          setGalleryMessage("");
         }, 3000);
       } else {
-        throw new Error(result.message || 'Erreur lors du changement de statut');
+        throw new Error(result.message || "Erreur lors du changement d'accès");
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
     }
   };
 
   const handleToggleFeaturedStatus = async (itemId, currentFeatured) => {
     try {
-      setGalleryMessage('');
-      const authToken = localStorage.getItem('authToken');
+      setGalleryMessage("");
+      const authToken = localStorage.getItem("authToken");
 
       if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
+        throw new Error("Token d'authentification manquant");
       }
 
-      const response = await fetch(`/api/gallery/${itemId}/featured`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/media/${itemId}/featured`, {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({ isFeatured: !currentFeatured }),
       });
@@ -289,103 +336,180 @@ export default function GalleryTab({ stats, showGalleryModal, setShowGalleryModa
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Erreur lors du changement de statut vedette');
+        throw new Error(
+          result.message || "Erreur lors du changement de statut vedette"
+        );
       }
 
       if (result.success) {
-        setGalleryMessage(`✅ Élément ${!currentFeatured ? 'mis en vedette' : 'retiré des vedettes'} avec succès !`);
+        setGalleryMessage(
+          `✅ Élément ${
+            !currentFeatured ? "mis en vedette" : "retiré des vedettes"
+          } avec succès !`
+        );
         fetchGalleryItems(); // Refresh the gallery items list
-        
+
         // Clear success message after 3 seconds
         setTimeout(() => {
-          setGalleryMessage('');
+          setGalleryMessage("");
         }, 3000);
       } else {
-        throw new Error(result.message || 'Erreur lors du changement de statut vedette');
+        throw new Error(
+          result.message || "Erreur lors du changement de statut vedette"
+        );
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
     }
   };
 
-  // Calculate statistics
+  // Calculate statistics based on your data structure
   const totalItems = galleryItems.length;
-  const publishedItems = galleryItems.filter(item => item.status === 'published').length;
-  const featuredItems = galleryItems.filter(item => item.isFeatured).length;
-  const totalViews = galleryItems.reduce((sum, item) => sum + (item.viewCount || 0), 0);
+  const publicItems = galleryItems.filter((item) => !item.isMemberOnly).length;
+  const memberOnlyItems = galleryItems.filter(
+    (item) => item.isMemberOnly
+  ).length;
+  const totalViews = galleryItems.reduce(
+    (sum, item) => sum + (item.views || 0),
+    0
+  );
+
+  // Count by file type
+  const imageItems = galleryItems.filter(
+    (item) => item.fileType === "image"
+  ).length;
+  const videoItems = galleryItems.filter(
+    (item) => item.fileType === "video"
+  ).length;
+  const documentItems = galleryItems.filter(
+    (item) => item.fileType === "document"
+  ).length;
+  const audioItems = galleryItems.filter(
+    (item) => item.fileType === "audio"
+  ).length;
 
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Gestion de la Galerie</h2>
+          <h2 className="text-xl font-semibold">Gestion de la Galerie Média</h2>
           <button
             onClick={() => setShowGalleryModal(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
-            <span>Ajouter un élément</span>
+            <span>Ajouter un média</span>
           </button>
         </div>
 
         {galleryMessage && (
           <div
             className={`p-4 rounded-md mb-6 ${
-              galleryMessage.includes('✅')
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-red-50 text-red-700 border border-red-200'
+              galleryMessage.includes("✅")
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : "bg-red-50 text-red-700 border border-red-200"
             }`}
           >
             <div className="flex items-center">
-              {galleryMessage.includes('✅') ? (
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              {galleryMessage.includes("✅") ? (
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               ) : (
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               )}
               <span>{galleryMessage}</span>
             </div>
           </div>
         )}
-        
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h3 className="font-medium text-blue-800 text-sm">Total des Éléments</h3>
+            <h3 className="font-medium text-blue-800 text-sm">
+              Total des Médias
+            </h3>
             <p className="text-2xl font-bold text-blue-600">{totalItems}</p>
+            <div className="mt-2 text-xs text-blue-600">
+              <div className="flex justify-between">
+                <span>Images:</span>
+                <span>{imageItems}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Vidéos:</span>
+                <span>{videoItems}</span>
+              </div>
+            </div>
           </div>
           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-            <h3 className="font-medium text-green-800 text-sm">Publiés</h3>
-            <p className="text-2xl font-bold text-green-600">{publishedItems}</p>
-          </div>
-          <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <h3 className="font-medium text-yellow-800 text-sm">En Vedette</h3>
-            <p className="text-2xl font-bold text-yellow-600">{featuredItems}</p>
+            <h3 className="font-medium text-green-800 text-sm">Public</h3>
+            <p className="text-2xl font-bold text-green-600">{publicItems}</p>
           </div>
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <h3 className="font-medium text-purple-800 text-sm">Vues Totales</h3>
-            <p className="text-2xl font-bold text-purple-600">{totalViews}</p>
+            <h3 className="font-medium text-purple-800 text-sm">
+              Membres uniquement
+            </h3>
+            <p className="text-2xl font-bold text-purple-600">
+              {memberOnlyItems}
+            </p>
+          </div>
+          <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+            <h3 className="font-medium text-orange-800 text-sm">
+              Vues Totales
+            </h3>
+            <p className="text-2xl font-bold text-orange-600">
+              {totalViews.toLocaleString()}
+            </p>
           </div>
         </div>
       </div>
 
-      <GalleryTable 
-        galleryItems={galleryItems} 
-        loading={galleryLoading} 
+      <GalleryTable
+        galleryItems={galleryItems}
+        loading={galleryLoading}
         onRefresh={fetchGalleryItems}
         onUpdateGalleryItem={handleUpdateGalleryItem}
         onDeleteGalleryItem={handleDeleteGalleryItem}
-        onToggleGalleryItemStatus={handleToggleGalleryItemStatus}
+        onToggleMemberOnlyStatus={handleToggleMemberOnlyStatus}
         onToggleFeaturedStatus={handleToggleFeaturedStatus}
       />
 
       {showGalleryModal && (
-        <GalleryItemModal 
+        <GalleryItemModal
           onClose={() => setShowGalleryModal(false)}
           onItemCreated={() => {
             fetchGalleryItems();
