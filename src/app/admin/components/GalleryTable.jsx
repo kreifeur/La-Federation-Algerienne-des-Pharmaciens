@@ -18,6 +18,7 @@ export default function GalleryTable({
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [uploadingFile, setUploadingFile] = useState(null);
 
   const fileTypeOptions = [
     { value: 'all', label: 'Tous' },
@@ -73,7 +74,6 @@ export default function GalleryTable({
   };
 
   const handleSaveEdit = async (itemId) => {
-    console.log(itemId);
     await onUpdateGalleryItem(itemId, editFormData);
     setEditingItem(null);
     setEditFormData({});
@@ -86,9 +86,73 @@ export default function GalleryTable({
 
   const handleFileUpdate = async (itemId, e) => {
     const file = e.target.files[0];
-    if (file) {
-      await onUpdateGalleryItem(itemId, {}, file);
+    if (!file) return;
+
+    setUploadingFile(itemId);
+
+    try {
+      // First upload to Cloudinary
+      const cloudinaryFormData = new FormData();
+      cloudinaryFormData.append("file", file);
+      cloudinaryFormData.append("upload_preset", "FAPKREIFEUR");
+      cloudinaryFormData.append("cloud_name", "dlr034bds");
+
+      const cloudinaryResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/dlr034bds/upload`,
+        {
+          method: "POST",
+          body: cloudinaryFormData,
+        }
+      );
+
+      const cloudinaryResult = await cloudinaryResponse.json();
+
+      if (!cloudinaryResponse.ok) {
+        throw new Error(
+          cloudinaryResult.error?.message || "Erreur lors de l'upload Cloudinary"
+        );
+      }
+
+      const cloudinaryUrl = cloudinaryResult.secure_url;
+
+      // Prepare update data with new Cloudinary URL
+      const updateData = {
+        imgURL: cloudinaryUrl,
+        fileUrl: cloudinaryUrl,
+        thumbnailUrl: cloudinaryUrl,
+        // Detect file type
+        fileType: getFileTypeFromFile(file)
+      };
+
+      // Call the parent update function
+      await onUpdateGalleryItem(itemId, updateData);
+      
+      // Refresh the list
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du fichier:", error);
+      alert(`Erreur: ${error.message}`);
+    } finally {
+      setUploadingFile(null);
     }
+  };
+
+  const getFileTypeFromFile = (file) => {
+    const type = file.type.split("/")[0];
+    if (type === "image" || type === "video") {
+      return type;
+    } else if (
+      file.type.includes("pdf") ||
+      file.type.includes("document") ||
+      file.type.includes("text")
+    ) {
+      return "document";
+    } else if (file.type.includes("audio")) {
+      return "audio";
+    }
+    return "document";
   };
 
   const handleSort = (column) => {
@@ -314,7 +378,15 @@ export default function GalleryTable({
                   {/* Preview */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="relative group">
-                      {item.fileType === 'image' ? (
+                      {uploadingFile === item._id ? (
+                        <div className="h-16 w-16 flex flex-col items-center justify-center bg-gray-100 rounded-md border">
+                          <svg className="animate-spin h-6 w-6 text-blue-600 mb-1" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          <span className="text-xs text-gray-600">Upload...</span>
+                        </div>
+                      ) : item.fileType === 'image' ? (
                         <img
                           src={item.thumbnailUrl || item.fileUrl || '/placeholder-image.jpg'}
                           alt={item.title}
@@ -337,15 +409,16 @@ export default function GalleryTable({
                           )}
                         </div>
                       )}
-                      {editingItem === item._id && item.fileType === 'image' ? (
+                      {editingItem === item._id && !uploadingFile ? (
                         <div className="absolute inset-0 bg-black bg-opacity-50 rounded-md flex items-center justify-center">
                           <label className="cursor-pointer text-white text-xs p-1 bg-blue-600 rounded hover:bg-blue-700">
                             Changer
                             <input
                               type="file"
-                              accept="image/*"
+                              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.ppt,.pptx"
                               className="sr-only"
                               onChange={(e) => handleFileUpdate(item._id, e)}
+                              disabled={uploadingFile === item._id}
                             />
                           </label>
                         </div>
@@ -363,6 +436,7 @@ export default function GalleryTable({
                           value={editFormData.title}
                           onChange={handleEditInputChange}
                           className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                          disabled={uploadingFile === item._id}
                         />
                         <textarea
                           name="description"
@@ -370,6 +444,7 @@ export default function GalleryTable({
                           onChange={handleEditInputChange}
                           rows="2"
                           className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                          disabled={uploadingFile === item._id}
                         />
                       </div>
                     ) : (
@@ -403,6 +478,7 @@ export default function GalleryTable({
                         onChange={handleEditTagsChange}
                         className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
                         placeholder="tag1, tag2, tag3"
+                        disabled={uploadingFile === item._id}
                       />
                     ) : (
                       <div className="flex flex-wrap gap-1">
@@ -444,7 +520,8 @@ export default function GalleryTable({
                         item.isMemberOnly
                           ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
                           : 'bg-green-100 text-green-800 hover:bg-green-200'
-                      }`}
+                      } ${editingItem === item._id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={editingItem === item._id}
                     >
                       {getAccessLabel(item.isMemberOnly)}
                     </button>
@@ -456,8 +533,9 @@ export default function GalleryTable({
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleSaveEdit(item._id)}
-                          className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded"
+                          className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Enregistrer"
+                          disabled={uploadingFile === item._id}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -465,8 +543,9 @@ export default function GalleryTable({
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
+                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Annuler"
+                          disabled={uploadingFile === item._id}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -477,32 +556,20 @@ export default function GalleryTable({
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEditClick(item)}
-                          className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
+                          className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Modifier"
+                          disabled={uploadingFile === item._id}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
                         
-                        {/* {onToggleFeaturedStatus && (
-                          <button
-                            onClick={() => onToggleFeaturedStatus(item._id, item.isFeatured)}
-                            className={`p-1 hover:bg-gray-50 rounded ${
-                              item.isFeatured ? 'text-yellow-600 hover:text-yellow-800' : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                            title={item.isFeatured ? "Retirer des vedettes" : "Mettre en vedette"}
-                          >
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          </button>
-                        )} */}
-                        
                         <button
                           onClick={() => onDeleteGalleryItem(item._id)}
-                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
+                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Supprimer"
+                          disabled={uploadingFile === item._id}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

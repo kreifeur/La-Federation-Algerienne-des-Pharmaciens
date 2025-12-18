@@ -41,7 +41,7 @@ export default function GalleryTab({
       const result = await response.json();
 
       if (result.success) {
-        console.log(result);
+        console.log("Gallery items loaded:", result.data?.media?.length || 0);
         setGalleryItems(result.data.media || []);
       } else {
         throw new Error(
@@ -51,14 +51,15 @@ export default function GalleryTab({
     } catch (error) {
       console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
-      // Fallback data matching your API structure
+      // Fallback data with Cloudinary URLs
       setGalleryItems([
         {
           _id: "1",
           title: "Logo de l'Association",
           description: "Logo officiel de notre association",
-          fileUrl: "/images/logo.jpg",
-          thumbnailUrl: "/images/logo-thumb.jpg",
+          imgURL: "https://res.cloudinary.com/dlr034bds/image/upload/v1/logo.jpg",
+          fileUrl: "https://res.cloudinary.com/dlr034bds/image/upload/v1/logo.jpg",
+          thumbnailUrl: "https://res.cloudinary.com/dlr034bds/image/upload/w_300,h_300,c_fill/v1/logo.jpg",
           fileType: "image",
           isMemberOnly: false,
           uploadedBy: "68dc23a5a4dc2af908c4f95f",
@@ -71,8 +72,9 @@ export default function GalleryTab({
           _id: "2",
           title: "Événement de Lancement",
           description: "Photos du dernier événement de lancement",
-          fileUrl: "/images/event-launch.jpg",
-          thumbnailUrl: "/images/event-launch-thumb.jpg",
+          imgURL: "https://res.cloudinary.com/dlr034bds/image/upload/v1/event-launch.jpg",
+          fileUrl: "https://res.cloudinary.com/dlr034bds/image/upload/v1/event-launch.jpg",
+          thumbnailUrl: "https://res.cloudinary.com/dlr034bds/image/upload/w_300,h_300,c_fill/v1/event-launch.jpg",
           fileType: "image",
           isMemberOnly: true,
           uploadedBy: "68dc23a5a4dc2af908c4f95f",
@@ -85,8 +87,9 @@ export default function GalleryTab({
           _id: "3",
           title: "Atelier de Formation",
           description: "Session de formation pour les membres",
-          fileUrl: "/images/workshop.jpg",
-          thumbnailUrl: "/images/workshop-thumb.jpg",
+          imgURL: "https://res.cloudinary.com/dlr034bds/image/upload/v1/workshop.jpg",
+          fileUrl: "https://res.cloudinary.com/dlr034bds/image/upload/v1/workshop.jpg",
+          thumbnailUrl: "https://res.cloudinary.com/dlr034bds/image/upload/w_300,h_300,c_fill/v1/workshop.jpg",
           fileType: "image",
           isMemberOnly: false,
           uploadedBy: "68dc23a5a4dc2af908c4f95f",
@@ -99,8 +102,9 @@ export default function GalleryTab({
           _id: "4",
           title: "Conférence Annuelle",
           description: "Keynote speaker lors de la conférence",
-          fileUrl: "/images/conference.jpg",
-          thumbnailUrl: "/images/conference-thumb.jpg",
+          imgURL: "https://res.cloudinary.com/dlr034bds/video/upload/v1/conference.mp4",
+          fileUrl: "https://res.cloudinary.com/dlr034bds/video/upload/v1/conference.mp4",
+          thumbnailUrl: "https://res.cloudinary.com/dlr034bds/video/upload/w_300,h_300,c_fill/v1/conference.jpg",
           fileType: "video",
           isMemberOnly: false,
           uploadedBy: "68dc23a5a4dc2af908c4f95f",
@@ -115,108 +119,119 @@ export default function GalleryTab({
     }
   };
 
-  const handleUpdateGalleryItem = async (itemId, updates, newImage = null) => {
-  try {
-    setGalleryMessage("");
-    const authToken = localStorage.getItem("authToken");
+  const handleUpdateGalleryItem = async (itemId, updates) => {
+    try {
+      setGalleryMessage("");
+      const authToken = localStorage.getItem("authToken");
 
-    if (!authToken) {
-      throw new Error("Token d'authentification manquant");
-    }
-
-    // Prepare the update data
-    const updateData = {};
-    
-    // Only include fields that are in the updates object
-    if (updates.title !== undefined) updateData.title = updates.title;
-    if (updates.description !== undefined) updateData.description = updates.description;
-    if (updates.tags !== undefined) updateData.tags = updates.tags;
-    
-    // If newImage is provided, use FormData
-    if (newImage) {
-      const formData = new FormData();
-      
-      // Append the update fields
-      if (updates.title !== undefined) formData.append("title", updates.title);
-      if (updates.description !== undefined) formData.append("description", updates.description);
-      if (updates.tags !== undefined && Array.isArray(updates.tags)) {
-        formData.append("tags", JSON.stringify(updates.tags));
-      }
-      
-      // Append the new image file
-      formData.append("file", newImage);
-      
-      console.log("Updating media with file:", itemId);
-      
-      const response = await fetch(`/api/media/${itemId}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.message || "Erreur lors de la mise à jour de l'élément"
-        );
+      if (!authToken) {
+        throw new Error("Token d'authentification manquant");
       }
 
-      if (result.success) {
-        setGalleryMessage("✅ Élément mis à jour avec succès !");
-        fetchGalleryItems(); // Refresh the gallery items list
+      console.log("Updating item:", itemId, updates);
 
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-          setGalleryMessage("");
-        }, 3000);
+      // Check if this is a file update (contains Cloudinary URLs)
+      const isFileUpdate = updates.imgURL && updates.fileUrl && updates.thumbnailUrl;
+      
+      if (isFileUpdate) {
+        // For file updates - the GalleryTable has already uploaded to Cloudinary
+        // updates should contain: imgURL, fileUrl, thumbnailUrl, fileType
+        const updateData = {
+          imgURL: updates.imgURL,
+          fileUrl: updates.fileUrl,
+          thumbnailUrl: updates.thumbnailUrl,
+          fileType: updates.fileType
+        };
+
+        console.log("Updating file URLs:", updateData);
+        
+        const response = await fetch(`/api/media/${itemId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(updateData),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message || "Erreur lors de la mise à jour du fichier"
+          );
+        }
+
+        if (result.success) {
+          setGalleryMessage("✅ Fichier mis à jour avec succès !");
+          // Refresh the gallery items list after a short delay
+          setTimeout(() => {
+            fetchGalleryItems();
+          }, 1000);
+
+          // Clear success message after 3 seconds
+          setTimeout(() => {
+            setGalleryMessage("");
+          }, 3000);
+          
+          return result;
+        } else {
+          throw new Error(
+            result.message || "Erreur lors de la mise à jour du fichier"
+          );
+        }
       } else {
-        throw new Error(
-          result.message || "Erreur lors de la mise à jour de l'élément"
-        );
+        // For metadata updates (title, description, tags)
+        const updateData = {};
+        
+        // Only include fields that are in the updates object
+        if (updates.title !== undefined) updateData.title = updates.title;
+        if (updates.description !== undefined) updateData.description = updates.description;
+        if (updates.tags !== undefined) updateData.tags = updates.tags;
+        
+        console.log("Updating metadata:", itemId, updateData);
+        
+        const response = await fetch(`/api/media/${itemId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(updateData),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message || "Erreur lors de la mise à jour de l'élément"
+          );
+        }
+
+        if (result.success) {
+          setGalleryMessage("✅ Élément mis à jour avec succès !");
+          // Refresh the gallery items list
+          fetchGalleryItems();
+
+          // Clear success message after 3 seconds
+          setTimeout(() => {
+            setGalleryMessage("");
+          }, 3000);
+          
+          return result;
+        } else {
+          throw new Error(
+            result.message || "Erreur lors de la mise à jour de l'élément"
+          );
+        }
       }
-    } else {
-      // If no new image, use JSON for the update
-      console.log("Updating media metadata:", itemId, updateData);
-      
-      const response = await fetch(`/api/media/${itemId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.message || "Erreur lors de la mise à jour de l'élément"
-        );
-      }
-
-      if (result.success) {
-        setGalleryMessage("✅ Élément mis à jour avec succès !");
-        fetchGalleryItems(); // Refresh the gallery items list
-
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-          setGalleryMessage("");
-        }, 3000);
-      } else {
-        throw new Error(
-          result.message || "Erreur lors de la mise à jour de l'élément"
-        );
-      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      setGalleryMessage(`❌ ${error.message}`);
+      throw error; // Re-throw to handle in GalleryTable
     }
-  } catch (error) {
-    console.error("Erreur:", error);
-    setGalleryMessage(`❌ ${error.message}`);
-  }
-};
+  };
+
   const handleDeleteGalleryItem = async (itemId) => {
     if (
       !confirm(
@@ -472,6 +487,14 @@ export default function GalleryTab({
               <div className="flex justify-between">
                 <span>Vidéos:</span>
                 <span>{videoItems}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Documents:</span>
+                <span>{documentItems}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Audio:</span>
+                <span>{audioItems}</span>
               </div>
             </div>
           </div>

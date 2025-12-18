@@ -15,6 +15,7 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
   const [tagInput, setTagInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -196,6 +197,7 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
 
     setLoading(true);
     setError("");
+    setUploadProgress(0);
 
     try {
       const authToken = localStorage.getItem("authToken");
@@ -204,44 +206,79 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
         throw new Error("Token d'authentification manquant");
       }
 
-      const formDataToSend = new FormData();
+      // First upload to Cloudinary
+      let cloudinaryUrl = "";
+      if (file) {
+        const cloudinaryFormData = new FormData();
+        cloudinaryFormData.append("file", file);
+        cloudinaryFormData.append("upload_preset", "FAPKREIFEUR");
+        cloudinaryFormData.append("cloud_name", "dlr034bds");
 
-      // Append form data
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("description", formData.description || "");
-      formDataToSend.append("isMemberOnly", formData.isMemberOnly.toString());
+        // Use XMLHttpRequest for progress tracking
+        cloudinaryUrl = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          
+          xhr.upload.addEventListener("progress", (event) => {
+            if (event.lengthComputable) {
+              const progress = Math.round((event.loaded * 100) / event.total);
+              setUploadProgress(progress);
+            }
+          });
 
-      // Append tags as JSON array
-      if (formData.tags.length > 0) {
-        formDataToSend.append("tags", JSON.stringify(formData.tags));
+          xhr.addEventListener("load", () => {
+            if (xhr.status === 200) {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response.secure_url);
+            } else {
+              try {
+                const errorResponse = JSON.parse(xhr.responseText);
+                reject(new Error(errorResponse.error?.message || "Upload échoué"));
+              } catch {
+                reject(new Error("Upload échoué"));
+              }
+            }
+          });
+
+          xhr.addEventListener("error", () => {
+            reject(new Error("Erreur réseau lors de l'upload"));
+          });
+
+          xhr.addEventListener("abort", () => {
+            reject(new Error("Upload annulé"));
+          });
+
+          xhr.open("POST", `https://api.cloudinary.com/v1_1/dlr034bds/upload`);
+          xhr.send(cloudinaryFormData);
+        });
       }
 
-      // Append file
-      formDataToSend.append("file", "file");
+      // Prepare data for your API
+      const mediaData = {
+        title: formData.title,
+        description: formData.description || "",
+        isMemberOnly: formData.isMemberOnly,
+        tags: formData.tags.length > 0 ? formData.tags : [],
+      };
 
-      // Add fileType if we can determine it
-      if (fileType) {
-        formDataToSend.append("fileType", fileType);
+      // Use Cloudinary URL
+      if (cloudinaryUrl) {
+        mediaData.imgURL = cloudinaryUrl;
+        mediaData.fileUrl = cloudinaryUrl;
+        mediaData.thumbnailUrl = cloudinaryUrl;
       }
 
-      console.log(formDataToSend);
+      // Add file type
+      mediaData.fileType = fileType;
+
+      console.log("Sending media data:", mediaData);
 
       const response = await fetch("/api/media", {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify({
-          title: formData.title,
-          imgURL: "hey.png",
-          description: "An example image uploaded by admin",
-          fileUrl: "https://example.com/uploads/photo.jpg",
-          fileType: "image",
-          thumbnailUrl: "https://example.com/uploads/thumb.jpg",
-          isMemberOnly: false,
-          tags: ["skincare", "workshop"],
-        }),
-        /* body: formDataToSend, */
+        body: JSON.stringify(mediaData),
       });
 
       const result = await response.json();
@@ -280,6 +317,7 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
       setError(`❌ ${error.message}`);
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -294,6 +332,7 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              disabled={loading}
             >
               <svg
                 className="w-5 h-5"
@@ -329,6 +368,29 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                 </svg>
                 <span>{error}</span>
               </div>
+            </div>
+          )}
+
+          {/* Upload Progress Indicator */}
+          {loading && uploadProgress > 0 && uploadProgress < 100 && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-blue-700">
+                  Upload en cours vers Cloudinary...
+                </span>
+                <span className="text-sm font-bold text-blue-600">
+                  {uploadProgress}%
+                </span>
+              </div>
+              <div className="w-full bg-blue-100 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                Ne fermez pas cette fenêtre pendant l'upload
+              </p>
             </div>
           )}
 
@@ -372,7 +434,8 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                               setFilePreview(null);
                               setFileType("");
                             }}
-                            className="text-sm text-red-600 hover:text-red-800"
+                            className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={loading}
                           >
                             Supprimer le fichier
                           </button>
@@ -395,7 +458,7 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                           <div className="flex flex-col items-center text-sm text-gray-600">
                             <label
                               htmlFor="file-upload"
-                              className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
+                              className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <span>Télécharger un fichier</span>
                               <input
@@ -406,12 +469,16 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                                 className="sr-only"
                                 onChange={handleFileChange}
                                 required
+                                disabled={loading}
                               />
                             </label>
                             <p className="mt-1">ou glisser-déposer</p>
                           </div>
                           <p className="text-xs text-gray-500">
                             Images, vidéos, audio, documents jusqu'à 10MB
+                          </p>
+                          <p className="text-xs text-blue-600 mt-1">
+                            Le fichier sera uploadé sur Cloudinary
                           </p>
                         </>
                       )}
@@ -435,6 +502,11 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                         ? "Document"
                         : fileType}
                     </p>
+                    {fileType === "image" && (
+                      <p className="text-xs text-blue-600 mt-1">
+                        Image sera optimisée par Cloudinary
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -445,7 +517,8 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                       name="isMemberOnly"
                       checked={formData.isMemberOnly}
                       onChange={handleInputChange}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={loading}
                     />
                     <div>
                       <span className="text-sm font-medium text-gray-700">
@@ -470,9 +543,10 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="Titre du média"
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -485,8 +559,9 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                     value={formData.description}
                     onChange={handleInputChange}
                     rows="4"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="Description du média (optionnel)"
+                    disabled={loading}
                   />
                 </div>
 
@@ -500,13 +575,15 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="Ajouter un tag (ex: événement, logo, conférence)"
+                      disabled={loading}
                     />
                     <button
                       type="button"
                       onClick={handleAddTag}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={loading}
                     >
                       Ajouter
                     </button>
@@ -523,7 +600,8 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                           <button
                             type="button"
                             onClick={() => handleRemoveTag(tag)}
-                            className="ml-2 text-blue-600 hover:text-blue-800 text-lg"
+                            className="ml-2 text-blue-600 hover:text-blue-800 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={loading}
                           >
                             ×
                           </button>
@@ -543,7 +621,7 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
                 Annuler
@@ -574,7 +652,11 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    <span>Envoi en cours...</span>
+                    <span>
+                      {uploadProgress > 0 && uploadProgress < 100
+                        ? "Upload..."
+                        : "Envoi en cours..."}
+                    </span>
                   </>
                 ) : (
                   <>

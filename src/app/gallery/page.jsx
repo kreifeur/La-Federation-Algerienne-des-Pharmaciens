@@ -1,140 +1,170 @@
 // pages/gallery.js
 "use client"
-import { useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Head from 'next/head';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function Gallery() {
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [galleryMessage, setGalleryMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
 
-  // Données de la galerie
-  const galleryItems = [
-    {
-      id: 1,
-      title: "Congrès Annuel 2023",
-      category: "events",
-      type: "image",
-      src: "/placeholder-congres.jpg",
-      description: "Notre congrès annuel réunissant les experts du secteur de la cosmétologie"
-    },
-    {
-      id: 2,
-      title: "Atelier Formulation",
-      category: "workshops",
-      type: "image",
-      src: "/placeholder-atelier.jpg",
-      description: "Session pratique sur la formulation des produits cosmétiques"
-    },
-    {
-      id: 3,
-      title: "Remise des Prix",
-      category: "events",
-      type: "image",
-      src: "/placeholder-prix.jpg",
-      description: "Cérémonie de remise des prix d'excellence en cosmétologie"
-    },
-    {
-      id: 4,
-      title: "Visite Laboratoire",
-      category: "visits",
-      type: "image",
-      src: "/placeholder-lab.jpg",
-      description: "Visite exclusive d'un laboratoire de recherche cosmétique"
-    },
-    {
-      id: 5,
-      title: "Formulation Naturelle",
-      category: "workshops",
-      type: "video",
-      src: "/placeholder-video-1.jpg",
-      videoId: "abc123",
-      description: "Apprentissage des techniques de formulation naturelle"
-    },
-    {
-      id: 6,
-      title: "Salon Professionnel",
-      category: "events",
-      type: "image",
-      src: "/placeholder-salon.jpg",
-      description: "Notre stand au salon international de la cosmétique"
-    },
-    {
-      id: 7,
-      title: "Interview Expert",
-      category: "videos",
-      type: "video",
-      src: "/placeholder-video-2.jpg",
-      videoId: "def456",
-      description: "Interview d'un expert en réglementation cosmétique"
-    },
-    {
-      id: 8,
-      title: "Usine Partenaire",
-      category: "visits",
-      type: "image",
-      src: "/placeholder-usine.jpg",
-      description: "Visite d'une usine de production cosmétique partenaire"
-    },
-    {
-      id: 9,
-      title: "Techniques Avancées",
-      category: "workshops",
-      type: "video",
-      src: "/placeholder-video-3.jpg",
-      videoId: "ghi789",
-      description: "Formation sur les techniques de production avancées"
-    },
-    {
-      id: 10,
-      title: "Cocktail Réseautage",
-      category: "events",
-      type: "image",
-      src: "/placeholder-cocktail.jpg",
-      description: "Événement de réseautage entre membres de l'association"
-    },
-    {
-      id: 11,
-      title: "Documentaire Innovation",
-      category: "videos",
-      type: "video",
-      src: "/placeholder-video-4.jpg",
-      videoId: "jkl012",
-      description: "Documentaire sur les innovations en cosmétologie"
-    },
-    {
-      id: 12,
-      title: "Centre R&D",
-      category: "visits",
-      type: "image",
-      src: "/placeholder-recherche.jpg",
-      description: "Visite d'un centre de recherche et développement"
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        // Removed unused authToken variable
+        const response = await fetch("/api/media", {
+          method: "GET",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          console.log("Gallery items loaded:", result.data?.media?.length || 0);
+          
+          // Process the data to ensure consistent structure
+          const processedItems = (result.data.media || []).map(item => {
+            // Detect file type from URL or tags
+            let detectedType = 'image'; // Default to image
+            
+            // Check URL extension for type detection
+            if (item.url) {
+              const url = item.url.toLowerCase();
+              if (url.includes('.mp4') || url.includes('.webm') || url.includes('.mov') || url.includes('.avi')) {
+                detectedType = 'video';
+              }
+            }
+            
+            // Check if item has type property or infer from tags
+            if (item.type) {
+              detectedType = item.type;
+            } else if (item.tags && item.tags.includes('video')) {
+              detectedType = 'video';
+            }
+            
+            // Extract or infer category from tags
+            let category = 'events'; // Default category
+            
+            if (item.tags) {
+              const tags = item.tags;
+              if (tags.includes('workshop') || tags.includes('atelier')) {
+                category = 'workshops';
+              } else if (tags.includes('visit') || tags.includes('visite')) {
+                category = 'visits';
+              } else if (tags.includes('video') || tags.includes('vidéo')) {
+                category = 'videos';
+              } else if (tags.includes('event') || tags.includes('événement')) {
+                category = 'events';
+              }
+            }
+            
+            return {
+              ...item,
+              id: item._id || item.id || `item-${Math.random().toString(36).substr(2, 9)}`,
+              type: detectedType,
+              category: item.category || category,
+              thumbnailUrl: item.thumbnailUrl || item.url || `/gallery-placeholder.jpg`,
+              tags: item.tags || '',
+              title: item.title || `Événement ${Math.floor(Math.random() * 100) + 1}`,
+              description: item.description || '',
+            };
+          });
+          
+          setGalleryItems(processedItems);
+          setGalleryMessage('');
+        } else {
+          throw new Error(
+            result.message || "Erreur lors du chargement de la galerie"
+          );
+        }
+      } catch (error) {
+        console.error("Erreur:", error);
+        setGalleryMessage(`❌ ${error.message}`);
+        
+        // Fallback data with consistent structure
+        const fallbackItems = Array.from({ length: 6 }, (_, i) => ({
+          id: `fallback-${i + 1}`,
+          title: `Événement ${i + 1}`,
+          description: `Description de l'événement ${i + 1}`,
+          thumbnailUrl: `/gallery-${(i % 3) + 1}.jpg`,
+          url: `/gallery-${(i % 3) + 1}.jpg`,
+          type: i === 5 ? 'video' : 'image', // Make last item a video
+          category: ['events', 'workshops', 'visits', 'events', 'workshops', 'videos'][i],
+          tags: ['événement', 'atelier', 'visite', 'événement', 'atelier', 'vidéo'][i],
+          createdAt: new Date().toISOString(),
+        }));
+        setGalleryItems(fallbackItems);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGallery();
+  }, []);
+
+  // Generate filters dynamically from available categories
+  const filters = useMemo(() => {
+    const categorySet = new Set(['all']);
+    
+    // Collect unique categories from gallery items
+    galleryItems.forEach(item => {
+      if (item.category) {
+        categorySet.add(item.category);
+      }
+    });
+    
+    // Map categories to display names
+    const categoryLabels = {
+      'all': 'Tous',
+      'events': 'Événements',
+      'workshops': 'Ateliers',
+      'visits': 'Visites',
+      'videos': 'Vidéos',
+    };
+    
+    return Array.from(categorySet).map(category => ({
+      key: category,
+      label: categoryLabels[category] || category.charAt(0).toUpperCase() + category.slice(1)
+    }));
+  }, [galleryItems]);
+
+  // Filter items based on active filter
+  const filteredItems = useMemo(() => {
+    if (activeFilter === 'all') {
+      return galleryItems;
     }
-  ];
+    
+    return galleryItems.filter(item => {
+      // Check both category and tags for filtering
+      const matchesCategory = item.category === activeFilter;
+      const matchesTags = item.tags && item.tags.includes(activeFilter.toLowerCase());
+      return matchesCategory || matchesTags;
+    });
+  }, [galleryItems, activeFilter]);
 
-  // Filtres disponibles
-  const filters = [
-    { key: 'all', label: 'Tous' },
-    { key: 'events', label: 'Événements' },
-    { key: 'workshops', label: 'Ateliers' },
-    { key: 'visits', label: 'Visites' },
-    { key: 'videos', label: 'Vidéos' }
-  ];
-
-  // Filtrer les éléments selon la catégorie active
-  const filteredItems = activeFilter === 'all' 
-    ? galleryItems 
-    : galleryItems.filter(item => item.category === activeFilter);
-
-  // Ouvrir la lightbox
+  // Open lightbox
   const openLightbox = (index) => {
     setCurrentImage(index);
     setLightboxOpen(true);
   };
 
-  // Navigation dans la lightbox
+  // Close lightbox
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+  };
+
+  // Lightbox navigation
   const goToPrevious = () => {
     setCurrentImage(prev => (prev === 0 ? filteredItems.length - 1 : prev - 1));
   };
@@ -142,6 +172,30 @@ export default function Gallery() {
   const goToNext = () => {
     setCurrentImage(prev => (prev === filteredItems.length - 1 ? 0 : prev + 1));
   };
+
+  // Handle keyboard navigation in lightbox
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!lightboxOpen) return;
+      
+      switch(e.key) {
+        case 'Escape':
+          closeLightbox();
+          break;
+        case 'ArrowLeft':
+          goToPrevious();
+          break;
+        case 'ArrowRight':
+          goToNext();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen]);
 
   return (
     <div>
@@ -160,85 +214,123 @@ export default function Gallery() {
             Découvrez les moments forts de nos événements, ateliers et rencontres à travers notre galerie photos et vidéos.
           </p>
 
-          {/* Filtres */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
-            {filters.map(filter => (
-              <button
-                key={filter.key}
-                onClick={() => setActiveFilter(filter.key)}
-                className={`px-4 py-2 rounded-full transition-colors ${
-                  activeFilter === filter.key
-                    ? 'bg-blue-800 text-white'
-                    : 'bg-white text-blue-800 hover:bg-blue-100'
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Galerie */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredItems.map((item, index) => (
-              <div 
-                key={item.id} 
-                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => openLightbox(index)}
-              >
-                <div className="relative aspect-square">
-                  <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-500">Image {item.id}</span>
-                  </div>
-                  {item.type === 'video' && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-blue-800 bg-opacity-70 rounded-full p-3">
-                        <span className="text-white text-2xl">▶</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-blue-800 mb-1">{item.title}</h3>
-                  <p className="text-sm text-gray-600">{item.description}</p>
-                  <div className="flex justify-between items-center mt-3">
-                    <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full capitalize">
-                      {item.category}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {item.type === 'video' ? 'Vidéo' : 'Photo'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredItems.length === 0 && (
+          {/* Loading state */}
+          {isLoading && (
             <div className="text-center py-12">
-              <p className="text-gray-600">Aucun élément trouvé dans cette catégorie.</p>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800"></div>
+              <p className="mt-4 text-gray-600">Chargement de la galerie...</p>
             </div>
           )}
 
+          {/* Error message */}
+          {galleryMessage && !isLoading && (
+            <div className="text-center py-4 px-4 bg-red-50 border border-red-200 rounded-lg mb-6">
+              <p className="text-red-600">{galleryMessage}</p>
+            </div>
+          )}
+
+          {/* Filtres */}
+          {!isLoading && (
+            <div className="flex flex-wrap justify-center gap-3 mb-12">
+              {filters.map(filter => (
+                <button
+                  key={filter.key}
+                  onClick={() => setActiveFilter(filter.key)}
+                  className={`px-4 py-2 rounded-full transition-colors ${
+                    activeFilter === filter.key
+                      ? 'bg-blue-800 text-white'
+                      : 'bg-white text-blue-800 hover:bg-blue-100'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Galerie */}
+          {!isLoading && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredItems.map((item, index) => (
+                  <div 
+                    key={item.id} 
+                    className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer group"
+                    onClick={() => openLightbox(index)}
+                  >
+                    <div className="relative aspect-square">
+                      <div 
+                        style={{ 
+                          backgroundImage: `url(${item.thumbnailUrl})`,
+                          backgroundPosition: 'center',
+                          backgroundSize: 'cover',
+                        }} 
+                        className="absolute inset-0 bg-gray-200 flex items-center justify-center"
+                      >
+                        {!item.thumbnailUrl && (
+                          <span className="text-gray-500">Image non disponible</span>
+                        )}
+                      </div>
+                      {item.type === 'video' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-opacity">
+                          <div className="bg-blue-800 bg-opacity-70 rounded-full p-3 group-hover:scale-110 transition-transform">
+                            <span className="text-white text-2xl">▶</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-blue-800 mb-1 truncate">{item.title}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-2 h-10">{item.description}</p>
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full capitalize truncate max-w-[120px]">
+                          {item.tags || 'Non catégorisé'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {item.type === 'video' ? 'Vidéo' : 'Photo'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {filteredItems.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">Aucun élément trouvé dans cette catégorie.</p>
+                </div>
+              )}
+            </>
+          )}
+
           {/* Lightbox */}
-          {lightboxOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+          {lightboxOpen && filteredItems[currentImage] && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) closeLightbox();
+              }}
+            >
               <button 
-                onClick={() => setLightboxOpen(false)}
-                className="absolute top-4 right-4 text-white text-3xl z-10"
+                onClick={closeLightbox}
+                className="absolute top-4 right-4 text-white text-3xl z-10 hover:text-gray-300 transition-colors"
+                aria-label="Fermer"
               >
                 &times;
               </button>
 
               <button 
                 onClick={goToPrevious}
-                className="absolute left-4 text-white text-3xl z-10 bg-blue-800 bg-opacity-50 rounded-full h-10 w-10 flex items-center justify-center"
+                className="absolute left-4 text-white text-3xl z-10 bg-blue-800 bg-opacity-50 rounded-full h-10 w-10 flex items-center justify-center hover:bg-opacity-70 transition-all"
+                aria-label="Précédent"
               >
                 ‹
               </button>
 
               <button 
                 onClick={goToNext}
-                className="absolute right-4 text-white text-3xl z-10 bg-blue-800 bg-opacity-50 rounded-full h-10 w-10 flex items-center justify-center"
+                className="absolute right-4 text-white text-3xl z-10 bg-blue-800 bg-opacity-50 rounded-full h-10 w-10 flex items-center justify-center hover:bg-opacity-70 transition-all"
+                aria-label="Suivant"
               >
                 ›
               </button>
@@ -246,22 +338,45 @@ export default function Gallery() {
               <div className="max-w-4xl w-full max-h-full">
                 {filteredItems[currentImage].type === 'image' ? (
                   <div className="bg-gray-800 rounded-lg overflow-hidden">
-                    <div className="aspect-video bg-gray-700 flex items-center justify-center">
-                      <span className="text-white">Image {filteredItems[currentImage].id}</span>
+                    <div className="aspect-video bg-gray-700 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={filteredItems[currentImage].url || filteredItems[currentImage].thumbnailUrl} 
+                        alt={filteredItems[currentImage].title}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/gallery-placeholder.jpg';
+                        }}
+                      />
                     </div>
                     <div className="p-6 text-white">
                       <h3 className="text-xl font-semibold mb-2">{filteredItems[currentImage].title}</h3>
                       <p>{filteredItems[currentImage].description}</p>
+                      <div className="flex items-center gap-2 mt-4">
+                        <span className="text-sm px-2 py-1 bg-blue-600 rounded-full">
+                          {filteredItems[currentImage].tags}
+                        </span>
+                        <span className="text-sm text-gray-400">
+                          {new Date(filteredItems[currentImage].createdAt).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ) : (
                   <div className="bg-gray-800 rounded-lg overflow-hidden">
-                    <div className="aspect-video bg-gray-700 flex items-center justify-center">
+                    <div className="aspect-video bg-black flex items-center justify-center">
                       <div className="text-center">
-                        <div className="bg-blue-800 bg-opacity-70 rounded-full p-4 inline-block mb-4">
+                        <div className="bg-blue-800 bg-opacity-70 rounded-full p-4 inline-block mb-4 cursor-pointer hover:bg-opacity-90 transition-all">
                           <span className="text-white text-4xl">▶</span>
                         </div>
-                        <p className="text-white">Vidéo {filteredItems[currentImage].videoId}</p>
+                        <p className="text-white mb-4">Lecture de la vidéo</p>
+                        <video 
+                          src={filteredItems[currentImage].url} 
+                          controls
+                          className="max-w-full max-h-[60vh]"
+                        >
+                          Votre navigateur ne supporte pas la lecture de vidéos.
+                        </video>
                       </div>
                     </div>
                     <div className="p-6 text-white">
@@ -273,7 +388,7 @@ export default function Gallery() {
               </div>
 
               <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-                <div className="bg-black bg-opacity-50 rounded-full px-4 py-2">
+                <div className="bg-black bg-opacity-50 rounded-full px-4 py-2 backdrop-blur-sm">
                   <p className="text-white text-sm">
                     {currentImage + 1} / {filteredItems.length}
                   </p>
@@ -282,6 +397,7 @@ export default function Gallery() {
             </div>
           )}
 
+          {/* Rest of the UI remains unchanged */}
           {/* Section Témoignages */}
           <section className="mt-16">
             <h2 className="text-3xl font-bold text-center text-blue-800 mb-12">Ils témoignent</h2>

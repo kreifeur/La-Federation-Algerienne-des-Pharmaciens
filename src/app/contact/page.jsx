@@ -228,7 +228,8 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">Adresse</h3>
-                      <p className="text-gray-700">123 Rue de la Cosmétique<br />75000 Paris, France</p>
+                      <p className="text-gray-700">Chez pharma invest , 
+Centre commercial et des affaires ElQods cheraga , Alger .</p>
                     </div>
                   </div>
                   
@@ -248,7 +249,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">Email</h3>
-                      <p className="text-gray-700">contact@association-cosmetologie.fr</p>
+                      <p className="text-gray-700">contact@La Fédération Algérienne des Pharmaciens.dz</p>
                     </div>
                   </div>
                   
@@ -258,7 +259,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">Horaires</h3>
-                      <p className="text-gray-700">Lundi - Vendredi: 9h - 17h<br />Week-end: Fermé</p>
+                      <p className="text-gray-700">Dimanche - Jeudi: 9h - 17h<br />Week-end: Fermé</p>
                     </div>
                   </div>
                 </div>
