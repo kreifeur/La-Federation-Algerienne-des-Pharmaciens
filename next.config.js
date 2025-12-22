@@ -6,7 +6,8 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://fapharmacie.dz/api/:path*',
+        /**destination: 'http://fapharmacie.dz/api/:path*',**/
+        destination: 'https://backend-association-cosm-tologie.vercel.app/api/:path*',
       },
     ];
   },
