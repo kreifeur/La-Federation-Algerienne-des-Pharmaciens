@@ -1,15 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  reactStrictMode: true,
+
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        /* destination: 'http://fapharmacie.dz/api/:path*', */
-        destination: 'https://backend-association-cosm-tologie.vercel.app/api/:path*',
+        destination: 'http://fapharmacie.dz/api/:path*',
       },
     ];
   },
+
   async headers() {
     return [
       {
@@ -20,8 +21,8 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
       },
-    ]
+    ];
   },
-}
+};
 
 module.exports = nextConfig;

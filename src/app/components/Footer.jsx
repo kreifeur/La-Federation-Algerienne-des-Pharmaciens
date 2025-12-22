@@ -44,8 +44,8 @@ const Footer = () => {
             <address className="not-italic">
               <p className="mb-2">Chez pharma invest , 
 Centre commercial et des affaires ElQods cheraga , Alger .</p>
-              <p className="mb-2">Tél: +33 1 23 45 67 89</p>
-              <p className="mb-2">Email: contact@La Fédération Algérienne des Pharmaciens.dz</p>
+              <p className="mb-2">Tél: +213 550 51 07</p>
+              <p className="mb-2">Email: dr.y.zebbiche@gmail.com</p>
             </address>
           </div>
         </div>

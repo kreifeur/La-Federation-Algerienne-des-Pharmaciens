@@ -239,7 +239,7 @@ Centre commercial et des affaires ElQods cheraga , Alger .</p>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">Téléphone</h3>
-                      <p className="text-gray-700">+33 1 23 45 67 89</p>
+                      <p className="text-gray-700">+213 550 51 07</p>
                     </div>
                   </div>
                   
@@ -249,7 +249,7 @@ Centre commercial et des affaires ElQods cheraga , Alger .</p>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">Email</h3>
-                      <p className="text-gray-700">contact@La Fédération Algérienne des Pharmaciens.dz</p>
+                      <p className="text-gray-700">dr.y.zebbiche@gmail.com</p>
                     </div>
                   </div>
                   
