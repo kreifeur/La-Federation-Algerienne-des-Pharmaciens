@@ -5,8 +5,8 @@ export default function AdminTabs({ activeTab, setActiveTab }) {
     { id: 'content', name: 'Blogs' },
     { id: 'gallery', name: 'Galerie' }, // Added Gallery tab
     { id: 'events', name: 'Événements' },
-    { id: 'finances', name: 'Finances' },
-    { id: 'reports', name: 'Rapports' }
+    /* { id: 'finances', name: 'Finances' },
+    { id: 'reports', name: 'Rapports' } */
   ];
 
   return (

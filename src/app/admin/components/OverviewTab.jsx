@@ -1,8 +1,41 @@
-import Link from 'next/link';
-import StatCard from './StatCard';
-import ActivityItem from './ActivityItem';
+"use client";
+import Link from "next/link";
+import StatCard from "./StatCard";
+import ArticleCreationModal from "./ArticleCreationModal";
+import MemberCreationModal from "./MemberCreationModal";
+import EventCreationModal from "./EventCreationModal";
+import GalleryItemModal from "./GalleryItemModal";
+import { useState, useEffect } from "react";
 
-export default function OverviewTab({ stats, recentActivities, pendingApprovals, setShowEventModal }) {
+export default function OverviewTab({
+  stats,
+  recentActivities,
+  pendingApprovals,
+}) {
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
+
+  const handleItemCreated = () => {
+    // Rechargez la galerie ou effectuez une action après création
+    console.log("Média ajouté à la galerie avec succès");
+  };
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [showArticleModal, setShowArticleModal] = useState(false);
+  const handleArticleCreated = () => {
+    // Rechargez les articles ou effectuez une action après création
+    console.log("Article créé avec succès");
+  };
+  const [showMemberModal, setShowMemberModal] = useState(false);
+
+  const handleMemberCreated = () => {
+    // Rechargez la liste des membres ou effectuez une action après création
+    console.log("Membre créé avec succès");
+  };
+
+  const handleEventCreated = () => {
+    // Rechargez la liste des événements ou effectuez une action après création
+    console.log("Événement créé avec succès");
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -33,7 +66,7 @@ export default function OverviewTab({ stats, recentActivities, pendingApprovals,
         />
       </div>
 
-    {/* approbation and activities */}
+      {/* approbation and activities */}
 
       {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-white rounded-lg shadow">
@@ -94,36 +127,81 @@ export default function OverviewTab({ stats, recentActivities, pendingApprovals,
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link href="/dashboard/admin/users/new" className="p-4 border border-gray-200 rounded-lg text-center hover:border-blue-300 hover:bg-blue-50 transition-colors">
+            <div
+              onClick={() => setShowMemberModal(true)}
+              className="p-4 border border-gray-200 rounded-lg text-center hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer"
+            >
               <div className="p-2 bg-blue-100 rounded-lg inline-block mb-2">
                 <span className="text-xl">👥</span>
               </div>
-              <p className="text-sm font-medium text-gray-900">Ajouter un membre</p>
-            </Link>
+              <p className="text-sm font-medium text-gray-900">
+                Ajouter un membre
+              </p>
+            </div>
 
-            <button 
+            {showMemberModal && (
+              <MemberCreationModal
+                onClose={() => setShowMemberModal(false)}
+                onMemberCreated={handleMemberCreated}
+              />
+            )}
+
+            <button
               onClick={() => setShowEventModal(true)}
-              className="p-4 border border-gray-200 rounded-lg text-center hover:border-green-300 hover:bg-green-50 transition-colors"
+              className="p-4 border border-gray-200 rounded-lg text-center hover:border-green-300 hover:bg-green-50 transition-colors cursor-pointer w-full"
             >
               <div className="p-2 bg-green-100 rounded-lg inline-block mb-2">
                 <span className="text-xl">🎪</span>
               </div>
-              <p className="text-sm font-medium text-gray-900">Créer un événement</p>
+              <p className="text-sm font-medium text-gray-900">
+                Créer un événement
+              </p>
             </button>
 
-            <Link href="/dashboard/admin/content/new" className="p-4 border border-gray-200 rounded-lg text-center hover:border-purple-300 hover:bg-purple-50 transition-colors">
+            {showEventModal && (
+              <EventCreationModal
+                onClose={() => setShowEventModal(false)}
+                onEventCreated={handleEventCreated}
+              />
+            )}
+
+            <div
+              onClick={() => setShowGalleryModal(true)}
+              className="p-4 border border-gray-200 rounded-lg text-center hover:border-purple-300 hover:bg-purple-50 transition-colors cursor-pointer"
+            >
               <div className="p-2 bg-purple-100 rounded-lg inline-block mb-2">
+                <span className="text-xl">📷</span>
+              </div>
+              <p className="text-sm font-medium text-gray-900">
+                Ajouter un nouveau média
+              </p>
+            </div>
+
+            {showGalleryModal && (
+              <GalleryItemModal
+                onClose={() => setShowGalleryModal(false)}
+                onItemCreated={handleItemCreated}
+              />
+            )}
+
+            <button
+              onClick={() => setShowArticleModal(true)}
+              className="p-4 border border-gray-200 rounded-lg text-center hover:border-orange-300 hover:bg-orange-50 transition-colors w-full"
+            >
+              <div className="p-2 bg-orange-100 rounded-lg inline-block mb-2">
                 <span className="text-xl">📝</span>
               </div>
-              <p className="text-sm font-medium text-gray-900">Publier du contenu</p>
-            </Link>
+              <p className="text-sm font-medium text-gray-900">
+                Créer un article
+              </p>
+            </button>
 
-            <Link href="/dashboard/admin/reports" className="p-4 border border-gray-200 rounded-lg text-center hover:border-orange-300 hover:bg-orange-50 transition-colors">
-              <div className="p-2 bg-orange-100 rounded-lg inline-block mb-2">
-                <span className="text-xl">📊</span>
-              </div>
-              <p className="text-sm font-medium text-gray-900">Générer un rapport</p>
-            </Link>
+            {showArticleModal && (
+              <ArticleCreationModal
+                onClose={() => setShowArticleModal(false)}
+                onArticleCreated={handleArticleCreated}
+              />
+            )}
           </div>
         </div>
       </div>
