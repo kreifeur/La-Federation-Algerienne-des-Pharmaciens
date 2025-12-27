@@ -254,12 +254,12 @@ const Header = () => {
           <div className="flex flex-col space-y-3 mt-4">
             {isConnected ? (
               <div className="space-y-3">
-                <div className="flex items-center space-x-2 px-3 py-2 bg-blue-700 rounded-md">
+                <Link href="/dashboard" className="flex items-center space-x-2 px-3 py-2 bg-blue-700 rounded-md">
                   <div className="w-6 h-6 bg-white text-blue-800 rounded-full flex items-center justify-center text-xs font-medium">
                     {getInitials(userName)}
                   </div>
                   <span className="text-sm truncate">{userName}</span>
-                </div>
+                </Link>
                 <Link
                   href="/dashboard/profile"
                   className="block px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors"
