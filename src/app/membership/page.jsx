@@ -242,60 +242,32 @@ export default function Membership() {
     setIsProcessing(true);
 
     try {
-      // 1. Register user
-      const registerData = {
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
-        profession: formData.profession,
-        company: formData.company,
-        address: formData.address,
-        city: formData.city,
-        postalCode: formData.postalCode,
-        country: formData.country,
-        membershipType: formData.membershipType,
-        plan: selectedPlan,
-        recaptchaToken: recaptchaToken,
-        professionalStatus: "professional",
-        domainOfInterest: ["skincare", "research"], // skincare, makeup, research, teaching, business, technology
-        biography: "",
-      };
+  // 1. Register user
+  const registerResponse = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(registerData),
+  });
 
-      console.log(registerData);
+  const registerResult = await registerResponse.json();
 
-      const registerResponse = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registerData),
-      });
+  if (!registerResult.success) {
+    throw new Error(registerResult.message || "Erreur d'enregistrement");
+  }
 
-      const registerResult = await registerResponse.json();
-      console.log(registerResult);
+  // 2. Payment
+  const res = await axios.get('http://localhost:3000/api/pay');
 
-      if (!registerResult.success) {
-        throw new Error(registerResult.message || "Erreur d'enregistrement");
-      }
+  if (res.data.formUrl) {
+    window.location.href = res.data.formUrl;
+  }
 
-          try {
-      const res = await axios.get('/api/pay')
-
-      console.log('SATIM RESPONSE:', res.data)
-
-      if (res.data.formUrl) {
-        window.location.href = res.data.formUrl
-      }
-    } catch (err) {
-      console.error(err)
-    }
-
-    } catch (error) {
-      console.error("Payment error:", error);
-      alert(`Erreur: ${error.message}`);
-      setIsProcessing(false);
-      recaptchaRef.current?.reset();
-    }
+} catch (error) {
+  console.error("Payment error:", error);
+  alert(`Erreur: ${error.message}`);
+  setIsProcessing(false);
+  recaptchaRef.current?.reset();
+}
   };
 
   const handleSubmit = async (e) => {
