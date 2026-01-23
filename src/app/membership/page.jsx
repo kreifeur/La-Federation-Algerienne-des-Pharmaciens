@@ -256,6 +256,7 @@ export default function Membership() {
       });
 
       const registerResult = await registerResponse.json();
+      console.log(registerResult);
 
       if (!registerResult.success) {
         throw new Error(registerResult.message || "Erreur d'enregistrement");
