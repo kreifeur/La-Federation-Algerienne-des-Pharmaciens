@@ -1,4 +1,4 @@
-// app/payment/failed/page.js
+/* // app/payment/failed/page.js
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -62,4 +62,4 @@ export default function PaymentFailed() {
       </div>
     </div>
   );
-}
+} */
