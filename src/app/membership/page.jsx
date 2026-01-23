@@ -278,41 +278,18 @@ export default function Membership() {
         throw new Error(registerResult.message || "Erreur d'enregistrement");
       }
 
-      const userId = registerResult.data.user?.id || `guest_${Date.now()}`;
+          try {
+      const res = await axios.get('/api/pay')
 
-      // 2. Initialize payment
-      const orderNumber = `MEM-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)
-        .toUpperCase()}`;
+      console.log('SATIM RESPONSE:', res.data)
 
-      const paymentResponse = await axios.get('/api/pay')
-
-      console.log(paymentResult);
-
-      const paymentResult = await paymentResponse.json();
-
-      if (paymentResult.errorCode) {
-        throw new Error(paymentResult.errorMessage || "Erreur de paiement");
+      if (res.data.formUrl) {
+        window.location.href = res.data.formUrl
       }
+    } catch (err) {
+      console.error(err)
+    }
 
-      // 3. Redirect to SATIM payment page
-      if (paymentResult.formUrl) {
-        // Store order info for verification
-        localStorage.setItem(
-          "currentOrder",
-          JSON.stringify({
-            orderNumber: orderNumber,
-            amount: getPlanAmount(),
-            plan: selectedPlan,
-            userId: userId,
-          })
-        );
-
-        window.location.href = paymentResult.formUrl;
-      } else {
-        throw new Error("URL de paiement non disponible");
-      }
     } catch (error) {
       console.error("Payment error:", error);
       alert(`Erreur: ${error.message}`);
