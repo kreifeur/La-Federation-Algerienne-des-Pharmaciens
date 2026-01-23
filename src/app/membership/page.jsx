@@ -21,6 +21,7 @@ export default function Membership() {
     postalCode: "",
     country: "Algerie",
     membershipType: "individual",
+    professionalStatus: "professional",
     domainOfInterest: ["skincare", "research"], // skincare, makeup, research, teaching, business, technology
     biography : "",
     plan: "individual",
