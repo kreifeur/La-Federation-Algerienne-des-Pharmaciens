@@ -3,7 +3,9 @@ import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import axios from 'axios'
 import ReCAPTCHA from "react-google-recaptcha";
+
 
 export default function Membership() {
   const [selectedPlan, setSelectedPlan] = useState("individual");
@@ -284,19 +286,7 @@ export default function Membership() {
         .substr(2, 9)
         .toUpperCase()}`;
 
-      const paymentResponse = await fetch("http://localhost:3000/api/pay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: getPlanAmount(),
-          planName: selectedPlan,
-          planTitle: membershipPlans.find((p) => p.id === selectedPlan)?.title,
-          userId: userId,
-          userEmail: formData.email,
-          userName: `${formData.firstName} ${formData.lastName}`,
-          orderNumber: orderNumber,
-        }),
-      });
+      const paymentResponse = await axios.get('/api/pay')
 
       const paymentResult = await paymentResponse.json();
 
