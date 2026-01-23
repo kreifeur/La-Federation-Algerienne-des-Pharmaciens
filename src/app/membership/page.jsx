@@ -247,6 +247,8 @@ export default function Membership() {
         recaptchaToken: recaptchaToken
       };
 
+      console.log(registerData);
+
       const registerResponse = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
