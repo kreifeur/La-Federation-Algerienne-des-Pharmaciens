@@ -2,19 +2,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 
 export default function PaymentSuccess() {
-  const searchParams = useSearchParams();
   const [paymentData, setPaymentData] = useState(null);
 
   useEffect(() => {
     // Extract payment data from URL parameters
-    const data = {
-      orderId: searchParams.get('orderId'),
-      amount: searchParams.get('amount'),
-      currency: searchParams.get('currency'),
-      status: searchParams.get('status'),
+      const data = {
+      orderId: 'orderId',
+      errorCode: 'errorCode',
+      errorMessage: 'errorMessage',
       timestamp: new Date().toLocaleString()
     };
     

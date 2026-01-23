@@ -1,18 +1,17 @@
-/* // app/payment/failed/page.js
+// app/payment/failed/page.js
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+
 
 export default function PaymentFailed() {
-  const searchParams = useSearchParams();
   const [errorData, setErrorData] = useState(null);
 
   useEffect(() => {
     const data = {
-      orderId: searchParams.get('orderId'),
-      errorCode: searchParams.get('errorCode'),
-      errorMessage: searchParams.get('errorMessage'),
+      orderId: 'orderId',
+      errorCode: 'errorCode',
+      errorMessage: 'errorMessage',
       timestamp: new Date().toLocaleString()
     };
     
@@ -62,4 +61,4 @@ export default function PaymentFailed() {
       </div>
     </div>
   );
-} */
+}
