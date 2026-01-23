@@ -1,12 +1,12 @@
-// pages/membership.js
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Membership() {
-  const [selectedPlan, setSelectedPlan] = useState("annual");
+  const [selectedPlan, setSelectedPlan] = useState("individual");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -21,13 +21,30 @@ export default function Membership() {
     postalCode: "",
     country: "Algerie",
     membershipType: "individual",
-    plan: "annual",
+    plan: "individual",
     acceptTerms: false,
   });
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const [sslVerified, setSslVerified] = useState(false);
+
+  const recaptchaRef = useRef(null);
+
+  useEffect(() => {
+    // Check if page is loaded with HTTPS
+    if (window.location.protocol === 'https:') {
+      setSslVerified(true);
+    }
+  }, []);
+
+  const handleRecaptchaChange = (token) => {
+    setRecaptchaToken(token);
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -35,8 +52,7 @@ export default function Membership() {
       ...prevState,
       [name]: type === "checkbox" ? checked : value,
     }));
-
-    // Effacer l'erreur quand l'utilisateur commence à taper
+    
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -50,63 +66,136 @@ export default function Membership() {
     }));
   };
 
+  const membershipPlans = [
+    {
+      id: "student",
+      title: "Étudiant",
+      price: "2500",
+      period: "an",
+      description: "Pour les étudiants en pharmacie",
+      features: [
+        "Accès aux événements à tarif réduit",
+        "Newsletter mensuelle",
+        "Accès aux ressources en ligne",
+        "Certificat de membre étudiant",
+      ],
+      recommended: false,
+    },
+    {
+      id: "individual",
+      title: "Individuel",
+      price: "8000",
+      period: "an",
+      description: "Pour les pharmaciens indépendants",
+      features: [
+        "Accès à tous les événements",
+        "Formations à tarif préférentiel",
+        "Accès à l'annuaire des membres",
+        "Revue trimestrielle",
+        "Certificat de membre",
+      ],
+      recommended: true,
+    },
+    {
+      id: "corporate",
+      title: "Entreprise",
+      price: "35000",
+      period: "an",
+      description: "Pour les pharmacies et institutions",
+      features: [
+        "5 membres inclus",
+        "Accès VIP aux événements",
+        "Espace exposant privilégié",
+        "Logo sur notre site web",
+        "Newsletter personnalisée",
+        "Support prioritaire",
+      ],
+      recommended: false,
+    },
+  ];
+
+  const benefits = [
+    {
+      icon: "🎓",
+      title: "Formations continues",
+      description: "Accédez à des formations de qualité pour développer vos compétences",
+    },
+    {
+      icon: "🤝",
+      title: "Réseau professionnel",
+      description: "Échangez avec des experts du secteur et développez votre réseau",
+    },
+    {
+      icon: "📅",
+      title: "Événements exclusifs",
+      description: "Participez à nos congrès, séminaires et rencontres professionnelles",
+    },
+    {
+      icon: "📚",
+      title: "Ressources documentaires",
+      description: "Accédez à notre bibliothèque de ressources et publications exclusives",
+    },
+    {
+      icon: "🔍",
+      title: "Veille réglementaire",
+      description: "Restez informé des dernières évolutions réglementaires du secteur",
+    },
+    {
+      icon: "🏆",
+      title: "Reconnaissance professionnelle",
+      description: "Bénéficiez d'une certification reconnue dans le secteur",
+    },
+  ];
+
+  const getPlanAmount = () => {
+    const plan = membershipPlans.find(p => p.id === selectedPlan);
+    return plan ? parseInt(plan.price) : 8000;
+  };
+
   const validateStep1 = () => {
     const newErrors = {};
-
     if (!formData.firstName.trim()) {
       newErrors.firstName = "Le prénom est requis";
     }
-
     if (!formData.lastName.trim()) {
       newErrors.lastName = "Le nom est requis";
     }
-
     if (!formData.email.trim()) {
       newErrors.email = "L'email est requis";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "L'email n'est pas valide";
     }
-
     if (!formData.password) {
       newErrors.password = "Le mot de passe est requis";
     } else if (formData.password.length < 6) {
-      newErrors.password =
-        "Le mot de passe doit contenir au moins 6 caractères";
+      newErrors.password = "Le mot de passe doit contenir au moins 6 caractères";
     }
-
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Veuillez confirmer votre mot de passe";
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Les mots de passe ne correspondent pas";
     }
-
     if (!formData.profession.trim()) {
       newErrors.profession = "La profession est requise";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const validateStep2 = () => {
     const newErrors = {};
-
     if (!formData.address.trim()) {
       newErrors.address = "L'adresse est requise";
     }
-
     if (!formData.postalCode.trim()) {
       newErrors.postalCode = "Le code postal est requis";
     }
-
     if (!formData.city.trim()) {
       newErrors.city = "La ville est requise";
     }
-
     if (!formData.acceptTerms) {
       newErrors.acceptTerms = "Vous devez accepter les conditions générales";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -125,231 +214,164 @@ export default function Membership() {
     setCurrentStep((prev) => prev - 1);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handlePayment = async () => {
+    if (!recaptchaToken) {
+      alert("Veuillez compléter le CAPTCHA pour continuer");
+      recaptchaRef.current?.reset();
+      return;
+    }
+
+    if (!sslVerified) {
+      alert("Veuillez utiliser une connexion sécurisée (HTTPS) pour procéder au paiement");
+      return;
+    }
+
+    setIsProcessing(true);
 
     try {
-      // Validation finale
-      if (!formData.acceptTerms) {
-        alert("Veuillez accepter les conditions générales");
-        return;
-      }
-
-      // Préparer les données pour l'endpoint /auth/register
+      // 1. Register user
       const registerData = {
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
-        professionalStatus: "professional",
-        domainOfInterest: ["skincare", "research"],
+        profession: formData.profession,
+        company: formData.company,
+        address: formData.address,
+        city: formData.city,
+        postalCode: formData.postalCode,
+        country: formData.country,
+        membershipType: formData.membershipType,
+        plan: selectedPlan,
+        recaptchaToken: recaptchaToken
       };
 
-      console.log("Données envoyées à /auth/register:", registerData);
-
-      const response = await fetch("/api/auth/register", {
+      const registerResponse = await fetch("/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registerData),
       });
 
-      const result = await response.json();
+      const registerResult = await registerResponse.json();
 
-      if (result.success) {
-        console.log("Adhésion enregistrée avec succès:", result.data);
-        setIsSubmitted(true);
-
-        // Stocker les informations utilisateur si nécessaire
-        if (result.data.user) {
-          localStorage.setItem("authToken", result.data.token);
-          localStorage.setItem("userData", JSON.stringify(result.data.user));
-        }
-      } else {
-        console.error("Erreur lors de l'enregistrement:", result.message);
-        alert(`Erreur: ${result.message}`);
+      if (!registerResult.success) {
+        throw new Error(registerResult.message || "Erreur d'enregistrement");
       }
+
+      const userId = registerResult.data.user?.id || `guest_${Date.now()}`;
+
+      // 2. Initialize payment
+      const orderNumber = `MEM-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
+      const paymentResponse = await fetch("/api/payment/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: getPlanAmount(),
+          planName: selectedPlan,
+          planTitle: membershipPlans.find(p => p.id === selectedPlan)?.title,
+          userId: userId,
+          userEmail: formData.email,
+          userName: `${formData.firstName} ${formData.lastName}`,
+          orderNumber: orderNumber
+        }),
+      });
+
+      const paymentResult = await paymentResponse.json();
+
+      if (paymentResult.errorCode) {
+        throw new Error(paymentResult.errorMessage || "Erreur de paiement");
+      }
+
+      // 3. Redirect to SATIM payment page
+      if (paymentResult.formUrl) {
+        // Store order info for verification
+        localStorage.setItem('currentOrder', JSON.stringify({
+          orderNumber: orderNumber,
+          amount: getPlanAmount(),
+          plan: selectedPlan,
+          userId: userId
+        }));
+        
+        window.location.href = paymentResult.formUrl;
+      } else {
+        throw new Error("URL de paiement non disponible");
+      }
+
     } catch (error) {
-      console.error("Erreur réseau:", error);
-      alert("Erreur de connexion au serveur");
+      console.error("Payment error:", error);
+      alert(`Erreur: ${error.message}`);
+      setIsProcessing(false);
+      recaptchaRef.current?.reset();
     }
   };
 
-  const membershipPlans = [
-    {
-      id: "student",
-      title: "Étudiant",
-      price: "25",
-      period: "an",
-      description: "Pour les étudiants en cosmétologie",
-      features: [
-        "Accès aux événements à tarif réduit",
-        "Newsletter mensuelle",
-        "Accès aux ressources en ligne",
-        "Certificat de membre étudiant",
-      ],
-      recommended: false,
-    },
-    {
-      id: "individual",
-      title: "Individuel",
-      price: "80",
-      period: "an",
-      description: "Pour les professionnels indépendants",
-      features: [
-        "Accès à tous les événements",
-        "Formations à tarif préférentiel",
-        "Accès à l'annuaire des membres",
-        "Revue trimestrielle",
-        "Certificat de membre",
-      ],
-      recommended: false,
-    },
-    {
-      id: "corporate",
-      title: "Entreprise",
-      price: "350",
-      period: "an",
-      description: "Pour les entreprises et institutions",
-      features: [
-        "5 membres inclus",
-        "Accès VIP aux événements",
-        "Espace exposant privilégié",
-        "Logo sur notre site web",
-        "Newsletter personnalisée",
-        "Support prioritaire",
-      ],
-      recommended: true,
-    },
-  ];
-
-  const benefits = [
-    {
-      icon: "🎓",
-      title: "Formations continues",
-      description:
-        "Accédez à des formations de qualité pour développer vos compétences",
-    },
-    {
-      icon: "🤝",
-      title: "Réseau professionnel",
-      description:
-        "Échangez avec des experts du secteur et développez votre réseau",
-    },
-    {
-      icon: "📅",
-      title: "Événements exclusifs",
-      description:
-        "Participez à nos congrès, séminaires et rencontres professionnelles",
-    },
-    {
-      icon: "📚",
-      title: "Ressources documentaires",
-      description:
-        "Accédez à notre bibliothèque de ressources et publications exclusives",
-    },
-    {
-      icon: "🔍",
-      title: "Veille réglementaire",
-      description:
-        "Restez informé des dernières évolutions réglementaires du secteur",
-    },
-    {
-      icon: "🏆",
-      title: "Reconnaissance professionnelle",
-      description: "Bénéficiez d'une certification reconnue dans le secteur",
-    },
-  ];
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await handlePayment();
+  };
 
   return (
     <div>
       <Head>
-        <title>Adhésion - La Fédération Algérienne des Pharmaciens</title>
-        <meta
-          name="description"
-          content="Rejoignez l'Association de Cosmétologie et bénéficiez de nos services exclusifs"
-        />
+        <title>Adhésion - Fédération Algérienne des Pharmaciens</title>
+        <meta name="description" content="Rejoignez la Fédération Algérienne des Pharmaciens et bénéficiez d'avantages exclusifs" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
+      
       <Header />
-
+      
       <main className="min-h-screen bg-blue-50 py-12">
         <div className="container mx-auto px-4">
+          {/* SSL Security Badge */}
+          <div className="text-center mb-6">
+            {sslVerified ? (
+              <div className="inline-flex items-center bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Connexion sécurisée SSL 256-bit
+              </div>
+            ) : (
+              <div className="inline-flex items-center bg-red-100 text-red-800 px-4 py-2 rounded-lg text-sm font-semibold">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                Veuillez utiliser HTTPS pour une connexion sécurisée
+              </div>
+            )}
+          </div>
+
           <h1 className="text-4xl font-bold text-center text-blue-800 mb-4">
             Devenez membre
           </h1>
           <p className="text-lg text-center text-gray-700 max-w-3xl mx-auto mb-12">
-            Rejoignez notre communauté de professionnels de la pharmacie et
-            bénéficiez d’avantages exclusifs, de ressources spécialisées et d’un
-            réseau de qualité pour accompagner votre développement
+            Rejoignez notre communauté de professionnels de la pharmacie et bénéficiez d'avantages exclusifs, 
+            de ressources spécialisées et d'un réseau de qualité pour accompagner votre développement
           </p>
 
           {!isSubmitted ? (
             <>
-              {/* Étapes de progression */}
+              {/* Progress Steps */}
               <div className="max-w-3xl mx-auto mb-12">
                 <div className="flex justify-between items-center">
-                  <div
-                    className={`flex flex-col items-center ${
-                      currentStep >= 1 ? "text-blue-800" : "text-gray-400"
-                    }`}
-                  >
-                    <div
-                      className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        currentStep >= 1
-                          ? "bg-blue-800 text-white"
-                          : "bg-gray-200"
-                      }`}
-                    >
+                  <div className={`flex flex-col items-center ${currentStep >= 1 ? "text-blue-800" : "text-gray-400"}`}>
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 1 ? "bg-blue-800 text-white" : "bg-gray-200"}`}>
                       1
                     </div>
-                    <span className="mt-2 text-sm font-medium">
-                      Informations personnelles
-                    </span>
+                    <span className="mt-2 text-sm font-medium">Informations personnelles</span>
                   </div>
-                  <div
-                    className={`h-1 flex-1 mx-2 ${
-                      currentStep >= 2 ? "bg-blue-800" : "bg-gray-200"
-                    }`}
-                  ></div>
-                  <div
-                    className={`flex flex-col items-center ${
-                      currentStep >= 2 ? "text-blue-800" : "text-gray-400"
-                    }`}
-                  >
-                    <div
-                      className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        currentStep >= 2
-                          ? "bg-blue-800 text-white"
-                          : "bg-gray-200"
-                      }`}
-                    >
+                  <div className={`h-1 flex-1 mx-2 ${currentStep >= 2 ? "bg-blue-800" : "bg-gray-200"}`}></div>
+                  <div className={`flex flex-col items-center ${currentStep >= 2 ? "text-blue-800" : "text-gray-400"}`}>
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 2 ? "bg-blue-800 text-white" : "bg-gray-200"}`}>
                       2
                     </div>
-                    <span className="mt-2 text-sm font-medium">
-                      Adresse et conditions
-                    </span>
+                    <span className="mt-2 text-sm font-medium">Adresse et conditions</span>
                   </div>
-                  <div
-                    className={`h-1 flex-1 mx-2 ${
-                      currentStep >= 3 ? "bg-blue-800" : "bg-gray-200"
-                    }`}
-                  ></div>
-                  <div
-                    className={`flex flex-col items-center ${
-                      currentStep >= 3 ? "text-blue-800" : "text-gray-400"
-                    }`}
-                  >
-                    <div
-                      className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        currentStep >= 3
-                          ? "bg-blue-800 text-white"
-                          : "bg-gray-200"
-                      }`}
-                    >
+                  <div className={`h-1 flex-1 mx-2 ${currentStep >= 3 ? "bg-blue-800" : "bg-gray-200"}`}></div>
+                  <div className={`flex flex-col items-center ${currentStep >= 3 ? "text-blue-800" : "text-gray-400"}`}>
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 3 ? "bg-blue-800 text-white" : "bg-gray-200"}`}>
                       3
                     </div>
                     <span className="mt-2 text-sm font-medium">Paiement</span>
@@ -357,20 +379,16 @@ export default function Membership() {
                 </div>
               </div>
 
-              {/* Étape 1: Informations personnelles */}
+              {/* Step 1: Personal Information */}
               {currentStep === 1 && (
                 <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
                   <h2 className="text-2xl font-semibold text-center text-blue-800 mb-8">
                     Vos informations personnelles
                   </h2>
-
                   <form onSubmit={(e) => e.preventDefault()}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       <div>
-                        <label
-                          htmlFor="firstName"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
                           Prénom *
                         </label>
                         <input
@@ -379,25 +397,15 @@ export default function Membership() {
                           name="firstName"
                           value={formData.firstName}
                           onChange={handleChange}
-                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors.firstName
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          }`}
+                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.firstName ? "border-red-500" : "border-gray-300"}`}
                           required
                         />
                         {errors.firstName && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.firstName}
-                          </p>
+                          <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
                         )}
                       </div>
-
                       <div>
-                        <label
-                          htmlFor="lastName"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
                           Nom *
                         </label>
                         <input
@@ -406,26 +414,16 @@ export default function Membership() {
                           name="lastName"
                           value={formData.lastName}
                           onChange={handleChange}
-                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors.lastName
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          }`}
+                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.lastName ? "border-red-500" : "border-gray-300"}`}
                           required
                         />
                         {errors.lastName && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.lastName}
-                          </p>
+                          <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
                         )}
                       </div>
                     </div>
-
                     <div className="mb-6">
-                      <label
-                        htmlFor="email"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                         Adresse email *
                       </label>
                       <input
@@ -434,24 +432,16 @@ export default function Membership() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.email ? "border-red-500" : "border-gray-300"
-                        }`}
+                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"}`}
                         required
                       />
                       {errors.email && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.email}
-                        </p>
+                        <p className="text-red-500 text-sm mt-1">{errors.email}</p>
                       )}
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       <div>
-                        <label
-                          htmlFor="password"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                           Mot de passe *
                         </label>
                         <div className="relative">
@@ -461,11 +451,7 @@ export default function Membership() {
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                              errors.password
-                                ? "border-red-500"
-                                : "border-gray-300"
-                            }`}
+                            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.password ? "border-red-500" : "border-gray-300"}`}
                             required
                           />
                           <button
@@ -477,20 +463,12 @@ export default function Membership() {
                           </button>
                         </div>
                         {errors.password && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.password}
-                          </p>
+                          <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                         )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          Minimum 6 caractères
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Minimum 6 caractères</p>
                       </div>
-
                       <div>
-                        <label
-                          htmlFor="confirmPassword"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                           Confirmer le mot de passe *
                         </label>
                         <input
@@ -499,27 +477,17 @@ export default function Membership() {
                           name="confirmPassword"
                           value={formData.confirmPassword}
                           onChange={handleChange}
-                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors.confirmPassword
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          }`}
+                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.confirmPassword ? "border-red-500" : "border-gray-300"}`}
                           required
                         />
                         {errors.confirmPassword && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.confirmPassword}
-                          </p>
+                          <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
                         )}
                       </div>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       <div>
-                        <label
-                          htmlFor="phone"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                           Téléphone
                         </label>
                         <input
@@ -531,12 +499,8 @@ export default function Membership() {
                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
-
                       <div>
-                        <label
-                          htmlFor="profession"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <label htmlFor="profession" className="block text-sm font-medium text-gray-700 mb-1">
                           Profession *
                         </label>
                         <input
@@ -545,26 +509,16 @@ export default function Membership() {
                           name="profession"
                           value={formData.profession}
                           onChange={handleChange}
-                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors.profession
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          }`}
+                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.profession ? "border-red-500" : "border-gray-300"}`}
                           required
                         />
                         {errors.profession && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.profession}
-                          </p>
+                          <p className="text-red-500 text-sm mt-1">{errors.profession}</p>
                         )}
                       </div>
                     </div>
-
                     <div className="mb-6">
-                      <label
-                        htmlFor="company"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
+                      <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
                         Entreprise / Organisation
                       </label>
                       <input
@@ -576,7 +530,6 @@ export default function Membership() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-
                     <div className="text-center">
                       <button
                         onClick={nextStep}
@@ -589,19 +542,15 @@ export default function Membership() {
                 </div>
               )}
 
-              {/* Étape 2: Adresse et conditions */}
+              {/* Step 2: Address and Terms */}
               {currentStep === 2 && (
                 <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
                   <h2 className="text-2xl font-semibold text-center text-blue-800 mb-8">
                     Votre adresse et conditions
                   </h2>
-
                   <form onSubmit={(e) => e.preventDefault()}>
                     <div className="mb-6">
-                      <label
-                        htmlFor="address"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
+                      <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                         Adresse *
                       </label>
                       <input
@@ -610,24 +559,16 @@ export default function Membership() {
                         name="address"
                         value={formData.address}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.address ? "border-red-500" : "border-gray-300"
-                        }`}
+                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.address ? "border-red-500" : "border-gray-300"}`}
                         required
                       />
                       {errors.address && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.address}
-                        </p>
+                        <p className="text-red-500 text-sm mt-1">{errors.address}</p>
                       )}
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                       <div>
-                        <label
-                          htmlFor="postalCode"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
                           Code postal *
                         </label>
                         <input
@@ -636,25 +577,15 @@ export default function Membership() {
                           name="postalCode"
                           value={formData.postalCode}
                           onChange={handleChange}
-                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors.postalCode
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          }`}
+                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.postalCode ? "border-red-500" : "border-gray-300"}`}
                           required
                         />
                         {errors.postalCode && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.postalCode}
-                          </p>
+                          <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>
                         )}
                       </div>
-
                       <div>
-                        <label
-                          htmlFor="city"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
                           Ville *
                         </label>
                         <input
@@ -663,23 +594,15 @@ export default function Membership() {
                           name="city"
                           value={formData.city}
                           onChange={handleChange}
-                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors.city ? "border-red-500" : "border-gray-300"
-                          }`}
+                          className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.city ? "border-red-500" : "border-gray-300"}`}
                           required
                         />
                         {errors.city && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.city}
-                          </p>
+                          <p className="text-red-500 text-sm mt-1">{errors.city}</p>
                         )}
                       </div>
-
                       <div>
-                        <label
-                          htmlFor="country"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
                           Pays *
                         </label>
                         <select
@@ -690,18 +613,17 @@ export default function Membership() {
                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         >
-                          <option value="Algerie">Algerie</option>
+                          <option value="Algerie">Algérie</option>
                           <option value="France">France</option>
                           <option value="Belgique">Belgique</option>
                           <option value="Suisse">Suisse</option>
-                          <option value="Luxembourg">Luxembourg</option>
                           <option value="Canada">Canada</option>
                           <option value="autre">Autre</option>
                         </select>
                       </div>
                     </div>
 
-                    {/* Choix de la formule */}
+                    {/* Membership Plan Selection */}
                     <div className="mb-8">
                       <h3 className="text-lg font-semibold text-blue-800 mb-4">
                         Choisissez votre formule d'adhésion
@@ -710,13 +632,7 @@ export default function Membership() {
                         {membershipPlans.map((plan) => (
                           <div
                             key={plan.id}
-                            className={`bg-white rounded-lg border-2 p-4 cursor-pointer transition-all ${
-                              selectedPlan === plan.id
-                                ? "border-blue-800 bg-blue-50"
-                                : "border-gray-200"
-                            } ${
-                              plan.recommended ? "ring-2 ring-yellow-500" : ""
-                            }`}
+                            className={`bg-white rounded-lg border-2 p-4 cursor-pointer transition-all ${selectedPlan === plan.id ? "border-blue-800 bg-blue-50" : "border-gray-200"} ${plan.recommended ? "ring-2 ring-yellow-500" : ""}`}
                             onClick={() => handlePlanChange(plan.id)}
                           >
                             {plan.recommended && (
@@ -724,31 +640,29 @@ export default function Membership() {
                                 Recommandé
                               </div>
                             )}
-                            <h4 className="font-semibold text-blue-800">
-                              {plan.title}
-                            </h4>
+                            <h4 className="font-semibold text-blue-800">{plan.title}</h4>
                             <div className="text-lg font-bold text-blue-800 mt-2">
-                              {plan.price}DA
-                              <span className="text-sm font-normal text-gray-600">
-                                /{plan.period}
-                              </span>
+                              {plan.price} DA
+                              <span className="text-sm font-normal text-gray-600"> /{plan.period}</span>
                             </div>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {plan.description}
-                            </p>
+                            <p className="text-sm text-gray-600 mt-1">{plan.description}</p>
+                            <ul className="mt-3 text-sm text-gray-700 space-y-1">
+                              {plan.features.slice(0, 2).map((feature, idx) => (
+                                <li key={idx} className="flex items-start">
+                                  <svg className="w-3 h-3 text-green-500 mt-1 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     <div className="mb-6">
-                      <div
-                        className={`p-4 border rounded-md ${
-                          errors.acceptTerms
-                            ? "border-red-500 bg-red-50"
-                            : "border-gray-200"
-                        }`}
-                      >
+                      <div className={`p-4 border rounded-md ${errors.acceptTerms ? "border-red-500 bg-red-50" : "border-gray-200"}`}>
                         <div className="flex items-start">
                           <input
                             type="checkbox"
@@ -759,31 +673,20 @@ export default function Membership() {
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
                             required
                           />
-                          <label
-                            htmlFor="acceptTerms"
-                            className="ml-2 block text-sm text-gray-700"
-                          >
+                          <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-700">
                             J'accepte les{" "}
-                            <a
-                              href="#"
-                              className="text-blue-600 hover:underline"
-                            >
+                            <a href="/conditions-generales" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
                               conditions générales
                             </a>{" "}
                             et la{" "}
-                            <a
-                              href="#"
-                              className="text-blue-600 hover:underline"
-                            >
+                            <a href="/politique-confidentialite" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
                               politique de confidentialité
                             </a>{" "}
                             *
                           </label>
                         </div>
                         {errors.acceptTerms && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.acceptTerms}
-                          </p>
+                          <p className="text-red-500 text-sm mt-1">{errors.acceptTerms}</p>
                         )}
                       </div>
                     </div>
@@ -806,158 +709,192 @@ export default function Membership() {
                 </div>
               )}
 
-              {/* Étape 3: Paiement */}
+              {/* Step 3: Payment */}
               {currentStep === 3 && (
                 <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
                   <h2 className="text-2xl font-semibold text-center text-blue-800 mb-8">
                     Finaliser votre adhésion
                   </h2>
 
+                  {/* Order Summary */}
                   <div className="bg-blue-50 p-6 rounded-lg mb-8">
                     <h3 className="text-lg font-semibold text-blue-800 mb-4">
                       Récapitulatif de votre commande
                     </h3>
-                    <div className="flex justify-between items-center mb-2">
-                      <span>
-                        Formule{" "}
-                        {
-                          membershipPlans.find((p) => p.id === selectedPlan)
-                            ?.title
-                        }
-                      </span>
-                      <span className="font-semibold">
-                        {
-                          membershipPlans.find((p) => p.id === selectedPlan)
-                            ?.price
-                        }
-                        DA
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-600 mb-4">
-                      Adhésion valable pour 1 an à partir de la date de paiement
-                    </div>
-                    <div className="border-t border-gray-300 pt-4">
-                      <div className="flex justify-between items-center font-semibold text-lg">
-                        <span>Total</span>
-                        <span>
-                          {
-                            membershipPlans.find((p) => p.id === selectedPlan)
-                              ?.price
-                          }
-                          DA
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-blue-800 mb-4">
-                      Moyen de paiement
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border-2 border-blue-500 rounded-lg p-4 flex items-center cursor-pointer bg-blue-50">
-                        <div className="h-6 w-6 rounded-full border-2 border-blue-500 mr-3 flex items-center justify-center">
-                          <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                        </div>
-                        <span>Carte bancaire</span>
-                      </div>
-                      <div className="border-2 border-gray-300 rounded-lg p-4 flex items-center cursor-pointer hover:border-blue-500">
-                        <div className="h-6 w-6 rounded-full border-2 border-gray-300 mr-3"></div>
-                        <span>Virement bancaire</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-blue-800 mb-4">
-                      Informations de paiement
-                    </h3>
+                    
                     <div className="space-y-4">
-                      <div>
-                        <label
-                          htmlFor="cardNumber"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Numéro de carte *
-                        </label>
-                        <input
-                          type="text"
-                          id="cardNumber"
-                          name="cardNumber"
-                          placeholder="1234 5678 9012 3456"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="flex justify-between items-center pb-3 border-b">
                         <div>
-                          <label
-                            htmlFor="expiryDate"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                          >
-                            Date d'expiration *
-                          </label>
-                          <input
-                            type="text"
-                            id="expiryDate"
-                            name="expiryDate"
-                            placeholder="MM/AA"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                          />
+                          <span className="font-medium">Formule </span>
+                          <span className="text-blue-800 font-semibold">
+                            {membershipPlans.find(p => p.id === selectedPlan)?.title}
+                          </span>
                         </div>
-
-                        <div>
-                          <label
-                            htmlFor="cvv"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                          >
-                            CVV *
-                          </label>
-                          <input
-                            type="text"
-                            id="cvv"
-                            name="cvv"
-                            placeholder="123"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                          />
-                        </div>
+                        <span className="font-semibold">{getPlanAmount().toLocaleString()} DA</span>
                       </div>
-
-                      <div>
-                        <label
-                          htmlFor="cardName"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Nom sur la carte *
-                        </label>
-                        <input
-                          type="text"
-                          id="cardName"
-                          name="cardName"
-                          placeholder="M. DUPONT Jean"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
+                      
+                      <div className="flex justify-between items-center pb-3 border-b">
+                        <span>Frais d'adhésion</span>
+                        <span>0 DA</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pb-3 border-b">
+                        <span>TVA (0%)</span>
+                        <span>0 DA</span>
+                      </div>
+                      
+                      <div className="pt-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-semibold">Montant total à payer</span>
+                          <div className="text-right">
+                            <div className="text-3xl font-bold text-blue-800">
+                              {getPlanAmount().toLocaleString()} DA
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              Adhésion valable pour 1 an à partir de la date de paiement
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-between">
+                  {/* Terms and Conditions */}
+                  <div className="mb-8 p-6 border border-gray-300 rounded-lg bg-gray-50">
+                    <h3 className="text-lg font-semibold text-blue-800 mb-4">
+                      Conditions générales de paiement et de vente
+                    </h3>
+                    <div className="text-sm text-gray-700 space-y-3 max-h-80 overflow-y-auto pr-2">
+                      <p>
+                        <strong>Article 1 - Objet</strong><br />
+                        Les présentes conditions générales régissent les modalités d'adhésion à la Fédération Algérienne des Pharmaciens et le processus de paiement en ligne.
+                      </p>
+                      <p>
+                        <strong>Article 2 - Prix et modalités de paiement</strong><br />
+                        Les prix sont indiqués en Dinars Algériens (DA) toutes taxes comprises. Le paiement s'effectue exclusivement en ligne via la plateforme sécurisée SATIM.
+                      </p>
+                      <p>
+                        <strong>Article 3 - Sécurité des transactions</strong><br />
+                        Toutes les transactions sont sécurisées par le protocole SSL 256-bit et certifiées PCI-DSS. Aucune information bancaire n'est stockée sur nos serveurs.
+                      </p>
+                      <p>
+                        <strong>Article 4 - Droit de rétractation</strong><br />
+                        Conformément à la législation en vigueur, vous disposez d'un délai de 7 jours ouvrables pour exercer votre droit de rétractation.
+                      </p>
+                      <p>
+                        <strong>Article 5 - Traitement des données</strong><br />
+                        Vos données personnelles sont traitées conformément à notre politique de confidentialité et ne sont en aucun cas transmises à des tiers.
+                      </p>
+                      <p>
+                        <strong>Article 6 - Service client</strong><br />
+                        Pour toute question relative à votre paiement, contactez le service client SATIM au numéro vert : <strong className="text-green-600">3020</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ReCAPTCHA */}
+                  <div className="mb-8">
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-gray-600">
+                        Vérification de sécurité requise
+                      </p>
+                    </div>
+                    <div className="flex justify-center">
+                      <ReCAPTCHA
+                        ref={recaptchaRef}
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LdFTlQsAAAAADv2imd6f-9kA15jCZpBTrP0D_hI"}
+                        onChange={handleRecaptchaChange}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Payment Button with SATIM Logo */}
+                  <div className="mb-8 text-center">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                      <div className="flex items-center justify-center mb-3">
+                        <img 
+                          src="/satim-logo.png" 
+                          alt="SATIM Payment Gateway" 
+                          className="h-10 mr-3"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                        <div>
+                          <p className="font-semibold text-gray-800">Paiement sécurisé via SATIM</p>
+                          <p className="text-sm text-gray-600">CIB / EDAHABIA / Cartes internationales</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        En cliquant sur le bouton ci-dessous, vous serez redirigé vers la plateforme sécurisée de SATIM pour finaliser votre paiement.
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={handleSubmit}
+                      disabled={isProcessing || !formData.acceptTerms || !recaptchaToken}
+                      className="relative inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-blue-800 to-blue-600 text-white rounded-lg hover:from-blue-700 hover:to-blue-500 transition-all font-semibold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-800 disabled:hover:to-blue-600 min-w-[300px]"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
+                          Traitement en cours...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          <span>Procéder au paiement sécurisé</span>
+                          <img 
+                            src="/cib-logo.png" 
+                            alt="CIB" 
+                            className="h-8 ml-4"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        </>
+                      )}
+                    </button>
+                    
+                    {/* SATIM Green Number */}
+                    <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-center">
+                        <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium text-green-800 mr-2">Service client SATIM :</span>
+                        <a href="tel:3020" className="text-green-700 font-bold text-xl hover:text-green-800">
+                          30 20
+                        </a>
+                      </div>
+                      <p className="text-sm text-green-700 text-center mt-2">
+                        Disponible 24h/24, 7j/7 pour toute assistance
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-6 border-t">
                     <button
                       onClick={prevStep}
                       className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+                      disabled={isProcessing}
                     >
                       Retour
                     </button>
-                    <button
-                      onClick={handleSubmit}
-                      className="px-6 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      Payer et finaliser mon adhésion
-                    </button>
+                    
+                    <div className="text-xs text-gray-500 text-right">
+                      <p className="flex items-center">
+                        <svg className="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        </svg>
+                        Connexion sécurisée SSL 256-bit
+                      </p>
+                      <p>Certifié PCI-DSS • Données cryptées</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -969,12 +906,10 @@ export default function Membership() {
                 Félicitations !
               </h2>
               <p className="text-lg text-gray-700 mb-6">
-                Votre adhésion à l'Association de Cosmétologie a été enregistrée
-                avec succès.
+                Votre adhésion à la Fédération Algérienne des Pharmaciens a été enregistrée avec succès.
               </p>
               <p className="text-gray-600 mb-8">
-                Un email de confirmation contenant tous les détails de votre
-                adhésion a été envoyé à{" "}
+                Un email de confirmation contenant tous les détails de votre adhésion a été envoyé à{" "}
                 <span className="font-medium">{formData.email}</span>.
               </p>
               <div className="bg-blue-50 p-4 rounded-lg mb-8">
@@ -982,14 +917,9 @@ export default function Membership() {
                   Prochaines étapes :
                 </h3>
                 <ul className="text-left list-disc list-inside text-gray-700 space-y-1">
-                  <li>
-                    Vous recevrez votre carte de membre sous 10 jours ouvrables
-                  </li>
+                  <li>Vous recevrez votre carte de membre sous 10 jours ouvrables</li>
                   <li>Accédez à votre espace membre avec vos identifiants</li>
-                  <li>
-                    Consultez notre calendrier d'événements pour votre première
-                    participation
-                  </li>
+                  <li>Consultez notre calendrier d'événements pour votre première participation</li>
                 </ul>
               </div>
               <button
@@ -1001,12 +931,11 @@ export default function Membership() {
             </div>
           )}
 
-          {/* Section Avantages */}
+          {/* Benefits Section */}
           <section className="mt-16">
             <h2 className="text-3xl font-bold text-center text-blue-800 mb-12">
               Avantages exclusifs pour nos membres
             </h2>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {benefits.map((benefit, index) => (
                 <div
@@ -1028,57 +957,44 @@ export default function Membership() {
             <h2 className="text-3xl font-bold text-center text-blue-800 mb-12">
               Questions fréquentes
             </h2>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">
                   Quand vais-je recevoir ma carte de membre ?
                 </h3>
                 <p className="text-gray-700">
-                  Votre carte de membre sera envoyée dans les 10 jours ouvrables
-                  suivant la validation de votre adhésion. Vous recevrez un
-                  email de confirmation avec un suivi de livraison.
+                  Votre carte de membre sera envoyée dans les 10 jours ouvrables suivant la validation de votre paiement. Vous recevrez un email de confirmation avec un suivi de livraison.
                 </p>
               </div>
-
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">
                   Puis-je modifier ma formule d'adhésion plus tard ?
                 </h3>
                 <p className="text-gray-700">
-                  Oui, vous pouvez changer de formule à tout moment. La
-                  différence de tarif sera calculée au prorata du temps restant
-                  sur votre adhésion actuelle.
+                  Oui, vous pouvez changer de formule à tout moment. La différence de tarif sera calculée au prorata du temps restant sur votre adhésion actuelle.
                 </p>
               </div>
-
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">
                   Comment accéder à mon espace membre ?
                 </h3>
                 <p className="text-gray-700">
-                  Dès que votre adhésion est validée, vous recevez un email avec
-                  vos identifiants pour accéder à votre espace membre sur notre
-                  site.
+                  Dès que votre paiement est confirmé, vous recevez un email avec vos identifiants pour accéder à votre espace membre sur notre site.
                 </p>
               </div>
-
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">
                   L'adhésion est-elle déductible fiscalement ?
                 </h3>
                 <p className="text-gray-700">
-                  Pour les professionnels, les frais d'adhésion sont
-                  généralement déductibles en tant que frais professionnels.
-                  Nous vous fournissons une facture pour justifier de cette
-                  dépense.
+                  Pour les pharmaciens, les frais d'adhésion sont généralement déductibles en tant que frais professionnels. Nous vous fournissons une facture pour justifier de cette dépense.
                 </p>
               </div>
             </div>
           </section>
         </div>
       </main>
-
+      
       <Footer />
     </div>
   );
