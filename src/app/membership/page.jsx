@@ -813,7 +813,7 @@ export default function Membership() {
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                       <div className="flex items-center justify-center mb-3">
                         <img 
-                          src="/satim-logo.png" 
+                          src="/satim_logo.jpg" 
                           alt="SATIM Payment Gateway" 
                           className="h-10 mr-3"
                           onError={(e) => {
@@ -848,7 +848,7 @@ export default function Membership() {
                           </svg>
                           <span>Procéder au paiement sécurisé</span>
                           <img 
-                            src="/cib-logo.png" 
+                            src="/cib_logo.png" 
                             alt="CIB" 
                             className="h-8 ml-4"
                             onError={(e) => {
