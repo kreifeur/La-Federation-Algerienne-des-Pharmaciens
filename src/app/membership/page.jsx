@@ -288,6 +288,8 @@ export default function Membership() {
 
       const paymentResponse = await axios.get('/api/pay')
 
+      console.log(paymentResult);
+
       const paymentResult = await paymentResponse.json();
 
       if (paymentResult.errorCode) {
