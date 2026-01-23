@@ -802,7 +802,7 @@ export default function Membership() {
                     <div className="flex justify-center">
                       <ReCAPTCHA
                         ref={recaptchaRef}
-                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LczT1QsAAAAAFv-oMf6F4jMrYKLN5GX3uYDpxcw"}
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LcVVlQsAAAAAAzjUdbl4n2fYmCTUsfPLKeppt_U"}
                         onChange={handleRecaptchaChange}
                       />
                     </div>
