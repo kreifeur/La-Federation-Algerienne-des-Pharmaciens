@@ -284,7 +284,7 @@ export default function Membership() {
         .substr(2, 9)
         .toUpperCase()}`;
 
-      const paymentResponse = await fetch("http://localhost:3000/api/payment/register", {
+      const paymentResponse = await fetch("http://localhost:3000/api/pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
