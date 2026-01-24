@@ -258,7 +258,7 @@ export default function Membership() {
         membershipType: formData.membershipType,
         plan: selectedPlan,
         recaptchaToken: recaptchaToken,
-        professionalStatus: "professional",
+        professionalStatus: formData.profession,
         domainOfInterest: ["skincare", "research"], // skincare, makeup, research, teaching, business, technology
         biography: "",
       };
