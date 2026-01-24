@@ -10,8 +10,8 @@ export async function GET() {
       amount: "1000",
       currency: "012",
       language: "FR",
-      returnUrl: "http://localhost:3000/test/success",
-      failUrl: "http://localhost:3000/test/failed",
+      returnUrl: "/payemnt/success",
+      failUrl: "/payment/failed",
       jsonParams: JSON.stringify({
         force_terminal_id: "E010902702",
         udf1: "2018105301346",
