@@ -4,26 +4,36 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import logo from "../../../public/logo.png";
 
-const Header = () => {
+const Header = ({ user, isLoading: propIsLoading = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [userName, setUserName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [localIsLoading, setLocalIsLoading] = useState(true);
 
-  // Vérifier si l'utilisateur est connecté au chargement du composant
+  // Use prop if available, otherwise check localStorage
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    if (user) {
+      // User data passed from parent
+      setIsConnected(true);
+      setUserName(`${user.firstName || ""} ${user.lastName || ""}`.trim() || "Mon Compte");
+      setLocalIsLoading(false);
+    } else if (user === null) {
+      // Explicit null means no user (not just undefined/not loaded yet)
+      checkAuthStatus();
+    }
+  }, [user]);
 
+  // Fallback: Check localStorage if no user prop
   const checkAuthStatus = () => {
     try {
+      // Check both localStorage keys (your login page uses "user", not "userData")
       const authToken = localStorage.getItem("authToken");
-      const userData = localStorage.getItem("userData");
+      const userFromLocalStorage = localStorage.getItem("user") || localStorage.getItem("userData");
 
-      if (authToken && userData) {
+      if (authToken && userFromLocalStorage) {
         setIsConnected(true);
-        const user = JSON.parse(userData);
-        setUserName(user.firstName + " " + user.lastName || "Mon Compte");
+        const user = JSON.parse(userFromLocalStorage);
+        setUserName(`${user.firstName || ""} ${user.lastName || ""}`.trim() || "Mon Compte");
       } else {
         setIsConnected(false);
         setUserName("");
@@ -33,16 +43,20 @@ const Header = () => {
       setIsConnected(false);
       setUserName("");
     } finally {
-      setIsLoading(false);
+      setLocalIsLoading(false);
     }
   };
 
   const handleLogout = () => {
+    // Clear all auth-related localStorage items
     localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
     localStorage.removeItem("userData");
+    
     setIsConnected(false);
     setUserName("");
-    // Optionnel: Rediriger vers la page d'accueil
+    
+    // Force reload to update the page state
     window.location.href = "/";
   };
 
@@ -56,6 +70,9 @@ const Header = () => {
       .slice(0, 2);
   };
 
+  // Determine loading state
+  const isLoading = propIsLoading || localIsLoading;
+
   if (isLoading) {
     return (
       <header className="bg-white text-blue-900 py-4 px-6 shadow-md sticky top-0 z-50 w-full">
@@ -64,6 +81,7 @@ const Header = () => {
             <img className="w-[200px]" src={logo.src} alt="logo" srcSet="" />
           </div>
           <div className="hidden md:flex space-x-4">
+            <div className="w-20 h-8 bg-gray-200 rounded-md animate-pulse"></div>
             <div className="w-20 h-8 bg-gray-200 rounded-md animate-pulse"></div>
           </div>
         </div>
@@ -75,7 +93,9 @@ const Header = () => {
     <header className="bg-white text-blue-900 py-4 px-6 shadow-md sticky top-0 z-50 w-full">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center">
-          <img className="w-[200px]" src={logo.src} alt="logo" srcSet="" />
+          <Link href="/">
+            <img className="w-[200px] cursor-pointer" src={logo.src} alt="logo" srcSet="" />
+          </Link>
         </div>
 
         {/* Desktop Navigation */}
@@ -125,7 +145,7 @@ const Header = () => {
         <div className="hidden md:flex space-x-4 items-center">
           {isConnected ? (
             <div className="flex items-center space-x-4">
-              {/* Menu déroulant utilisateur */}
+              {/* User dropdown */}
               <div className="relative group">
                 <button className="flex items-center space-x-2 px-4 py-2 border border-blue-900 rounded-md hover:bg-blue-900 hover:text-white transition-colors">
                   <div className="w-8 h-8 bg-blue-800 text-white rounded-full flex items-center justify-center text-sm font-medium">
@@ -143,7 +163,6 @@ const Header = () => {
                   >
                     Dashboard
                   </Link>
-
                   <Link
                     href="/dashboard/profile"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
@@ -169,18 +188,18 @@ const Header = () => {
             </div>
           ) : (
             <>
-              <a
+              <Link
                 href="/login"
                 className="px-4 py-2 border border-blue-900 rounded-md hover:bg-blue-900 hover:text-white transition-colors"
               >
                 Connexion
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/membership"
                 className="px-4 py-2 bg-yellow-500 text-blue-900 rounded-md hover:bg-yellow-400 transition-colors font-medium"
               >
                 Adhérer
-              </a>
+              </Link>
             </>
           )}
         </div>
@@ -286,20 +305,20 @@ const Header = () => {
               </div>
             ) : (
               <div className="flex flex-col space-y-3">
-                <a
+                <Link
                   href="/login"
                   className="px-4 py-2 border border-white rounded-md hover:bg-white hover:text-blue-800 transition-colors text-center"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Connexion
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/membership"
                   className="px-4 py-2 bg-yellow-500 text-blue-900 rounded-md hover:bg-yellow-400 transition-colors font-medium text-center"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Adhérer
-                </a>
+                </Link>
               </div>
             )}
           </div>
