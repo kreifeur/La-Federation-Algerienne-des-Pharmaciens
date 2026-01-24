@@ -279,7 +279,7 @@ export default function Membership() {
       }
 
           try {
-      const res = await axios.get('http://localhost:3000/api/pay')
+      const res = await axios.get('https://la-federation-algerienne-des-pharma.vercel.app/api/pay/api/pay')
 
       console.log('SATIM RESPONSE:', res.data)
 
