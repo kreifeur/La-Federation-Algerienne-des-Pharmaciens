@@ -10,7 +10,7 @@ export async function GET() {
       amount: "1000",
       currency: "012",
       language: "FR",
-      returnUrl: "https://la-federation-algerienne-des-pharma.vercel.app/payemnt/success",
+      returnUrl: "https://la-federation-algerienne-des-pharma.vercel.app/payment/success",
       failUrl: "https://la-federation-algerienne-des-pharma.vercel.app/payment/failed",
       jsonParams: JSON.stringify({
         force_terminal_id: "E010902702",
