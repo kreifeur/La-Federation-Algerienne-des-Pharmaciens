@@ -3,8 +3,9 @@ import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import axios from "axios";
+import axios from 'axios'
 import ReCAPTCHA from "react-google-recaptcha";
+
 
 export default function Membership() {
   const [selectedPlan, setSelectedPlan] = useState("individual");
@@ -233,7 +234,7 @@ export default function Membership() {
 
     if (!sslVerified) {
       alert(
-        "Veuillez utiliser une connexion sécurisée (HTTPS) pour procéder au paiement",
+        "Veuillez utiliser une connexion sécurisée (HTTPS) pour procéder au paiement"
       );
       return;
     }
@@ -277,19 +278,18 @@ export default function Membership() {
         throw new Error(registerResult.message || "Erreur d'enregistrement");
       }
 
-      try {
-        const res = await axios.get(
-          "https://la-federation-algerienne-des-pharma.vercel.app/api/pay",
-        );
+          try {
+      const res = await axios.get('https://la-federation-algerienne-des-pharma.vercel.app/api/pay')
 
-        console.log("SATIM RESPONSE:", res.data);
+      console.log('SATIM RESPONSE:', res.data)
 
-        if (res.data.formUrl) {
-          window.location.href = res.data.formUrl;
-        }
-      } catch (err) {
-        console.error(err);
+      if (res.data.formUrl) {
+        window.location.href = res.data.formUrl
       }
+    } catch (err) {
+      console.error(err)
+    }
+
     } catch (error) {
       console.error("Payment error:", error);
       alert(`Erreur: ${error.message}`);
@@ -1013,7 +1013,7 @@ export default function Membership() {
                         ref={recaptchaRef}
                         sitekey={
                           process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ||
-                          "6LezUVgsAAAAAM_lcd5gw5g--VO8w5EwOdi63jZE"
+                          "6LfpUlgsAAAAAEtjpuZzbrEQ9OU3_znkeHRQgHmt"
                         }
                         onChange={handleRecaptchaChange}
                       />
