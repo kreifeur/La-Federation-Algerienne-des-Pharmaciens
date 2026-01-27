@@ -279,7 +279,7 @@ export default function Membership() {
       }
 
           try {
-      const res = await axios.get('https://la-federation-algerienne-des-pharma.vercel.app/api/pay')
+      const res = await axios.get('/api/pay')
 
       console.log('SATIM RESPONSE:', res.data)
 
@@ -1013,7 +1013,7 @@ export default function Membership() {
                         ref={recaptchaRef}
                         sitekey={
                           process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ||
-                          "6Lf6VFgsAAAAAOS2vK0x_RDFSNPCq74QFxpBPn_u"
+                          "6LcVVlQsAAAAAAzjUdbl4n2fYmCTUsfPLKeppt_U"
                         }
                         onChange={handleRecaptchaChange}
                       />
