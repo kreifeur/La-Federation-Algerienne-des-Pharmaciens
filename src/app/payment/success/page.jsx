@@ -21,11 +21,12 @@ export default function RegisterSuccess() {
         }
 
         const data = await response.json();
+
         setStatus(data);
 
         // You can also check the payment status from the response
         // and update the UI accordingly
-        if (data.errorCode === "0") {
+        if (data.ErrorCode === "0") {
           // Payment was successful
           console.log("Payment confirmed:", data);
         } else {
