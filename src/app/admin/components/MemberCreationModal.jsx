@@ -116,7 +116,6 @@ export default function MemberCreationModal({ onClose, onMemberCreated }) {
         throw new Error(result.message || 'Erreur lors de la création du membre');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setMemberMessage(`❌ ${error.message}`);
     } finally {
       setMemberLoading(false);

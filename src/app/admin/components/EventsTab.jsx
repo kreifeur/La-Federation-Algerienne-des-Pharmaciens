@@ -42,7 +42,6 @@ export default function EventsTab({ stats, showEventModal, setShowEventModal }) 
         throw new Error(result.message || 'Erreur lors du chargement des événements');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setEventMessage(`❌ ${error.message}`);
       // Fallback data with image support
       setEvents([
@@ -147,7 +146,6 @@ export default function EventsTab({ stats, showEventModal, setShowEventModal }) 
         throw new Error(result.message || 'Erreur lors de la mise à jour de l\'événement');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setEventMessage(`❌ ${error.message}`);
     }
   };
@@ -190,7 +188,6 @@ export default function EventsTab({ stats, showEventModal, setShowEventModal }) 
         throw new Error(result.message || 'Erreur lors de la suppression de l\'événement');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setEventMessage(`❌ ${error.message}`);
     }
   };
@@ -233,7 +230,6 @@ export default function EventsTab({ stats, showEventModal, setShowEventModal }) 
         throw new Error(result.message || 'Erreur lors du changement de statut');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setEventMessage(`❌ ${error.message}`);
     }
   };

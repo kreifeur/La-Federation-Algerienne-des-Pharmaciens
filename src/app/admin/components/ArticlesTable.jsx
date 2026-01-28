@@ -128,7 +128,6 @@ export default function ArticlesTable({ articles, loading, onRefresh }) {
         throw new Error(result.message || 'Erreur lors de la mise à jour de l\'article');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setArticleMessage(`❌ ${error.message}`);
     } finally {
       setArticleLoading(false);
@@ -168,7 +167,6 @@ export default function ArticlesTable({ articles, loading, onRefresh }) {
         throw new Error(result.message || 'Erreur lors de la suppression de l\'article');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setArticleMessage(`❌ ${error.message}`);
     }
   };
@@ -205,7 +203,6 @@ export default function ArticlesTable({ articles, loading, onRefresh }) {
         throw new Error(result.message || 'Erreur lors du changement de statut');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setArticleMessage(`❌ ${error.message}`);
     }
   };

@@ -123,7 +123,6 @@ export default function ArticleCreationModal({ onClose, onArticleCreated }) {
         throw new Error(result.message || 'Erreur lors de la création de l\'article');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setArticleMessage(`❌ ${error.message}`);
     } finally {
       setArticleLoading(false);

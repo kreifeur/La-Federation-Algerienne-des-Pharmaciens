@@ -270,8 +270,6 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
       // Add file type
       mediaData.fileType = fileType;
 
-      console.log("Sending media data:", mediaData);
-
       const response = await fetch("/api/media", {
         method: "POST",
         headers: {
@@ -313,7 +311,6 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
         );
       }
     } catch (error) {
-      console.error("Erreur:", error);
       setError(`❌ ${error.message}`);
     } finally {
       setLoading(false);

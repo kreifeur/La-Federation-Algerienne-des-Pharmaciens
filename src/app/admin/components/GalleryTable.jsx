@@ -132,7 +132,6 @@ export default function GalleryTable({
         onRefresh();
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du fichier:", error);
       alert(`Erreur: ${error.message}`);
     } finally {
       setUploadingFile(null);

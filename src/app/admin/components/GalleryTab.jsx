@@ -41,7 +41,6 @@ export default function GalleryTab({
       const result = await response.json();
 
       if (result.success) {
-        console.log("Gallery items loaded:", result.data?.media?.length || 0);
         setGalleryItems(result.data.media || []);
       } else {
         throw new Error(
@@ -49,7 +48,6 @@ export default function GalleryTab({
         );
       }
     } catch (error) {
-      console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
       // Fallback data with Cloudinary URLs
       setGalleryItems([
@@ -128,7 +126,6 @@ export default function GalleryTab({
         throw new Error("Token d'authentification manquant");
       }
 
-      console.log("Updating item:", itemId, updates);
 
       // Check if this is a file update (contains Cloudinary URLs)
       const isFileUpdate = updates.imgURL && updates.fileUrl && updates.thumbnailUrl;
@@ -142,8 +139,6 @@ export default function GalleryTab({
           thumbnailUrl: updates.thumbnailUrl,
           fileType: updates.fileType
         };
-
-        console.log("Updating file URLs:", updateData);
         
         const response = await fetch(`/api/media/${itemId}`, {
           method: "PUT",
@@ -189,7 +184,6 @@ export default function GalleryTab({
         if (updates.description !== undefined) updateData.description = updates.description;
         if (updates.tags !== undefined) updateData.tags = updates.tags;
         
-        console.log("Updating metadata:", itemId, updateData);
         
         const response = await fetch(`/api/media/${itemId}`, {
           method: "PUT",
@@ -226,7 +220,6 @@ export default function GalleryTab({
         }
       }
     } catch (error) {
-      console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
       throw error; // Re-throw to handle in GalleryTable
     }
@@ -278,7 +271,6 @@ export default function GalleryTab({
         );
       }
     } catch (error) {
-      console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
     }
   };
@@ -325,7 +317,6 @@ export default function GalleryTab({
         throw new Error(result.message || "Erreur lors du changement d'accès");
       }
     } catch (error) {
-      console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
     }
   };
@@ -374,7 +365,6 @@ export default function GalleryTab({
         );
       }
     } catch (error) {
-      console.error("Erreur:", error);
       setGalleryMessage(`❌ ${error.message}`);
     }
   };

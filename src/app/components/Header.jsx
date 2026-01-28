@@ -27,7 +27,6 @@ const Header = () => {
 
   const checkAuthStatus = () => {
     try {
-      // Check both localStorage keys
       const authToken = localStorage.getItem("authToken");
       const userFromLocalStorage = localStorage.getItem("user") || localStorage.getItem("userData");
 
@@ -53,9 +52,17 @@ const Header = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
     localStorage.removeItem("userData");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userFullName");
+    localStorage.removeItem("membershipStatus");
+    localStorage.removeItem("rememberedEmail");
     
     setIsConnected(false);
     setUserName("");
+    
+    // Dispatch storage event to notify other tabs/components
+    window.dispatchEvent(new Event("storage"));
     
     // Force reload to update the page state
     window.location.href = "/";

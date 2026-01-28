@@ -177,7 +177,6 @@ export default function EventEditForm({
       const localDate = new Date(date.getTime() - timezoneOffset);
       return localDate.toISOString().slice(0, 16);
     } catch (error) {
-      console.error("Error formatting date:", error);
       return "";
     }
   };

@@ -36,8 +36,6 @@ export default function MembersTab({ stats, setStats }) {
 
       const result = await response.json();
 
-      console.log(result.data.users[0]);
-
       if (result.success) {
         setMembers(result.data.users || []);
         // Mettre à jour les stats
@@ -48,7 +46,6 @@ export default function MembersTab({ stats, setStats }) {
         );
       }
     } catch (error) {
-      console.error("Erreur:", error);
       setMembers(demoMembers);
       updateStats(demoMembers);
     } finally {

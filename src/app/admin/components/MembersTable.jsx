@@ -142,7 +142,6 @@ export default function MembersTable({ members, loading, onRefresh }) {
         throw new Error(result.message || 'Erreur lors de la mise à jour du membre');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setMemberMessage(`❌ ${error.message}`);
     } finally {
       setMemberLoading(false);
@@ -182,7 +181,6 @@ export default function MembersTable({ members, loading, onRefresh }) {
         throw new Error(result.message || 'Erreur lors de la suppression du membre');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setMemberMessage(`❌ ${error.message}`);
     }
   };
@@ -219,7 +217,6 @@ export default function MembersTable({ members, loading, onRefresh }) {
         throw new Error(result.message || 'Erreur lors du changement de statut');
       }
     } catch (error) {
-      console.error('Erreur:', error);
       setMemberMessage(`❌ ${error.message}`);
     }
   };
