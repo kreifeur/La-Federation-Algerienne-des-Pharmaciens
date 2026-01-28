@@ -4,29 +4,30 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import logo from "../../../public/logo.png";
 
-const Header = ({ user, isLoading: propIsLoading = false }) => {
+const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [userName, setUserName] = useState("");
-  const [localIsLoading, setLocalIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Use prop if available, otherwise check localStorage
   useEffect(() => {
-    if (user) {
-      // User data passed from parent
-      setIsConnected(true);
-      setUserName(`${user.firstName || ""} ${user.lastName || ""}`.trim() || "Mon Compte");
-      setLocalIsLoading(false);
-    } else if (user === null) {
-      // Explicit null means no user (not just undefined/not loaded yet)
+    checkAuthStatus();
+    
+    // Listen for storage changes (in case of login/logout from other tabs)
+    const handleStorageChange = () => {
       checkAuthStatus();
-    }
-  }, [user]);
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
-  // Fallback: Check localStorage if no user prop
   const checkAuthStatus = () => {
     try {
-      // Check both localStorage keys (your login page uses "user", not "userData")
+      // Check both localStorage keys
       const authToken = localStorage.getItem("authToken");
       const userFromLocalStorage = localStorage.getItem("user") || localStorage.getItem("userData");
 
@@ -43,7 +44,7 @@ const Header = ({ user, isLoading: propIsLoading = false }) => {
       setIsConnected(false);
       setUserName("");
     } finally {
-      setLocalIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -70,17 +71,16 @@ const Header = ({ user, isLoading: propIsLoading = false }) => {
       .slice(0, 2);
   };
 
-  // Determine loading state
-  const isLoading = propIsLoading || localIsLoading;
-
   if (isLoading) {
     return (
       <header className="bg-white text-blue-900 py-4 px-6 shadow-md sticky top-0 z-50 w-full">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center">
-            <img className="w-[200px]" src={logo.src} alt="logo" srcSet="" />
+            <Link href="/">
+              <img className="w-[200px] cursor-pointer" src={logo.src} alt="logo" srcSet="" />
+            </Link>
           </div>
-          <div className="hidden md:flex space-x-4">
+          <div className="hidden md:flex space-x-4 items-center">
             <div className="w-20 h-8 bg-gray-200 rounded-md animate-pulse"></div>
             <div className="w-20 h-8 bg-gray-200 rounded-md animate-pulse"></div>
           </div>
@@ -208,6 +208,7 @@ const Header = ({ user, isLoading: propIsLoading = false }) => {
         <button
           className="md:hidden text-2xl"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle menu"
         >
           ☰
         </button>
@@ -267,13 +268,13 @@ const Header = ({ user, isLoading: propIsLoading = false }) => {
               Contact
             </Link>
           </nav>
-          <br />
-          <hr />
+          
+          <div className="border-t border-blue-700 my-4"></div>
 
-          <div className="flex flex-col space-y-3 mt-4">
+          <div className="flex flex-col space-y-3">
             {isConnected ? (
               <div className="space-y-3">
-                <Link href="/dashboard" className="flex items-center space-x-2 px-3 py-2 bg-blue-700 rounded-md">
+                <Link href="/dashboard" className="flex items-center space-x-2 px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors" onClick={() => setIsMenuOpen(false)}>
                   <div className="w-6 h-6 bg-white text-blue-800 rounded-full flex items-center justify-center text-xs font-medium">
                     {getInitials(userName)}
                   </div>
