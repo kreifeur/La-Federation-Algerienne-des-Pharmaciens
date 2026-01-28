@@ -1,43 +1,45 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import MemberEditForm from './MemberEditForm';
+import { useState } from "react";
+import MemberEditForm from "./MemberEditForm";
 
 export default function MembersTable({ members, loading, onRefresh }) {
   const [editingMember, setEditingMember] = useState(null);
-  const [memberMessage, setMemberMessage] = useState('');
+  const [memberMessage, setMemberMessage] = useState("");
   const [memberLoading, setMemberLoading] = useState(false);
   const [memberForm, setMemberForm] = useState({
-    email: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    professionalStatus: '',
+    email: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+    professionalStatus: "",
     domainOfInterest: [],
-    role: 'member',
-    membershipStatus: 'pending'
+    role: "member",
+    membershipStatus: "pending",
   });
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      active: { color: 'bg-green-100 text-green-800', label: 'Actif' },
-      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'En attente' },
-      inactive: { color: 'bg-red-100 text-red-800', label: 'Inactif' },
-      suspended: { color: 'bg-gray-100 text-gray-800', label: 'Suspendu' }
+      active: { color: "bg-green-100 text-green-800", label: "Actif" },
+      pending: { color: "bg-yellow-100 text-yellow-800", label: "En attente" },
+      inactive: { color: "bg-red-100 text-red-800", label: "Inactif" },
+      suspended: { color: "bg-gray-100 text-gray-800", label: "Suspendu" },
     };
-    
+
     const config = statusConfig[status] || statusConfig.pending;
     return (
-      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${config.color}`}>
+      <span
+        className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${config.color}`}
+      >
         {config.label}
       </span>
     );
@@ -45,13 +47,15 @@ export default function MembersTable({ members, loading, onRefresh }) {
 
   const getRoleBadge = (role) => {
     const roleConfig = {
-      admin: { color: 'bg-purple-100 text-purple-800', label: 'Admin' },
-      member: { color: 'bg-blue-100 text-blue-800', label: 'Membre' }
+      admin: { color: "bg-purple-100 text-purple-800", label: "Admin" },
+      member: { color: "bg-blue-100 text-blue-800", label: "Membre" },
     };
-    
+
     const config = roleConfig[role] || roleConfig.member;
     return (
-      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${config.color}`}>
+      <span
+        className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${config.color}`}
+      >
         {config.label}
       </span>
     );
@@ -60,47 +64,47 @@ export default function MembersTable({ members, loading, onRefresh }) {
   const handleEditMember = (member) => {
     setEditingMember(member._id);
     setMemberForm({
-      email: member.email || '',
-      firstName: member.profile?.firstName || '',
-      lastName: member.profile?.lastName || '',
-      phone: member.profile?.phone || '',
-      professionalStatus: member.profile?.professionalStatus || '',
+      email: member.email || "",
+      firstName: member.profile?.firstName || "",
+      lastName: member.profile?.lastName || "",
+      phone: member.profile?.phone || "",
+      professionalStatus: member.profile?.professionalStatus || "",
       domainOfInterest: member.profile?.domainOfInterest || [],
-      role: member.role || 'member',
-      membershipStatus: member.profile?.membershipStatus || 'pending'
+      role: member.role || "member",
+      membershipStatus: member.profile?.membershipStatus || "pending",
     });
-    setMemberMessage('');
+    setMemberMessage("");
   };
 
   const handleCancelEdit = () => {
     setEditingMember(null);
     setMemberForm({
-      email: '',
-      firstName: '',
-      lastName: '',
-      phone: '',
-      professionalStatus: '',
+      email: "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      professionalStatus: "",
       domainOfInterest: [],
-      role: 'member',
-      membershipStatus: 'pending'
+      role: "member",
+      membershipStatus: "pending",
     });
-    setMemberMessage('');
+    setMemberMessage("");
   };
 
   const handleUpdateMember = async (memberId) => {
     setMemberLoading(true);
-    setMemberMessage('');
+    setMemberMessage("");
 
     try {
-      const authToken = localStorage.getItem('authToken');
-      
+      const authToken = localStorage.getItem("authToken");
+
       if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
+        throw new Error("Token d'authentification manquant");
       }
 
       // Validation des données
       if (!memberForm.email || !memberForm.firstName || !memberForm.lastName) {
-        throw new Error('Veuillez remplir tous les champs obligatoires.');
+        throw new Error("Veuillez remplir tous les champs obligatoires.");
       }
 
       const memberData = {
@@ -111,35 +115,39 @@ export default function MembersTable({ members, loading, onRefresh }) {
           phone: memberForm.phone,
           professionalStatus: memberForm.professionalStatus,
           domainOfInterest: memberForm.domainOfInterest,
-          membershipStatus: memberForm.membershipStatus
+          membershipStatus: memberForm.membershipStatus,
         },
-        role: memberForm.role
+        role: memberForm.role,
       };
 
       const response = await fetch(`/api/admin/users/${memberId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify(memberData)
+        body: JSON.stringify(memberData),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Erreur lors de la mise à jour du membre');
+        throw new Error(
+          result.message || "Erreur lors de la mise à jour du membre",
+        );
       }
 
       if (result.success) {
-        setMemberMessage('✅ Membre mis à jour avec succès !');
+        setMemberMessage("✅ Membre mis à jour avec succès !");
         onRefresh();
         setTimeout(() => {
           setEditingMember(null);
-          setMemberMessage('');
+          setMemberMessage("");
         }, 2000);
       } else {
-        throw new Error(result.message || 'Erreur lors de la mise à jour du membre');
+        throw new Error(
+          result.message || "Erreur lors de la mise à jour du membre",
+        );
       }
     } catch (error) {
       setMemberMessage(`❌ ${error.message}`);
@@ -149,36 +157,44 @@ export default function MembersTable({ members, loading, onRefresh }) {
   };
 
   const handleDeleteMember = async (memberId) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce membre ? Cette action est irréversible.')) {
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir supprimer ce membre ? Cette action est irréversible.",
+      )
+    ) {
       return;
     }
 
     try {
-      const authToken = localStorage.getItem('authToken');
-      
+      const authToken = localStorage.getItem("authToken");
+
       if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
+        throw new Error("Token d'authentification manquant");
       }
 
       const response = await fetch(`/api/admin/users/${memberId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
+          Authorization: `Bearer ${authToken}`,
+        },
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Erreur lors de la suppression du membre');
+        throw new Error(
+          result.message || "Erreur lors de la suppression du membre",
+        );
       }
 
       if (result.success) {
-        setMemberMessage('✅ Membre supprimé avec succès !');
+        setMemberMessage("✅ Membre supprimé avec succès !");
         onRefresh();
-        setTimeout(() => setMemberMessage(''), 2000);
+        setTimeout(() => setMemberMessage(""), 2000);
       } else {
-        throw new Error(result.message || 'Erreur lors de la suppression du membre');
+        throw new Error(
+          result.message || "Erreur lors de la suppression du membre",
+        );
       }
     } catch (error) {
       setMemberMessage(`❌ ${error.message}`);
@@ -187,34 +203,40 @@ export default function MembersTable({ members, loading, onRefresh }) {
 
   const handleToggleStatus = async (memberId, currentStatus) => {
     try {
-      const authToken = localStorage.getItem('authToken');
-      
+      const authToken = localStorage.getItem("authToken");
+
       if (!authToken) {
-        throw new Error('Token d\'authentification manquant');
+        throw new Error("Token d'authentification manquant");
       }
 
       const newStatus = !currentStatus;
       const response = await fetch(`/api/admin/users/${memberId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify({ isActive: newStatus })
+        body: JSON.stringify({ isActive: newStatus }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Erreur lors du changement de statut');
+        throw new Error(
+          result.message || "Erreur lors du changement de statut",
+        );
       }
 
       if (result.success) {
-        setMemberMessage(`✅ Statut ${newStatus ? 'activé' : 'désactivé'} avec succès !`);
+        setMemberMessage(
+          `✅ Statut ${newStatus ? "activé" : "désactivé"} avec succès !`,
+        );
         onRefresh();
-        setTimeout(() => setMemberMessage(''), 2000);
+        setTimeout(() => setMemberMessage(""), 2000);
       } else {
-        throw new Error(result.message || 'Erreur lors du changement de statut');
+        throw new Error(
+          result.message || "Erreur lors du changement de statut",
+        );
       }
     } catch (error) {
       setMemberMessage(`❌ ${error.message}`);
@@ -225,7 +247,9 @@ export default function MembersTable({ members, loading, onRefresh }) {
     return (
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Tous les Membres</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            Tous les Membres
+          </h2>
         </div>
         <div className="p-6">
           <div className="text-center py-8">
@@ -242,12 +266,16 @@ export default function MembersTable({ members, loading, onRefresh }) {
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-medium text-gray-900">Tous les Membres</h2>
       </div>
-      
+
       <div className="p-6">
         {memberMessage && !editingMember && (
-          <div className={`p-4 rounded-md mb-4 ${
-            memberMessage.includes('✅') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-          }`}>
+          <div
+            className={`p-4 rounded-md mb-4 ${
+              memberMessage.includes("✅")
+                ? "bg-green-50 text-green-700"
+                : "bg-red-50 text-red-700"
+            }`}
+          >
             {memberMessage}
           </div>
         )}
@@ -268,7 +296,7 @@ export default function MembersTable({ members, loading, onRefresh }) {
                     Contact
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut Professionnel
+                    Profession
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Rôle & Statut
@@ -286,7 +314,7 @@ export default function MembersTable({ members, loading, onRefresh }) {
                   <tr key={member._id} className="hover:bg-gray-50">
                     {editingMember === member._id ? (
                       <td colSpan="6">
-                        <MemberEditForm 
+                        <MemberEditForm
                           member={member}
                           memberForm={memberForm}
                           setMemberForm={setMemberForm}
@@ -301,41 +329,49 @@ export default function MembersTable({ members, loading, onRefresh }) {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {member.profile?.firstName} {member.profile?.lastName}
+                              {member.profile?.firstName}{" "}
+                              {member.profile?.lastName}
                             </div>
                             <div className="text-sm text-gray-500">
                               {member.email}
                             </div>
                             {member.profile?.domainOfInterest && (
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {member.profile.domainOfInterest.map((domain, index) => (
-                                  <span 
-                                    key={index}
-                                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                                  >
-                                    {domain}
-                                  </span>
-                                ))}
+                                {member.profile.domainOfInterest.map(
+                                  (domain, index) => (
+                                    <span
+                                      key={index}
+                                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                                    >
+                                      {domain}
+                                    </span>
+                                  ),
+                                )}
                               </div>
                             )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {member.profile?.phone || 'Non renseigné'}
+                          {member.profile?.phone || "Non renseigné"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
-                          {member.profile?.professionalStatus || 'Non renseigné'}
+                          {member.profile?.professionalStatus ||
+                            "Non renseigné"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="space-y-1 flex gap-1 items-center ">
                             {getRoleBadge(member.role)}
                             {getStatusBadge(member.profile?.membershipStatus)}
-                            <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                              member.isActive 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {member.isActive ? 'Compte actif' : 'Compte inactif'}
+                            <div
+                              className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                member.isActive
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {member.isActive
+                                ? "Compte actif"
+                                : "Compte inactif"}
                             </div>
                           </div>
                         </td>
@@ -351,16 +387,18 @@ export default function MembersTable({ members, loading, onRefresh }) {
                               Modifier
                             </button> */}
                             <button
-                              onClick={() => handleToggleStatus(member._id, member.isActive)}
+                              onClick={() =>
+                                handleToggleStatus(member._id, member.isActive)
+                              }
                               className={`${
-                                member.isActive 
-                                  ? 'text-orange-600 hover:text-orange-900' 
-                                  : 'text-green-600 hover:text-green-900'
+                                member.isActive
+                                  ? "text-orange-600 hover:text-orange-900"
+                                  : "text-green-600 hover:text-green-900"
                               }`}
                             >
-                              {member.isActive ? 'Désactiver' : 'Activer'}
+                              {member.isActive ? "Désactiver" : "Activer"}
                             </button>
-                           {/*  <button
+                            {/*  <button
                               onClick={() => handleDeleteMember(member._id)}
                               className="text-red-600 hover:text-red-900"
                             >

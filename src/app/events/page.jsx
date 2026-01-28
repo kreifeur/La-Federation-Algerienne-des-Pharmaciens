@@ -13,17 +13,16 @@ export default function Events() {
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [registeringEvent, setRegisteringEvent] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [categories, setCategories] = useState([]); // New state for categories
+  const [categories, setCategories] = useState([]);
+  const [userInfo, setUserInfo] = useState(null); // Nouveau état pour les infos utilisateur
   const router = useRouter();
 
-  // Filtres disponibles - Will be populated from API
   const [filters, setFilters] = useState([
     { key: "all", label: "Tous les événements" },
     { key: "upcoming", label: "Événements à venir" },
     { key: "past", label: "Événements passés" }
   ]);
 
-  // Fetch categories from API
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -37,7 +36,6 @@ export default function Events() {
         const categoriesData = data.data.categories;
         setCategories(categoriesData);
         
-        // Update filters with categories from API
         const categoryFilters = categoriesData.map(category => ({
           key: category.name.toLowerCase().replace(/\s+/g, '-'),
           label: category.name
@@ -53,7 +51,6 @@ export default function Events() {
     }
   };
 
-  // Fonction pour récupérer le profil utilisateur
   const fetchUserProfile = async () => {
     try {
       const authToken = localStorage.getItem("authToken");
@@ -77,9 +74,10 @@ export default function Events() {
 
       const result = await response.json();
 
-      if (result.success && result.data && (result.data.userId || result.data._id)) {
+      if (result.success && result.data) {
         const userId = result.data.userId || result.data._id;
         setCurrentUserId(userId);
+        setUserInfo(result.data); // Sauvegarder les infos utilisateur
         console.log("Utilisateur connecté, ID:", userId);
         return userId;
       }
@@ -91,7 +89,6 @@ export default function Events() {
     }
   };
 
-  // Fetch events from API
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -99,21 +96,15 @@ export default function Events() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-
-      // Essayer de récupérer le profil utilisateur
       const userId = await fetchUserProfile();
 
       const response = await fetch("/api/events");
       const data = await response.json();
 
       if (data.success && data.data) {
-        console.log(data);
-        // CORRECTION: data.data peut être un tableau ou un objet avec une propriété events
         const eventsArray = Array.isArray(data.data) ? data.data : (data.data.events || []);
         
-        // Ajouter le statut à chaque événement
         const eventsWithStatus = eventsArray.map(event => {
-          // Vérifier si l'utilisateur est dans participants
           const isRegistered = userId ? 
             (event.participants?.some(p => 
               (typeof p === 'object' ? p.userId || p._id : p) === userId
@@ -137,20 +128,18 @@ export default function Events() {
     }
   };
 
-  // Fonction pour vérifier si un événement est à venir
   const isUpcomingEvent = (event) => {
     if (!event.startDate) return false;
     try {
       const eventDate = new Date(event.startDate);
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Ignorer l'heure pour comparer seulement les dates
+      today.setHours(0, 0, 0, 0);
       return eventDate >= today;
     } catch (error) {
       return false;
     }
   };
 
-  // Fonction pour vérifier si un événement est passé
   const isPastEvent = (event) => {
     if (!event.startDate) return false;
     try {
@@ -163,7 +152,6 @@ export default function Events() {
     }
   };
 
-  // Filtrer les événements côté frontend
   const filteredEvents = events.filter((event) => {
     switch (activeFilter) {
       case "all":
@@ -173,14 +161,9 @@ export default function Events() {
       case "past":
         return isPastEvent(event);
       default:
-        // For category filters, check if event category matches the filter
         if (!event.category) return false;
-        
-        // Find the category filter that matches the active filter key
         const categoryFilter = filters.find(f => f.key === activeFilter);
         if (!categoryFilter) return false;
-        
-        // Check if event category name matches the filter label
         return event.category.toLowerCase() === categoryFilter.label.toLowerCase();
     }
   });
@@ -208,7 +191,6 @@ export default function Events() {
         return;
       }
 
-      // S'assurer que nous avons l'ID utilisateur
       let userId = currentUserId;
       if (!userId) {
         userId = await fetchUserProfile();
@@ -218,38 +200,46 @@ export default function Events() {
         throw new Error("Impossible de récupérer l'ID utilisateur");
       }
 
-      const response = await fetch(`/api/events/${event._id}/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({ userId }),
-      });
+      // Vérifier si l'événement est gratuit
+      const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+      
+      if (isFreeEvent) {
+        // Pour les événements gratuits, procéder à l'inscription directe
+        const response = await fetch(`/api/events/${event._id}/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ userId }),
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message || "Erreur lors de l'inscription");
-      }
+        if (!response.ok) {
+          throw new Error(result.message || "Erreur lors de l'inscription");
+        }
 
-      if (result.success) {
-        // Mettre à jour le statut de l'événement localement
-        setEvents((prev) =>
-          prev.map((ev) =>
-            ev._id === event._id
-              ? {
-                  ...ev,
-                  status: "registered",
-                  participants: [...(ev.participants || []), { userId }],
-                }
-              : ev
-          )
-        );
+        if (result.success) {
+          setEvents((prev) =>
+            prev.map((ev) =>
+              ev._id === event._id
+                ? {
+                    ...ev,
+                    status: "registered",
+                    participants: [...(ev.participants || []), { userId }],
+                  }
+                : ev
+            )
+          );
 
-        alert("✅ Inscription réussie ! Vous êtes maintenant inscrit à cet événement.");
+          alert("✅ Inscription réussie ! Vous êtes maintenant inscrit à cet événement.");
+        } else {
+          throw new Error(result.message || "Erreur lors de l'inscription");
+        }
       } else {
-        throw new Error(result.message || "Erreur lors de l'inscription");
+        // Pour les événements payants, rediriger vers la page de paiement
+        redirectToPaymentPage(event);
       }
     } catch (error) {
       console.error("Erreur:", error);
@@ -257,6 +247,37 @@ export default function Events() {
     } finally {
       setRegisteringEvent(null);
     }
+  };
+
+  const redirectToPaymentPage = (event) => {
+    // Préparer les données de l'événement pour la page de paiement
+    const paymentData = {
+      eventId: event._id,
+      eventTitle: event.title,
+      eventDate: event.startDate,
+      eventLocation: event.location,
+      
+      // Déterminer le prix en fonction du statut de membre
+      amount: userInfo?.isMember ? event.memberPrice : event.nonMemberPrice,
+      priceType: userInfo?.isMember ? "member" : "non-member",
+      memberPrice: event.memberPrice,
+      nonMemberPrice: event.nonMemberPrice,
+      
+      userId: currentUserId,
+      userName: userInfo?.fullName || userInfo?.email,
+      userEmail: userInfo?.email,
+      
+      // Autres informations utiles
+      isOnlineEvent: event.isOnline,
+      maxParticipants: event.maxParticipants,
+      currentParticipants: event.participants?.length || 0,
+    };
+
+    // Stocker les données temporairement dans localStorage
+    localStorage.setItem("pendingPayment", JSON.stringify(paymentData));
+    
+    // Rediriger vers la page de paiement
+    router.push("/payment");
   };
 
   const handleLoginRedirect = () => {
@@ -270,6 +291,11 @@ export default function Events() {
     const participantsCount = event.participants?.length || 0;
     const maxParticipants = event.maxParticipants || "Illimité";
 
+    // Vérifier si l'événement est gratuit ou payant
+    const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+    const priceInfo = isFreeEvent ? "Gratuit" : 
+      `Prix membre: ${event.memberPrice || 0}DA\nPrix non-membre: ${event.nonMemberPrice || 0}DA`;
+
     alert(
       `Détails de l'événement:\n\n` +
         `📌 ${event.title}\n\n` +
@@ -281,15 +307,16 @@ export default function Events() {
         (event.isOnline ? `🌐 Événement en ligne\n` : '') +
         (event.isMemberOnly ? `🔒 Réservé aux membres seulement\n` : '') +
         `👥 Participants: ${participantsCount}/${maxParticipants}\n` +
-        `💰 Prix membre: ${event.memberPrice || 0}DA\n` +
-        `💰 Prix non-membre: ${event.nonMemberPrice || 0}DA\n` +
+        `💰 ${priceInfo}\n` +
         `📋 Catégorie: ${formatCategory(event.category)}\n` +
         `${
           isConnected
             ? isRegistered
               ? "✅ Vous êtes inscrit à cet événement"
-              : "❌ Vous n'êtes pas inscrit - Statut: Disponible"
-            : "🔐 Connectez-vous pour vous inscrire - Statut: Disponible"
+              : isFreeEvent
+                ? "❌ Vous n'êtes pas inscrit - Statut: Disponible (Gratuit)"
+                : "❌ Vous n'êtes pas inscrit - Statut: Disponible (Payant)"
+            : "🔐 Connectez-vous pour vous inscrire"
         }`
     );
   };
@@ -325,18 +352,13 @@ export default function Events() {
 
   const formatCategory = (category) => {
     if (!category) return "Non spécifiée";
-    
-    // Try to find the category in our categories list
     const foundCategory = categories.find(cat => cat.name === category);
     if (foundCategory) {
       return foundCategory.name;
     }
-    
-    // Fallback to the category name as is
     return category;
   };
 
-  // Obtenir le texte du bouton en fonction du statut
   const getButtonText = (event) => {
     if (isPastEvent(event)) {
       return "Voir le replay";
@@ -347,26 +369,53 @@ export default function Events() {
     if (event.maxParticipants && (event.participants?.length || 0) >= event.maxParticipants) {
       return "Complet";
     }
-    return "S'inscrire";
+    
+    // Afficher "Payer" pour les événements payants
+    const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+    return isFreeEvent ? "S'inscrire" : "S'inscrire & Payer";
   };
 
-  // Vérifier si le bouton doit être désactivé
   const isButtonDisabled = (event) => {
     return isPastEvent(event) || 
            event.status === "registered" || 
            (event.maxParticipants && (event.participants?.length || 0) >= event.maxParticipants) ||
            registeringEvent === event._id ||
-           (event.isMemberOnly && !currentUserId); // Ajout: vérifier si réservé aux membres
+           (event.isMemberOnly && !currentUserId);
   };
 
-  // Générer une clé unique pour chaque événement
   const getEventKey = (event, index) => {
     return event._id ? `event-${event._id}` : `event-${index}-${Date.now()}`;
   };
 
-  // Fonction pour rafraîchir la liste des événements
   const refreshEvents = () => {
     fetchEvents();
+  };
+
+  // Afficher le prix selon le statut de l'utilisateur
+  const displayPrice = (event) => {
+    const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+    
+    if (isFreeEvent) {
+      return (
+        <span className="text-green-600 font-semibold">
+          Gratuit
+        </span>
+      );
+    } else {
+      const userPrice = userInfo?.isMember ? event.memberPrice : event.nonMemberPrice;
+      const otherPrice = userInfo?.isMember ? event.nonMemberPrice : event.memberPrice;
+      
+      return (
+        <div className="text-right">
+          <div className="text-blue-800 font-semibold">
+            {userPrice || 0} DA {userInfo?.isMember ? "(Membre)" : "(Non-membre)"}
+          </div>
+          <div className="text-sm text-gray-500">
+            {otherPrice || 0} DA {userInfo?.isMember ? "(Non-membre)" : "(Membre)"}
+          </div>
+        </div>
+      );
+    }
   };
 
   return (
@@ -445,6 +494,7 @@ export default function Events() {
                 const isDisabled = isButtonDisabled(event);
                 const participantsCount = event.participants?.length || 0;
                 const maxParticipants = event.maxParticipants || "Illimité";
+                const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
 
                 return (
                   <div
@@ -477,6 +527,11 @@ export default function Events() {
                             <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
                               {status.text}
                             </span>
+                            {!isFreeEvent && (
+                              <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                                💰 Payant
+                              </span>
+                            )}
                           </div>
                           <h3 className="text-xl font-semibold text-blue-800 mb-1 line-clamp-1">
                             {event.title}
@@ -517,19 +572,7 @@ export default function Events() {
                             {event.location || "Lieu à confirmer"}
                           </span>
                         </div>
-                        <div className="text-right">
-                          {event.nonMemberPrice === 0 && event.memberPrice === 0 ? (
-                            <span className="text-green-600 font-semibold">
-                              Gratuit
-                            </span>
-                          ) : (
-                            <>
-                              <div className="text-blue-800 font-semibold">
-                                {event.memberPrice || 0} DA 
-                              </div>
-                            </>
-                          )}
-                        </div>
+                        {displayPrice(event)}
                       </div>
 
                       <div className="flex justify-between items-center">

@@ -333,7 +333,7 @@ export default function Membership() {
                     clipRule="evenodd"
                   />
                 </svg>
-                Connexion sécurisée SSL 256-bit
+                Connexion sécurisée
               </div>
             ) : (
               <div className="inline-flex items-center bg-red-100 text-red-800 px-4 py-2 rounded-lg text-sm font-semibold">
