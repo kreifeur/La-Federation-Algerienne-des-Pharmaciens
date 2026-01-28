@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import MemberEditForm from "./MemberEditForm";
 
 export default function MembersTable({ members, loading, onRefresh }) {
   const [editingMember, setEditingMember] = useState(null);
   const [memberMessage, setMemberMessage] = useState("");
   const [memberLoading, setMemberLoading] = useState(false);
+  const [selectedProfession, setSelectedProfession] = useState("all");
   const [memberForm, setMemberForm] = useState({
     email: "",
     firstName: "",
@@ -17,6 +18,41 @@ export default function MembersTable({ members, loading, onRefresh }) {
     role: "member",
     membershipStatus: "pending",
   });
+
+  // Extract unique professions from members, including "Non renseigné"
+  const allProfessions = useMemo(() => {
+    const professions = new Set();
+    
+    // Add default option
+    professions.add("all");
+    
+    // Add all professions from members
+    members.forEach((member) => {
+      const profStatus = member.profile?.professionalStatus;
+      if (profStatus && profStatus.trim() !== "") {
+        professions.add(profStatus);
+      } else {
+        professions.add("Non renseigné");
+      }
+    });
+    
+    return Array.from(professions);
+  }, [members]);
+
+  // Filter members by selected profession
+  const filteredMembers = useMemo(() => {
+    if (selectedProfession === "all") return members;
+    
+    return members.filter((member) => {
+      const profStatus = member.profile?.professionalStatus;
+      
+      if (selectedProfession === "Non renseigné") {
+        return !profStatus || profStatus.trim() === "";
+      }
+      
+      return profStatus === selectedProfession;
+    });
+  }, [members, selectedProfession]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -59,6 +95,15 @@ export default function MembersTable({ members, loading, onRefresh }) {
         {config.label}
       </span>
     );
+  };
+
+  // Helper function to get displayed profession text
+  const getDisplayedProfession = (member) => {
+    const profStatus = member.profile?.professionalStatus;
+    if (!profStatus || profStatus.trim() === "") {
+      return "Non renseigné";
+    }
+    return profStatus;
   };
 
   const handleEditMember = (member) => {
@@ -263,8 +308,35 @@ export default function MembersTable({ members, loading, onRefresh }) {
 
   return (
     <div className="bg-white rounded-lg shadow">
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h2 className="text-lg font-medium text-gray-900">Tous les Membres</h2>
+        
+        {/* Profession Filter */}
+        <div className="flex items-center space-x-2">
+          <label htmlFor="profession-filter" className="text-sm font-medium text-gray-700">
+            Filtrer par profession:
+          </label>
+          <select
+            id="profession-filter"
+            value={selectedProfession}
+            onChange={(e) => setSelectedProfession(e.target.value)}
+            className="block w-64 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          >
+            {allProfessions.map((profession) => (
+              <option key={profession} value={profession}>
+                {profession === "all" ? "Toutes les professions" : profession}
+              </option>
+            ))}
+          </select>
+          {selectedProfession !== "all" && (
+            <button
+              onClick={() => setSelectedProfession("all")}
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              Réinitialiser
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="p-6">
@@ -280,9 +352,43 @@ export default function MembersTable({ members, loading, onRefresh }) {
           </div>
         )}
 
-        {members.length === 0 ? (
+        {/* Filter status info */}
+        <div className="mb-4 p-3 bg-gray-50 rounded-md">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              <span className="font-medium">{filteredMembers.length}</span> membre{filteredMembers.length !== 1 ? 's' : ''} 
+              {selectedProfession !== "all" && (
+                <>
+                  {" "}pour la profession: <span className="font-medium">{selectedProfession}</span>
+                </>
+              )}
+            </div>
+            {selectedProfession !== "all" && (
+              <button
+                onClick={() => setSelectedProfession("all")}
+                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                Afficher tous les membres ({members.length})
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredMembers.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-600">Aucun membre trouvé.</p>
+            <p className="text-gray-600">
+              {selectedProfession === "all" 
+                ? "Aucun membre trouvé." 
+                : `Aucun membre trouvé pour la profession: ${selectedProfession}`}
+            </p>
+            {selectedProfession !== "all" && (
+              <button
+                onClick={() => setSelectedProfession("all")}
+                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Voir tous les membres
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -310,7 +416,7 @@ export default function MembersTable({ members, loading, onRefresh }) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {members.map((member) => (
+                {filteredMembers.map((member) => (
                   <tr key={member._id} className="hover:bg-gray-50">
                     {editingMember === member._id ? (
                       <td colSpan="6">
@@ -355,8 +461,7 @@ export default function MembersTable({ members, loading, onRefresh }) {
                           {member.profile?.phone || "Non renseigné"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
-                          {member.profile?.professionalStatus ||
-                            "Non renseigné"}
+                          {getDisplayedProfession(member)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="space-y-1 flex gap-1 items-center ">

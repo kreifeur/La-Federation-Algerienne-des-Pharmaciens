@@ -2,14 +2,6 @@
 
 import { useState, useCallback } from 'react';
 
-const PROFESSIONAL_STATUS_OPTIONS = [
-  { value: 'student', label: 'Étudiant' },
-  { value: 'professional', label: 'Professionnel' },
-  { value: 'researcher', label: 'Chercheur' },
-  { value: 'entrepreneur', label: 'Entrepreneur' },
-  { value: 'retired', label: 'Retraité' }
-];
-
 const DOMAIN_OPTIONS = [
   { value: 'skincare', label: 'Soins de la peau' },
   { value: 'research', label: 'Recherche' },
@@ -25,7 +17,7 @@ export default function MemberCreationModal({ onClose, onMemberCreated }) {
     firstName: '',
     lastName: '',
     phone: '',
-    professionalStatus: 'professional',
+    professionalStatus: '', // Champ libre - vide par défaut
     domainOfInterest: ['skincare', 'research'],
     role: 'member'
   });
@@ -74,7 +66,7 @@ export default function MemberCreationModal({ onClose, onMemberCreated }) {
         firstName: memberForm.firstName,
         lastName: memberForm.lastName,
         phone: memberForm.phone,
-        professionalStatus: memberForm.professionalStatus,
+        professionalStatus: memberForm.professionalStatus, // Champ libre
         domainOfInterest: memberForm.domainOfInterest,
         role: memberForm.role
       };
@@ -101,7 +93,7 @@ export default function MemberCreationModal({ onClose, onMemberCreated }) {
           firstName: '',
           lastName: '',
           phone: '',
-          professionalStatus: 'professional',
+          professionalStatus: '', // Réinitialisé à vide
           domainOfInterest: ['skincare', 'research'],
           role: 'member'
         });
@@ -227,20 +219,16 @@ export default function MemberCreationModal({ onClose, onMemberCreated }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Statut Professionnel
+                  Profession
                 </label>
-                <select
+                <input
+                  type="text"
                   name="professionalStatus"
                   value={memberForm.professionalStatus}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {PROFESSIONAL_STATUS_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Entrez la profession"
+                />
               </div>
             </div>
 
