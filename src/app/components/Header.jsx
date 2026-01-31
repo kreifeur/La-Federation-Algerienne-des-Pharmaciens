@@ -328,7 +328,7 @@ const Header = () => {
                 </Link>
                 <Link
                   href="/dashboard/directory"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
+                  className="block px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors"
                 >
                   Annuaire
                 </Link>
