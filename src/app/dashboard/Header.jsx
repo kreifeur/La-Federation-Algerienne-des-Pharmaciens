@@ -69,6 +69,13 @@ export default function Header({ user }) {
                   Événements
                 </a>
 
+                <a
+                  href="/dashboard/directory"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Annuaire
+                </a>
+
                 {/*NOTIMPORTATNT*/}
                 {/* <a href="/dashboard/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Paramètres

@@ -12,28 +12,32 @@ const Header = () => {
 
   useEffect(() => {
     checkAuthStatus();
-    
+
     // Listen for storage changes (in case of login/logout from other tabs)
     const handleStorageChange = () => {
       checkAuthStatus();
     };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
+
+    window.addEventListener("storage", handleStorageChange);
+
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
   const checkAuthStatus = () => {
     try {
       const authToken = localStorage.getItem("authToken");
-      const userFromLocalStorage = localStorage.getItem("user") || localStorage.getItem("userData");
+      const userFromLocalStorage =
+        localStorage.getItem("user") || localStorage.getItem("userData");
 
       if (authToken && userFromLocalStorage) {
         setIsConnected(true);
         const user = JSON.parse(userFromLocalStorage);
-        setUserName(`${user.firstName || ""} ${user.lastName || ""}`.trim() || "Mon Compte");
+        setUserName(
+          `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+            "Mon Compte",
+        );
       } else {
         setIsConnected(false);
         setUserName("");
@@ -57,13 +61,13 @@ const Header = () => {
     localStorage.removeItem("userFullName");
     localStorage.removeItem("membershipStatus");
     localStorage.removeItem("rememberedEmail");
-    
+
     setIsConnected(false);
     setUserName("");
-    
+
     // Dispatch storage event to notify other tabs/components
     window.dispatchEvent(new Event("storage"));
-    
+
     // Force reload to update the page state
     window.location.href = "/";
   };
@@ -84,7 +88,12 @@ const Header = () => {
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center">
             <Link href="/">
-              <img className="w-[200px] cursor-pointer" src={logo.src} alt="logo" srcSet="" />
+              <img
+                className="w-[200px] cursor-pointer"
+                src={logo.src}
+                alt="logo"
+                srcSet=""
+              />
             </Link>
           </div>
           <div className="hidden md:flex space-x-4 items-center">
@@ -101,7 +110,12 @@ const Header = () => {
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/">
-            <img className="w-[200px] cursor-pointer" src={logo.src} alt="logo" srcSet="" />
+            <img
+              className="w-[200px] cursor-pointer"
+              src={logo.src}
+              alt="logo"
+              srcSet=""
+            />
           </Link>
         </div>
 
@@ -282,13 +296,17 @@ const Header = () => {
               Contact
             </Link>
           </nav>
-          
+
           <div className="border-t border-blue-700 my-4"></div>
 
           <div className="flex flex-col space-y-3">
             {isConnected ? (
               <div className="space-y-3">
-                <Link href="/dashboard" className="flex items-center space-x-2 px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors" onClick={() => setIsMenuOpen(false)}>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
                   <div className="w-6 h-6 bg-white text-blue-800 rounded-full flex items-center justify-center text-xs font-medium">
                     {getInitials(userName)}
                   </div>
@@ -307,6 +325,12 @@ const Header = () => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Mes Événements
+                </Link>
+                <Link
+                  href="/dashboard/directory"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
+                >
+                  Annuaire
                 </Link>
                 <button
                   onClick={() => {
