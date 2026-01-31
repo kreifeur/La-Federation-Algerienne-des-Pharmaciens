@@ -6,9 +6,9 @@ import Footer from "../components/Footer";
 import axios from 'axios'
 import ReCAPTCHA from "react-google-recaptcha";
 
+
 export default function Membership() {
   const [selectedPlan, setSelectedPlan] = useState("individual");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(""); // New state for payment method
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -69,11 +69,6 @@ export default function Membership() {
       ...prevState,
       plan: plan,
     }));
-  };
-
-  // Add function to handle payment method selection
-  const handlePaymentMethodChange = (method) => {
-    setSelectedPaymentMethod(method);
   };
 
   const membershipPlans = [
@@ -266,7 +261,6 @@ export default function Membership() {
         professionalStatus: formData.profession,
         domainOfInterest: ["skincare", "research"], // skincare, makeup, research, teaching, business, technology
         biography: "",
-        paymentMethod: selectedPaymentMethod, // Add payment method to registration data
       };
 
       console.log(registerData);
@@ -284,25 +278,17 @@ export default function Membership() {
         throw new Error(registerResult.message || "Erreur d'enregistrement");
       }
 
-      // Handle different payment methods
-      if (selectedPaymentMethod === "cash") {
-        // For cash payment, show success message immediately
-        setIsSubmitted(true);
-        setIsProcessing(false);
-      } else {
-        // For online payment, redirect to payment gateway
-        try {
-          const res = await axios.get('/api/pay')
-          console.log('SATIM RESPONSE:', res.data)
-          if (res.data.formUrl) {
-            window.location.href = res.data.formUrl
-          }
-        } catch (err) {
-          console.error(err)
-          alert("Erreur lors de la redirection vers le paiement en ligne");
-          setIsProcessing(false);
-        }
+          try {
+      const res = await axios.get('/api/pay')
+
+      console.log('SATIM RESPONSE:', res.data)
+
+      if (res.data.formUrl) {
+        window.location.href = res.data.formUrl
       }
+    } catch (err) {
+      console.error(err)
+    }
 
     } catch (error) {
       console.error("Payment error:", error);
@@ -314,13 +300,6 @@ export default function Membership() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Check if payment method is selected
-    if (!selectedPaymentMethod) {
-      alert("Veuillez sélectionner un mode de paiement");
-      return;
-    }
-    
     await handlePayment();
   };
 
@@ -842,59 +821,6 @@ export default function Membership() {
                       </div>
                     </div>
 
-                    {/* Payment Method Selection - MODIFIED */}
-                    <div className="flex flex-col gap-2 my-6">
-                      <div 
-                        className={`border p-3 cursor-pointer rounded-md transition-all ${
-                          selectedPaymentMethod === "cash" 
-                            ? "border-blue-800 bg-blue-50" 
-                            : "border-gray-300 hover:bg-gray-50"
-                        }`}
-                        onClick={() => handlePaymentMethodChange("cash")}
-                      >
-                        <div className="flex items-center">
-                          <div className={`w-5 h-5 rounded-full border mr-3 flex items-center justify-center ${
-                            selectedPaymentMethod === "cash" 
-                              ? "border-blue-800 bg-blue-800" 
-                              : "border-gray-400"
-                          }`}>
-                            {selectedPaymentMethod === "cash" && (
-                              <div className="w-2 h-2 rounded-full bg-white"></div>
-                            )}
-                          </div>
-                          <span className="font-medium">Paiement par cash</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1 ml-8">
-                          Payez en espèces lors de votre visite à notre siège
-                        </p>
-                      </div>
-
-                      <div 
-                        className={`border p-3 cursor-pointer rounded-md transition-all ${
-                          selectedPaymentMethod === "online" 
-                            ? "border-blue-800 bg-blue-50" 
-                            : "border-gray-300 hover:bg-gray-50"
-                        }`}
-                        onClick={() => handlePaymentMethodChange("online")}
-                      >
-                        <div className="flex items-center">
-                          <div className={`w-5 h-5 rounded-full border mr-3 flex items-center justify-center ${
-                            selectedPaymentMethod === "online" 
-                              ? "border-blue-800 bg-blue-800" 
-                              : "border-gray-400"
-                          }`}>
-                            {selectedPaymentMethod === "online" && (
-                              <div className="w-2 h-2 rounded-full bg-white"></div>
-                            )}
-                          </div>
-                          <span className="font-medium">Paiement en ligne par CIB/DHAHABIA</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1 ml-8">
-                          Paiement sécurisé via la plateforme SATIM
-                        </p>
-                      </div>
-                    </div>
-
                     <div className="mb-6">
                       <div
                         className={`p-4 border rounded-md ${
@@ -994,13 +920,6 @@ export default function Membership() {
                       </div>
 
                       <div className="flex justify-between items-center pb-3 border-b">
-                        <span>Mode de paiement</span>
-                        <span className="font-medium">
-                          {selectedPaymentMethod === "cash" ? "Paiement par cash" : "Paiement en ligne"}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center pb-3 border-b">
                         <span>Frais d'adhésion</span>
                         <span>0 DA</span>
                       </div>
@@ -1020,9 +939,8 @@ export default function Membership() {
                               {getPlanAmount().toLocaleString()} DA
                             </div>
                             <div className="text-sm text-gray-600 mt-1">
-                              {selectedPaymentMethod === "cash" 
-                                ? "À régler en espèces à notre siège" 
-                                : "Adhésion valable pour 1 an à partir de la date de paiement"}
+                              Adhésion valable pour 1 an à partir de la date de
+                              paiement
                             </div>
                           </div>
                         </div>
@@ -1033,89 +951,53 @@ export default function Membership() {
                   {/* Terms and Conditions */}
                   <div className="mb-8 p-6 border border-gray-300 rounded-lg bg-gray-50">
                     <h3 className="text-lg font-semibold text-blue-800 mb-4">
-                      {selectedPaymentMethod === "cash" 
-                        ? "Instructions pour le paiement en espèces" 
-                        : "Conditions générales de paiement et de vente"}
+                      Conditions générales de paiement et de vente
                     </h3>
                     <div className="text-sm text-gray-700 space-y-3 max-h-80 overflow-y-auto pr-2">
-                      {selectedPaymentMethod === "cash" ? (
-                        <>
-                          <p>
-                            <strong>Instructions pour le paiement en espèces :</strong>
-                          </p>
-                          <p>
-                            Vous avez choisi de payer en espèces. Voici les étapes à suivre :
-                          </p>
-                          <ol className="list-decimal list-inside space-y-2 pl-2">
-                            <li>Votre demande d'adhésion a été enregistrée avec succès</li>
-                            <li>Vous recevrez un email de confirmation avec votre numéro de dossier</li>
-                            <li>Présentez-vous à notre siège avec :
-                              <ul className="list-disc list-inside ml-4 mt-1">
-                                <li>Votre pièce d'identité</li>
-                                <li>Votre diplôme de pharmacien (ou carte d'étudiant)</li>
-                                <li>Le montant de {getPlanAmount().toLocaleString()} DA en espèces</li>
-                              </ul>
-                            </li>
-                            <li>Vous recevrez immédiatement votre carte de membre après paiement</li>
-                          </ol>
-                          <p>
-                            <strong>Adresse de notre siège :</strong>
-                            <br />
-                            Fédération Algérienne des Pharmaciens
-                            <br />
-                            [Adresse complète à compléter]
-                            <br />
-                            Horaires d'ouverture : [Horaires à compléter]
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p>
-                            <strong>Article 1 - Objet</strong>
-                            <br />
-                            Les présentes conditions générales régissent les
-                            modalités d'adhésion à la Fédération Algérienne des
-                            Pharmaciens et le processus de paiement en ligne.
-                          </p>
-                          <p>
-                            <strong>
-                              Article 2 - Prix et modalités de paiement
-                            </strong>
-                            <br />
-                            Les prix sont indiqués en Dinars Algériens (DA) toutes
-                            taxes comprises. Le paiement s'effectue exclusivement en
-                            ligne via la plateforme sécurisée SATIM.
-                          </p>
-                          <p>
-                            <strong>Article 3 - Sécurité des transactions</strong>
-                            <br />
-                            Toutes les transactions sont sécurisées par le protocole
-                            SSL 256-bit et certifiées PCI-DSS. Aucune information
-                            bancaire n'est stockée sur nos serveurs.
-                          </p>
-                          <p>
-                            <strong>Article 4 - Droit de rétractation</strong>
-                            <br />
-                            Conformément à la législation en vigueur, vous disposez
-                            d'un délai de 7 jours ouvrables pour exercer votre droit
-                            de rétractation.
-                          </p>
-                          <p>
-                            <strong>Article 5 - Traitement des données</strong>
-                            <br />
-                            Vos données personnelles sont traitées conformément à
-                            notre politique de confidentialité et ne sont en aucun
-                            cas transmises à des tiers.
-                          </p>
-                          <p>
-                            <strong>Article 6 - Service client</strong>
-                            <br />
-                            Pour toute question relative à votre paiement, contactez
-                            le service client SATIM au numéro vert :{" "}
-                            <strong className="text-green-600">3020</strong>.
-                          </p>
-                        </>
-                      )}
+                      <p>
+                        <strong>Article 1 - Objet</strong>
+                        <br />
+                        Les présentes conditions générales régissent les
+                        modalités d'adhésion à la Fédération Algérienne des
+                        Pharmaciens et le processus de paiement en ligne.
+                      </p>
+                      <p>
+                        <strong>
+                          Article 2 - Prix et modalités de paiement
+                        </strong>
+                        <br />
+                        Les prix sont indiqués en Dinars Algériens (DA) toutes
+                        taxes comprises. Le paiement s'effectue exclusivement en
+                        ligne via la plateforme sécurisée SATIM.
+                      </p>
+                      <p>
+                        <strong>Article 3 - Sécurité des transactions</strong>
+                        <br />
+                        Toutes les transactions sont sécurisées par le protocole
+                        SSL 256-bit et certifiées PCI-DSS. Aucune information
+                        bancaire n'est stockée sur nos serveurs.
+                      </p>
+                      <p>
+                        <strong>Article 4 - Droit de rétractation</strong>
+                        <br />
+                        Conformément à la législation en vigueur, vous disposez
+                        d'un délai de 7 jours ouvrables pour exercer votre droit
+                        de rétractation.
+                      </p>
+                      <p>
+                        <strong>Article 5 - Traitement des données</strong>
+                        <br />
+                        Vos données personnelles sont traitées conformément à
+                        notre politique de confidentialité et ne sont en aucun
+                        cas transmises à des tiers.
+                      </p>
+                      <p>
+                        <strong>Article 6 - Service client</strong>
+                        <br />
+                        Pour toute question relative à votre paiement, contactez
+                        le service client SATIM au numéro vert :{" "}
+                        <strong className="text-green-600">3020</strong>.
+                      </p>
                     </div>
                   </div>
 
@@ -1138,69 +1020,46 @@ export default function Membership() {
                     </div>
                   </div>
 
-                  {/* Payment Button - MODIFIED */}
+                  {/* Payment Button with SATIM Logo */}
                   <div className="mb-8 text-center">
-                    {selectedPaymentMethod === "online" && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                        <div className="flex items-center justify-center mb-3">
-                          <img
-                            src="/satim_logo.jpg"
-                            alt="SATIM Payment Gateway"
-                            className="h-10 mr-3"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.style.display = "none";
-                            }}
-                          />
-                          <div>
-                            <p className="font-semibold text-gray-800">
-                              Paiement sécurisé via SATIM
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              CIB / EDAHABIA / Cartes internationales
-                            </p>
-                          </div>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                      <div className="flex items-center justify-center mb-3">
+                        <img
+                          src="/satim_logo.jpg"
+                          alt="SATIM Payment Gateway"
+                          className="h-10 mr-3"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = "none";
+                          }}
+                        />
+                        <div>
+                          <p className="font-semibold text-gray-800">
+                            Paiement sécurisé via SATIM
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            CIB / EDAHABIA / Cartes internationales
+                          </p>
                         </div>
-                        <p className="text-sm text-gray-600">
-                          En cliquant sur le bouton ci-dessous, vous serez
-                          redirigé vers la plateforme sécurisée de SATIM pour
-                          finaliser votre paiement.
-                        </p>
                       </div>
-                    )}
+                      <p className="text-sm text-gray-600">
+                        En cliquant sur le bouton ci-dessous, vous serez
+                        redirigé vers la plateforme sécurisée de SATIM pour
+                        finaliser votre paiement.
+                      </p>
+                    </div>
 
                     <button
                       onClick={handleSubmit}
                       disabled={
                         isProcessing || !formData.acceptTerms || !recaptchaToken
                       }
-                      className={`relative inline-flex items-center justify-center px-10 py-4 rounded-lg hover:opacity-90 transition-all font-semibold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed min-w-[300px] ${
-                        selectedPaymentMethod === "cash"
-                          ? "bg-green-600 text-white"
-                          : "bg-gradient-to-r from-blue-800 to-blue-600 text-white"
-                      }`}
+                      className="relative inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-blue-800 to-blue-600 text-white rounded-lg hover:from-blue-700 hover:to-blue-500 transition-all font-semibold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-800 disabled:hover:to-blue-600 min-w-[300px]"
                     >
                       {isProcessing ? (
                         <>
                           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
                           Traitement en cours...
-                        </>
-                      ) : selectedPaymentMethod === "cash" ? (
-                        <>
-                          <svg
-                            className="w-6 h-6 mr-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <span>Finaliser l'adhésion (paiement par cash)</span>
                         </>
                       ) : (
                         <>
@@ -1231,36 +1090,34 @@ export default function Membership() {
                       )}
                     </button>
 
-                    {selectedPaymentMethod === "online" && (
-                      /* SATIM Green Number - Only show for online payment */
-                      <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-green-600 mr-2"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          <span className="font-medium text-green-800 mr-2">
-                            Service client SATIM :
-                          </span>
-                          <a
-                            href="tel:3020"
-                            className="text-green-700 font-bold text-xl hover:text-green-800"
-                          >
-                            30 20
-                          </a>
-                        </div>
-                        <p className="text-sm text-green-700 text-center mt-2">
-                          Disponible 24h/24, 7j/7 pour toute assistance
-                        </p>
+                    {/* SATIM Green Number */}
+                    <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-green-600 mr-2"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="font-medium text-green-800 mr-2">
+                          Service client SATIM :
+                        </span>
+                        <a
+                          href="tel:3020"
+                          className="text-green-700 font-bold text-xl hover:text-green-800"
+                        >
+                          30 20
+                        </a>
                       </div>
-                    )}
+                      <p className="text-sm text-green-700 text-center mt-2">
+                        Disponible 24h/24, 7j/7 pour toute assistance
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex justify-between items-center pt-6 border-t">
@@ -1303,40 +1160,11 @@ export default function Membership() {
                 Votre adhésion à la Fédération Algérienne des Pharmaciens a été
                 enregistrée avec succès.
               </p>
-              
-              {selectedPaymentMethod === "cash" ? (
-                <>
-                  <div className="bg-blue-50 p-4 rounded-lg mb-8">
-                    <h3 className="font-semibold text-blue-800 mb-2">
-                      Paiement par cash - Instructions :
-                    </h3>
-                    <ul className="text-left list-disc list-inside text-gray-700 space-y-2">
-                      <li>Présentez-vous à notre siège avec :
-                        <ul className="list-circle list-inside ml-4 mt-1">
-                          <li>Votre pièce d'identité</li>
-                          <li>Votre diplôme de pharmacien (ou carte d'étudiant)</li>
-                          <li>Le montant de {getPlanAmount().toLocaleString()} DA en espèces</li>
-                        </ul>
-                      </li>
-                      <li>Adresse : Fédération Algérienne des Pharmaciens - [Adresse à compléter]</li>
-                      <li>Horaires : [Horaires à compléter]</li>
-                      <li>Vous recevrez immédiatement votre carte de membre après paiement</li>
-                    </ul>
-                  </div>
-                  <p className="text-gray-600 mb-8">
-                    Un email de confirmation contenant tous les détails de votre
-                    adhésion et notre adresse exacte a été envoyé à{" "}
-                    <span className="font-medium">{formData.email}</span>.
-                  </p>
-                </>
-              ) : (
-                <p className="text-gray-600 mb-8">
-                  Un email de confirmation contenant tous les détails de votre
-                  adhésion a été envoyé à{" "}
-                  <span className="font-medium">{formData.email}</span>.
-                </p>
-              )}
-              
+              <p className="text-gray-600 mb-8">
+                Un email de confirmation contenant tous les détails de votre
+                adhésion a été envoyé à{" "}
+                <span className="font-medium">{formData.email}</span>.
+              </p>
               <div className="bg-blue-50 p-4 rounded-lg mb-8">
                 <h3 className="font-semibold text-blue-800 mb-2">
                   Prochaines étapes :
