@@ -12,15 +12,20 @@ export default function Gallery() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
+  const [authToken, setAuthToken] = useState(null);
 
   useEffect(() => {
+    // Check for auth token on component mount
+    const token = localStorage.getItem('authToken');
+    setAuthToken(token);
+    
     const fetchGallery = async () => {
       try {
-        // Removed unused authToken variable
         const response = await fetch("/api/media", {
           method: "GET",
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
           },
         });
 
@@ -34,7 +39,7 @@ export default function Gallery() {
           console.log("Gallery items loaded:", result.data?.media?.length || 0);
           
           // Process the data to ensure consistent structure
-          const processedItems = (result.data.media || []).map(item => {
+          const allItems = (result.data.media || []).map(item => {
             // Detect file type from URL or tags
             let detectedType = 'image'; // Default to image
             
@@ -78,10 +83,21 @@ export default function Gallery() {
               tags: item.tags || '',
               title: item.title || `Événement ${Math.floor(Math.random() * 100) + 1}`,
               description: item.description || '',
+              isMemberOnly: item.isMemberOnly || false,
             };
           });
           
-          setGalleryItems(processedItems);
+          // Filter items based on authentication status
+          let filteredItems = allItems;
+          if (!token) {
+            // If no auth token, only show non-member-only content
+            filteredItems = allItems.filter(item => item.isMemberOnly !== true);
+            console.log("Non-authenticated user: Showing", filteredItems.length, "public items out of", allItems.length);
+          } else {
+            console.log("Authenticated user: Showing all", filteredItems.length, "items");
+          }
+          
+          setGalleryItems(filteredItems);
           setGalleryMessage('');
         } else {
           throw new Error(
@@ -103,8 +119,16 @@ export default function Gallery() {
           category: ['events', 'workshops', 'visits', 'events', 'workshops', 'videos'][i],
           tags: ['événement', 'atelier', 'visite', 'événement', 'atelier', 'vidéo'][i],
           createdAt: new Date().toISOString(),
+          isMemberOnly: i > 2, // Make items 4,5,6 member-only (indices 3,4,5)
         }));
-        setGalleryItems(fallbackItems);
+        
+        // Filter fallback items based on authentication
+        let filteredFallback = fallbackItems;
+        if (!authToken) {
+          filteredFallback = fallbackItems.filter(item => item.isMemberOnly !== true);
+        }
+        
+        setGalleryItems(filteredFallback);
       } finally {
         setIsLoading(false);
       }
@@ -210,7 +234,7 @@ export default function Gallery() {
       <main className="min-h-screen bg-blue-50 py-12">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-center text-blue-800 mb-4">Galerie</h1>
-          <p className="text-lg text-center text-gray-700 max-w-3xl mx-auto mb-12">
+          <p className="text-lg text-center text-gray-700 max-w-3xl mx-auto mb-4">
             Découvrez les moments forts de nos événements, ateliers et rencontres à travers notre galerie photos et vidéos.
           </p>
 
@@ -230,7 +254,7 @@ export default function Gallery() {
           )}
 
           {/* Filtres */}
-          {!isLoading && (
+          {!isLoading && galleryItems.length > 0 && (
             <div className="flex flex-wrap justify-center gap-3 mb-12">
               {filters.map(filter => (
                 <button
@@ -255,9 +279,18 @@ export default function Gallery() {
                 {filteredItems.map((item, index) => (
                   <div 
                     key={item.id} 
-                    className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer group"
+                    className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer group relative"
                     onClick={() => openLightbox(index)}
                   >
+                    {/* Member-only badge */}
+                    {item.isMemberOnly && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <span className="bg-blue-800 text-white text-xs px-2 py-1 rounded-full flex items-center">
+                          <span className="mr-1">🔒</span> Membre
+                        </span>
+                      </div>
+                    )}
+                    
                     <div className="relative aspect-square">
                       <div 
                         style={{ 
@@ -286,9 +319,14 @@ export default function Gallery() {
                         <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full capitalize truncate max-w-[120px]">
                           {item.tags || 'Non catégorisé'}
                         </span>
-                        <span className="text-xs text-gray-500">
-                          {item.type === 'video' ? 'Vidéo' : 'Photo'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {item.isMemberOnly && (
+                            <span className="text-xs text-blue-600">🔒</span>
+                          )}
+                          <span className="text-xs text-gray-500">
+                            {item.type === 'video' ? 'Vidéo' : 'Photo'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -297,7 +335,25 @@ export default function Gallery() {
 
               {filteredItems.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-gray-600">Aucun élément trouvé dans cette catégorie.</p>
+                  {galleryItems.length === 0 ? (
+                    <div>
+                      <p className="text-gray-600 text-lg mb-4">
+                        {authToken 
+                          ? "Aucun média disponible pour le moment." 
+                          : "Aucun média public disponible. Connectez-vous pour voir le contenu réservé aux membres."}
+                      </p>
+                      {!authToken && (
+                        <a 
+                          href="/login" 
+                          className="inline-block px-6 py-3 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
+                        >
+                          Se connecter
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">Aucun élément trouvé dans cette catégorie.</p>
+                  )}
                 </div>
               )}
             </>
@@ -350,14 +406,23 @@ export default function Gallery() {
                       />
                     </div>
                     <div className="p-6 text-white">
-                      <h3 className="text-xl font-semibold mb-2">{filteredItems[currentImage].title}</h3>
-                      <p>{filteredItems[currentImage].description}</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-semibold">{filteredItems[currentImage].title}</h3>
+                        {filteredItems[currentImage].isMemberOnly && (
+                          <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full flex items-center">
+                            <span className="mr-1">🔒</span> Contenu membre
+                          </span>
+                        )}
+                      </div>
+                      <p className="mb-4">{filteredItems[currentImage].description}</p>
                       <div className="flex items-center gap-2 mt-4">
                         <span className="text-sm px-2 py-1 bg-blue-600 rounded-full">
                           {filteredItems[currentImage].tags}
                         </span>
                         <span className="text-sm text-gray-400">
-                          {new Date(filteredItems[currentImage].createdAt).toLocaleDateString('fr-FR')}
+                          {filteredItems[currentImage].createdAt ? 
+                            new Date(filteredItems[currentImage].createdAt).toLocaleDateString('fr-FR') : 
+                            'Date inconnue'}
                         </span>
                       </div>
                     </div>
@@ -365,22 +430,31 @@ export default function Gallery() {
                 ) : (
                   <div className="bg-gray-800 rounded-lg overflow-hidden">
                     <div className="aspect-video bg-black flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="bg-blue-800 bg-opacity-70 rounded-full p-4 inline-block mb-4 cursor-pointer hover:bg-opacity-90 transition-all">
-                          <span className="text-white text-4xl">▶</span>
+                      <div className="text-center w-full">
+                        <div className="mb-4">
+                          <div className="bg-blue-800 bg-opacity-70 rounded-full p-4 inline-block mb-4 cursor-pointer hover:bg-opacity-90 transition-all">
+                            <span className="text-white text-4xl">▶</span>
+                          </div>
+                          <p className="text-white mb-4">Lecture de la vidéo</p>
                         </div>
-                        <p className="text-white mb-4">Lecture de la vidéo</p>
                         <video 
                           src={filteredItems[currentImage].url} 
                           controls
-                          className="max-w-full max-h-[60vh]"
+                          className="max-w-full max-h-[60vh] mx-auto"
                         >
                           Votre navigateur ne supporte pas la lecture de vidéos.
                         </video>
                       </div>
                     </div>
                     <div className="p-6 text-white">
-                      <h3 className="text-xl font-semibold mb-2">{filteredItems[currentImage].title}</h3>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-semibold">{filteredItems[currentImage].title}</h3>
+                        {filteredItems[currentImage].isMemberOnly && (
+                          <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full flex items-center">
+                            <span className="mr-1">🔒</span> Contenu membre
+                          </span>
+                        )}
+                      </div>
                       <p>{filteredItems[currentImage].description}</p>
                     </div>
                   </div>
@@ -397,7 +471,6 @@ export default function Gallery() {
             </div>
           )}
 
-          {/* Rest of the UI remains unchanged */}
           {/* Section Témoignages */}
           <section className="mt-16">
             <h2 className="text-3xl font-bold text-center text-blue-800 mb-12">Ils témoignent</h2>
