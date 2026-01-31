@@ -183,6 +183,13 @@ const Header = () => {
                     Mes Événements
                   </Link>
 
+                  <Link
+                    href="/dashboard/directory"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
+                  >
+                    Annuaire
+                  </Link>
+
                   <div className="border-t border-gray-100 my-1"></div>
                   <button
                     onClick={handleLogout}

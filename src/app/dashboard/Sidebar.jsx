@@ -11,9 +11,9 @@ export default function Sidebar({ user }) {
     { name: 'Tableau de bord', href: '/dashboard', icon: '📊' },
     { name: 'Mon profil', href: '/dashboard/profile', icon: '👤' },
     { name: 'Événements', href: '/dashboard/events', icon: '🎪' },
-    /* { name: 'Ressources', href: '/dashboard/resources', icon: '📚' },
+    /* { name: 'Ressources', href: '/dashboard/resources', icon: '📚' },*/
     { name: 'Annuaire', href: '/dashboard/directory', icon: '📇' },
-    { name: 'Messages', href: '/dashboard/messages', icon: '✉️' }, */
+    /*{ name: 'Messages', href: '/dashboard/messages', icon: '✉️' }, */
    /*  { name: 'Notifications', href: '/dashboard/notifications', icon: '🔔' }, */
   ];
 
