@@ -1,25 +1,35 @@
-"use client"
-// components/Gallery.js
-import { useEffect, useState } from 'react';
+"use client";
+
+import { useEffect, useState } from "react";
+
+const VIDEO_EXTENSIONS = ["mp4", "webm", "ogg", "mov"];
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
+
+const getFileExtension = (url = "") => {
+  return url.split(".").pop()?.toLowerCase().split("?")[0];
+};
+
+const isVideoFile = (url) => {
+  const ext = getFileExtension(url);
+  return VIDEO_EXTENSIONS.includes(ext);
+};
 
 const Gallery = () => {
   const [galleryItems, setGalleryItems] = useState([]);
-  const [galleryMessage, setGalleryMessage] = useState('');
+  const [galleryMessage, setGalleryMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [authToken, setAuthToken] = useState(null);
 
   useEffect(() => {
-    // Check for auth token on component mount
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     setAuthToken(token);
-    
+
     const fetchGallery = async () => {
       try {
         const response = await fetch("/api/media", {
-          method: "GET",
           headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
-          }
+            Authorization: token ? `Bearer ${token}` : "",
+          },
         });
 
         if (!response.ok) {
@@ -27,44 +37,20 @@ const Gallery = () => {
         }
 
         const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.message || "Erreur serveur");
+        }
 
-        if (result.success) {
-          let mediaItems = result.data?.media || [];
-          
-          // Filter media based on authentication status
-          if (!token) {
-            // If no auth token, only show non-member-only content
-            mediaItems = mediaItems.filter(item => !item.isMemberOnly);
-            console.log("Non-authenticated user: Showing", mediaItems.length, "public items");
-          } else {
-            console.log("Authenticated user: Showing all", mediaItems.length, "items");
-          }
-          
-          setGalleryItems(mediaItems);
-        } else {
-          throw new Error(
-            result.message || "Erreur lors du chargement de la galerie"
-          );
+        let media = result.data?.media || [];
+
+        if (!token) {
+          media = media.filter((item) => !item.isMemberOnly);
         }
-      } catch (error) {
-        console.error("Erreur:", error);
-        setGalleryMessage(`❌ ${error.message}`);
-        
-        // Fallback data with Cloudinary URLs
-        const fallbackItems = Array(6).fill(null).map((_, i) => ({
-          id: i + 1,
-          title: `Événement ${i + 1}`,
-          image: `/gallery-${i + 1}.jpg`,
-          isMemberOnly: i > 2 // Example: make some items member-only
-        }));
-        
-        // Filter fallback items based on authentication
-        let filteredFallback = fallbackItems;
-        if (!authToken) {
-          filteredFallback = fallbackItems.filter(item => !item.isMemberOnly);
-        }
-        
-        setGalleryItems(filteredFallback);
+
+        setGalleryItems(media);
+      } catch (err) {
+        console.error(err);
+        setGalleryMessage("❌ Impossible de charger la galerie");
       } finally {
         setIsLoading(false);
       }
@@ -75,10 +61,8 @@ const Gallery = () => {
 
   if (isLoading) {
     return (
-      <section id="gallery" className="py-16 px-6 bg-blue-50">
-        <div className="container mx-auto text-center">
-          <p>Chargement de la galerie...</p>
-        </div>
+      <section className="py-16 px-6 bg-blue-50 text-center">
+        Chargement…
       </section>
     );
   }
@@ -86,60 +70,79 @@ const Gallery = () => {
   return (
     <section id="gallery" className="py-16 px-6 bg-blue-50">
       <div className="container mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-12 text-blue-800">Galerie</h2>
-        
+        <h2 className="text-3xl font-bold text-center mb-12 text-blue-800">
+          Galerie
+        </h2>
+
         {galleryMessage && (
-          <div className="text-center mb-4 text-red-600">
+          <div className="text-center mb-6 text-red-600">
             {galleryMessage}
           </div>
         )}
-        
+
         {galleryItems.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg mb-4">
-              {authToken 
-                ? "Aucun média disponible pour le moment." 
-                : "Aucun média public disponible. Connectez-vous pour voir plus de contenu."}
-            </p>
+          <div className="text-center text-gray-600">
+            {authToken
+              ? "Aucun média disponible."
+              : "Connectez-vous pour voir plus de contenu."}
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {galleryItems.map(item => (
-                <div 
-                  key={item._id || item.id} 
-                  className="aspect-square bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative"
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {galleryItems.map((item) => {
+              const mediaUrl =
+                item.url || item.image || item.thumbnailUrl || "";
+
+              const isVideo = isVideoFile(mediaUrl);
+
+              // Cloudinary desktop fix (safe even if not Cloudinary)
+              const finalVideoUrl = isVideo
+                ? mediaUrl.replace(
+                    "/image/upload/",
+                    "/video/upload/f_mp4,vc_h264,ac_aac/"
+                  )
+                : null;
+
+              return (
+                <div
+                  key={item._id || item.id}
+                  className="relative w-full pt-[100%] bg-gray-200 rounded-lg overflow-hidden"
                 >
                   {item.isMemberOnly && (
-                    <div className="absolute top-2 right-2 bg-blue-800 text-white text-xs px-2 py-1 rounded z-10">
+                    <div className="absolute top-2 right-2 z-10 bg-blue-800 text-white text-xs px-2 py-1 rounded">
                       Membres
                     </div>
                   )}
-                  
-                  {item.thumbnailUrl || item.image ? (
-                    <img 
-                      src={item.thumbnailUrl || item.image} 
-                      alt={item.title || `Image ${item._id || item.id}`}
-                      className="w-full h-full object-cover"
-                    />
+
+                  {/* VIDEO */}
+                  {isVideo ? (
+                    <video
+                      controls
+                      muted
+                      playsInline
+                      preload="metadata"
+                      crossOrigin="anonymous"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    >
+                      <source
+                        src={
+                          finalVideoUrl ||
+                          "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+                        }
+                        type="video/mp4"
+                      />
+                    </video>
                   ) : (
-                    <span className="text-gray-500">
-                      {item.title || `Image ${item._id || item.id}`}
-                    </span>
+                    /* IMAGE */
+                    <img
+                      src={mediaUrl}
+                      alt={item.title || "media"}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
                   )}
                 </div>
-              ))}
-            </div>
-            
-            <div className="text-center mt-10">
-              <a 
-                href="/gallery" 
-                className="px-6 py-3 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
-              >
-                Voir toute la galerie
-              </a>
-            </div>
-          </>
+              );
+            })}
+          </div>
         )}
       </div>
     </section>

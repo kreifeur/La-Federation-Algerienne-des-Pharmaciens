@@ -46,15 +46,17 @@ export default function Gallery() {
             // Check URL extension for type detection
             if (item.url) {
               const url = item.url.toLowerCase();
-              if (url.includes('.mp4') || url.includes('.webm') || url.includes('.mov') || url.includes('.avi')) {
+              if (url.includes('.mp4') || url.includes('.webm') || url.includes('.mov') || url.includes('.avi') || url.includes('.m4v') || url.includes('.mkv')) {
                 detectedType = 'video';
               }
             }
             
             // Check if item has type property or infer from tags
-            if (item.type) {
+            if (item.fileType) {
+              detectedType = item.fileType;
+            } else if (item.type) {
               detectedType = item.type;
-            } else if (item.tags && item.tags.includes('video')) {
+            } else if (item.tags && (item.tags.includes('video') || item.tags.includes('vidéo'))) {
               detectedType = 'video';
             }
             
@@ -62,14 +64,14 @@ export default function Gallery() {
             let category = 'events'; // Default category
             
             if (item.tags) {
-              const tags = item.tags;
-              if (tags.includes('workshop') || tags.includes('atelier')) {
+              const tags = Array.isArray(item.tags) ? item.tags : [item.tags];
+              if (tags.some(tag => tag.includes('workshop') || tag.includes('atelier'))) {
                 category = 'workshops';
-              } else if (tags.includes('visit') || tags.includes('visite')) {
+              } else if (tags.some(tag => tag.includes('visit') || tag.includes('visite'))) {
                 category = 'visits';
-              } else if (tags.includes('video') || tags.includes('vidéo')) {
+              } else if (tags.some(tag => tag.includes('video') || tag.includes('vidéo'))) {
                 category = 'videos';
-              } else if (tags.includes('event') || tags.includes('événement')) {
+              } else if (tags.some(tag => tag.includes('event') || tag.includes('événement'))) {
                 category = 'events';
               }
             }
@@ -109,22 +111,35 @@ export default function Gallery() {
         setGalleryMessage(`❌ ${error.message}`);
         
         // Fallback data with consistent structure
-        const fallbackItems = Array.from({ length: 6 }, (_, i) => ({
-          id: `fallback-${i + 1}`,
-          title: `Événement ${i + 1}`,
-          description: `Description de l'événement ${i + 1}`,
-          thumbnailUrl: `/gallery-${(i % 3) + 1}.jpg`,
-          url: `/gallery-${(i % 3) + 1}.jpg`,
-          type: i === 5 ? 'video' : 'image', // Make last item a video
-          category: ['events', 'workshops', 'visits', 'events', 'workshops', 'videos'][i],
-          tags: ['événement', 'atelier', 'visite', 'événement', 'atelier', 'vidéo'][i],
-          createdAt: new Date().toISOString(),
-          isMemberOnly: i > 2, // Make items 4,5,6 member-only (indices 3,4,5)
-        }));
+        const fallbackItems = Array.from({ length: 8 }, (_, i) => {
+          const isVideo = i === 2 || i === 5 || i === 7;
+          const videoUrls = [
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          ];
+          
+          return {
+            id: `fallback-${i + 1}`,
+            title: isVideo ? `Vidéo ${i + 1}` : `Événement ${i + 1}`,
+            description: isVideo 
+              ? `Une vidéo captivante de nos activités ${i + 1}`
+              : `Description de l'événement ${i + 1}`,
+            thumbnailUrl: isVideo 
+              ? `/video-thumbnail-${(i % 3) + 1}.jpg` 
+              : `/gallery-${(i % 3) + 1}.jpg`,
+            url: isVideo ? videoUrls[i % 3] : `/gallery-${(i % 3) + 1}.jpg`,
+            type: isVideo ? 'video' : 'image',
+            category: ['events', 'workshops', 'videos', 'events', 'workshops', 'videos', 'visits', 'videos'][i],
+            tags: isVideo ? ['vidéo', 'documentaire'] : ['événement', 'atelier', 'visite'][i % 3],
+            createdAt: new Date().toISOString(),
+            isMemberOnly: i > 4,
+          };
+        });
         
         // Filter fallback items based on authentication
         let filteredFallback = fallbackItems;
-        if (!authToken) {
+        if (!token) {
           filteredFallback = fallbackItems.filter(item => item.isMemberOnly !== true);
         }
         
@@ -135,7 +150,7 @@ export default function Gallery() {
     };
 
     fetchGallery();
-  }, []);
+  }, [authToken]);
 
   // Generate filters dynamically from available categories
   const filters = useMemo(() => {
@@ -172,7 +187,10 @@ export default function Gallery() {
     return galleryItems.filter(item => {
       // Check both category and tags for filtering
       const matchesCategory = item.category === activeFilter;
-      const matchesTags = item.tags && item.tags.includes(activeFilter.toLowerCase());
+      const matchesTags = item.tags && 
+        (Array.isArray(item.tags) 
+          ? item.tags.some(tag => tag.toLowerCase().includes(activeFilter.toLowerCase()))
+          : item.tags.toLowerCase().includes(activeFilter.toLowerCase()));
       return matchesCategory || matchesTags;
     });
   }, [galleryItems, activeFilter]);
@@ -291,24 +309,44 @@ export default function Gallery() {
                       </div>
                     )}
                     
-                    <div className="relative aspect-square">
-                      <div 
-                        style={{ 
-                          backgroundImage: `url(${item.thumbnailUrl})`,
-                          backgroundPosition: 'center',
-                          backgroundSize: 'cover',
-                        }} 
-                        className="absolute inset-0 bg-gray-200 flex items-center justify-center"
-                      >
-                        {!item.thumbnailUrl && (
-                          <span className="text-gray-500">Image non disponible</span>
-                        )}
-                      </div>
-                      {item.type === 'video' && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-opacity">
-                          <div className="bg-blue-800 bg-opacity-70 rounded-full p-3 group-hover:scale-110 transition-transform">
-                            <span className="text-white text-2xl">▶</span>
+                    <div className="relative aspect-square overflow-hidden">
+                      {item.type === 'video' ? (
+                        <>
+                          {/* Video Thumbnail with Play Button */}
+                          <div className="absolute inset-0 bg-gray-900">
+                            <video 
+                              className="w-full h-full object-cover opacity-90"
+                              muted
+                              preload="metadata"
+                            
+                            >
+                              <source src={item.thumbnailUrl} type="video/mp4" />
+                              Votre navigateur ne supporte pas la lecture de vidéos.
+                            </video>
                           </div>
+                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 group-hover:bg-opacity-10 transition-opacity">
+                            <div className="bg-blue-800 bg-opacity-80 rounded-full p-4 group-hover:scale-110 transition-transform">
+                              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        /* Image Thumbnail */
+                        <div 
+                          style={{ 
+                            backgroundImage: `url(${item.thumbnailUrl})`,
+                            backgroundPosition: 'center',
+                            backgroundSize: 'cover',
+                          }} 
+                          className="absolute inset-0 bg-gray-200 group-hover:scale-105 transition-transform duration-300"
+                        >
+                          {!item.thumbnailUrl && (
+                            <span className="text-gray-500 absolute inset-0 flex items-center justify-center">
+                              Image non disponible
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -317,14 +355,14 @@ export default function Gallery() {
                       <p className="text-sm text-gray-600 line-clamp-2 h-10">{item.description}</p>
                       <div className="flex justify-between items-center mt-3">
                         <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full capitalize truncate max-w-[120px]">
-                          {item.tags || 'Non catégorisé'}
+                          {Array.isArray(item.tags) ? item.tags[0] : item.tags || 'Non catégorisé'}
                         </span>
                         <div className="flex items-center gap-2">
                           {item.isMemberOnly && (
                             <span className="text-xs text-blue-600">🔒</span>
                           )}
-                          <span className="text-xs text-gray-500">
-                            {item.type === 'video' ? 'Vidéo' : 'Photo'}
+                          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                            {item.type === 'video' ? '🎬 Vidéo' : '📷 Photo'}
                           </span>
                         </div>
                       </div>
@@ -362,14 +400,14 @@ export default function Gallery() {
           {/* Lightbox */}
           {lightboxOpen && filteredItems[currentImage] && (
             <div 
-              className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4"
               onClick={(e) => {
                 if (e.target === e.currentTarget) closeLightbox();
               }}
             >
               <button 
                 onClick={closeLightbox}
-                className="absolute top-4 right-4 text-white text-3xl z-10 hover:text-gray-300 transition-colors"
+                className="absolute top-4 right-4 text-white text-3xl z-10 hover:text-gray-300 transition-colors bg-black bg-opacity-50 rounded-full h-10 w-10 flex items-center justify-center"
                 aria-label="Fermer"
               >
                 &times;
@@ -377,7 +415,7 @@ export default function Gallery() {
 
               <button 
                 onClick={goToPrevious}
-                className="absolute left-4 text-white text-3xl z-10 bg-blue-800 bg-opacity-50 rounded-full h-10 w-10 flex items-center justify-center hover:bg-opacity-70 transition-all"
+                className="absolute left-4 text-white text-3xl z-10 bg-blue-800 bg-opacity-80 rounded-full h-12 w-12 flex items-center justify-center hover:bg-opacity-100 transition-all hover:scale-110"
                 aria-label="Précédent"
               >
                 ‹
@@ -385,87 +423,88 @@ export default function Gallery() {
 
               <button 
                 onClick={goToNext}
-                className="absolute right-4 text-white text-3xl z-10 bg-blue-800 bg-opacity-50 rounded-full h-10 w-10 flex items-center justify-center hover:bg-opacity-70 transition-all"
+                className="absolute right-4 text-white text-3xl z-10 bg-blue-800 bg-opacity-80 rounded-full h-12 w-12 flex items-center justify-center hover:bg-opacity-100 transition-all hover:scale-110"
                 aria-label="Suivant"
               >
                 ›
               </button>
 
-              <div className="max-w-4xl w-full max-h-full">
-                {filteredItems[currentImage].type === 'image' ? (
-                  <div className="bg-gray-800 rounded-lg overflow-hidden">
-                    <div className="aspect-video bg-gray-700 flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={filteredItems[currentImage].url || filteredItems[currentImage].thumbnailUrl} 
-                        alt={filteredItems[currentImage].title}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/gallery-placeholder.jpg';
-                        }}
-                      />
+              <div className="max-w-5xl w-full max-h-[90vh] bg-gray-900 rounded-lg overflow-hidden shadow-2xl">
+                <div className="h-[70vh] bg-black flex items-center justify-center">
+                  {filteredItems[currentImage].type === 'image' ? (
+                    <img 
+                      src={filteredItems[currentImage].thumbnailUrl || filteredItems[currentImage].thumbnailUrl} 
+                      alt={filteredItems[currentImage].title}
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/gallery-placeholder.jpg';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <video 
+                        controls
+                        autoPlay
+                        className="max-w-full max-h-full"
+                        poster={filteredItems[currentImage].thumbnailUrl}
+                      >
+                        <source src={filteredItems[currentImage].thumbnailUrl} type="video/mp4" />
+                        <source src={filteredItems[currentImage].thumbnailUrl} type="video/webm" />
+                        <source src={filteredItems[currentImage].thumbnailUrl} type="video/ogg" />
+                        Votre navigateur ne supporte pas la lecture de vidéos.
+                      </video>
                     </div>
-                    <div className="p-6 text-white">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xl font-semibold">{filteredItems[currentImage].title}</h3>
-                        {filteredItems[currentImage].isMemberOnly && (
-                          <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                            <span className="mr-1">🔒</span> Contenu membre
-                          </span>
-                        )}
-                      </div>
-                      <p className="mb-4">{filteredItems[currentImage].description}</p>
-                      <div className="flex items-center gap-2 mt-4">
-                        <span className="text-sm px-2 py-1 bg-blue-600 rounded-full">
-                          {filteredItems[currentImage].tags}
-                        </span>
-                        <span className="text-sm text-gray-400">
-                          {filteredItems[currentImage].createdAt ? 
-                            new Date(filteredItems[currentImage].createdAt).toLocaleDateString('fr-FR') : 
-                            'Date inconnue'}
-                        </span>
-                      </div>
+                  )}
+                </div>
+                
+                <div className="p-6 text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-2xl font-bold">{filteredItems[currentImage].title}</h3>
+                    {filteredItems[currentImage].isMemberOnly && (
+                      <span className="bg-blue-600 text-white text-sm px-3 py-1 rounded-full flex items-center">
+                        <span className="mr-1">🔒</span> Contenu membre
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-gray-200 mb-4">{filteredItems[currentImage].description}</p>
+                  
+                  <div className="flex flex-wrap items-center gap-3 mt-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm px-3 py-1 bg-blue-600 rounded-full">
+                        {Array.isArray(filteredItems[currentImage].tags) 
+                          ? filteredItems[currentImage].tags.map((tag, i) => (
+                              <span key={i} className="mr-1">{tag}{i < filteredItems[currentImage].tags.length - 1 ? ',' : ''}</span>
+                            ))
+                          : filteredItems[currentImage].tags}
+                      </span>
+                      <span className="text-sm px-3 py-1 bg-gray-700 rounded-full">
+                        {filteredItems[currentImage].type === 'video' ? '🎬 Vidéo' : '📷 Photo'}
+                      </span>
+                    </div>
+                    
+                    <div className="text-sm text-gray-400 ml-auto">
+                      {filteredItems[currentImage].createdAt ? 
+                        new Date(filteredItems[currentImage].createdAt).toLocaleDateString('fr-FR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        }) : 
+                        'Date inconnue'}
                     </div>
                   </div>
-                ) : (
-                  <div className="bg-gray-800 rounded-lg overflow-hidden">
-                    <div className="aspect-video bg-black flex items-center justify-center">
-                      <div className="text-center w-full">
-                        <div className="mb-4">
-                          <div className="bg-blue-800 bg-opacity-70 rounded-full p-4 inline-block mb-4 cursor-pointer hover:bg-opacity-90 transition-all">
-                            <span className="text-white text-4xl">▶</span>
-                          </div>
-                          <p className="text-white mb-4">Lecture de la vidéo</p>
-                        </div>
-                        <video 
-                          src={filteredItems[currentImage].url} 
-                          controls
-                          className="max-w-full max-h-[60vh] mx-auto"
-                        >
-                          Votre navigateur ne supporte pas la lecture de vidéos.
-                        </video>
-                      </div>
-                    </div>
-                    <div className="p-6 text-white">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xl font-semibold">{filteredItems[currentImage].title}</h3>
-                        {filteredItems[currentImage].isMemberOnly && (
-                          <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                            <span className="mr-1">🔒</span> Contenu membre
-                          </span>
-                        )}
-                      </div>
-                      <p>{filteredItems[currentImage].description}</p>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
 
               <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-                <div className="bg-black bg-opacity-50 rounded-full px-4 py-2 backdrop-blur-sm">
-                  <p className="text-white text-sm">
+                <div className="bg-black bg-opacity-70 rounded-full px-6 py-2 backdrop-blur-sm flex items-center gap-4">
+                  <span className="text-white text-sm font-medium">
                     {currentImage + 1} / {filteredItems.length}
-                  </p>
+                  </span>
+                  <span className="text-gray-300 text-sm">
+                    {filteredItems[currentImage].type === 'video' ? 'Vidéo en cours de lecture' : 'Image'}
+                  </span>
                 </div>
               </div>
             </div>
