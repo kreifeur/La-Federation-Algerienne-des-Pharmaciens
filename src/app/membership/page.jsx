@@ -266,7 +266,8 @@ export default function Membership() {
         professionalStatus: formData.profession,
         domainOfInterest: ["skincare", "research"], // skincare, makeup, research, teaching, business, technology
         biography: "",
-        paymentMethod: selectedPaymentMethod, // Add payment method to registration data
+        paymentMethod: selectedPaymentMethod,
+        isActive :false , // Add payment method to registration data
       };
 
       console.log(registerData);
