@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import axios from 'axios'
+import axios from "axios";
 import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Membership() {
@@ -239,7 +239,7 @@ export default function Membership() {
 
     if (!sslVerified) {
       alert(
-        "Veuillez utiliser une connexion sécurisée (HTTPS) pour procéder au paiement"
+        "Veuillez utiliser une connexion sécurisée (HTTPS) pour procéder au paiement",
       );
       return;
     }
@@ -267,7 +267,7 @@ export default function Membership() {
         domainOfInterest: ["skincare", "research"], // skincare, makeup, research, teaching, business, technology
         biography: "",
         paymentMethod: selectedPaymentMethod,
-        isActive :false , // Add payment method to registration data
+        isActive: true, // Add payment method to registration data
       };
 
       console.log(registerData);
@@ -293,18 +293,17 @@ export default function Membership() {
       } else {
         // For online payment, redirect to payment gateway
         try {
-          const res = await axios.get('/api/pay')
-          console.log('SATIM RESPONSE:', res.data)
+          const res = await axios.get("/api/pay");
+          console.log("SATIM RESPONSE:", res.data);
           if (res.data.formUrl) {
-            window.location.href = res.data.formUrl
+            window.location.href = res.data.formUrl;
           }
         } catch (err) {
-          console.error(err)
+          console.error(err);
           alert("Erreur lors de la redirection vers le paiement en ligne");
           setIsProcessing(false);
         }
       }
-
     } catch (error) {
       console.error("Payment error:", error);
       alert(`Erreur: ${error.message}`);
@@ -315,13 +314,13 @@ export default function Membership() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Check if payment method is selected
     if (!selectedPaymentMethod) {
       alert("Veuillez sélectionner un mode de paiement");
       return;
     }
-    
+
     await handlePayment();
   };
 
@@ -845,20 +844,22 @@ export default function Membership() {
 
                     {/* Payment Method Selection - MODIFIED */}
                     <div className="flex flex-col gap-2 my-6">
-                      <div 
+                      <div
                         className={`border p-3 cursor-pointer rounded-md transition-all ${
-                          selectedPaymentMethod === "cash" 
-                            ? "border-blue-800 bg-blue-50" 
+                          selectedPaymentMethod === "cash"
+                            ? "border-blue-800 bg-blue-50"
                             : "border-gray-300 hover:bg-gray-50"
                         }`}
                         onClick={() => handlePaymentMethodChange("cash")}
                       >
                         <div className="flex items-center">
-                          <div className={`w-5 h-5 rounded-full border mr-3 flex items-center justify-center ${
-                            selectedPaymentMethod === "cash" 
-                              ? "border-blue-800 bg-blue-800" 
-                              : "border-gray-400"
-                          }`}>
+                          <div
+                            className={`w-5 h-5 rounded-full border mr-3 flex items-center justify-center ${
+                              selectedPaymentMethod === "cash"
+                                ? "border-blue-800 bg-blue-800"
+                                : "border-gray-400"
+                            }`}
+                          >
                             {selectedPaymentMethod === "cash" && (
                               <div className="w-2 h-2 rounded-full bg-white"></div>
                             )}
@@ -870,25 +871,29 @@ export default function Membership() {
                         </p>
                       </div>
 
-                      <div 
+                      <div
                         className={`border p-3 cursor-pointer rounded-md transition-all ${
-                          selectedPaymentMethod === "online" 
-                            ? "border-blue-800 bg-blue-50" 
+                          selectedPaymentMethod === "online"
+                            ? "border-blue-800 bg-blue-50"
                             : "border-gray-300 hover:bg-gray-50"
                         }`}
                         onClick={() => handlePaymentMethodChange("online")}
                       >
                         <div className="flex items-center">
-                          <div className={`w-5 h-5 rounded-full border mr-3 flex items-center justify-center ${
-                            selectedPaymentMethod === "online" 
-                              ? "border-blue-800 bg-blue-800" 
-                              : "border-gray-400"
-                          }`}>
+                          <div
+                            className={`w-5 h-5 rounded-full border mr-3 flex items-center justify-center ${
+                              selectedPaymentMethod === "online"
+                                ? "border-blue-800 bg-blue-800"
+                                : "border-gray-400"
+                            }`}
+                          >
                             {selectedPaymentMethod === "online" && (
                               <div className="w-2 h-2 rounded-full bg-white"></div>
                             )}
                           </div>
-                          <span className="font-medium">Paiement en ligne par CIB/DHAHABIA</span>
+                          <span className="font-medium">
+                            Paiement en ligne par CIB/DHAHABIA
+                          </span>
                         </div>
                         <p className="text-sm text-gray-600 mt-1 ml-8">
                           Paiement sécurisé via la plateforme SATIM
@@ -997,7 +1002,9 @@ export default function Membership() {
                       <div className="flex justify-between items-center pb-3 border-b">
                         <span>Mode de paiement</span>
                         <span className="font-medium">
-                          {selectedPaymentMethod === "cash" ? "Paiement par cash" : "Paiement en ligne"}
+                          {selectedPaymentMethod === "cash"
+                            ? "Paiement par cash"
+                            : "Paiement en ligne"}
                         </span>
                       </div>
 
@@ -1021,8 +1028,8 @@ export default function Membership() {
                               {getPlanAmount().toLocaleString()} DA
                             </div>
                             <div className="text-sm text-gray-600 mt-1">
-                              {selectedPaymentMethod === "cash" 
-                                ? "À régler en espèces à notre siège" 
+                              {selectedPaymentMethod === "cash"
+                                ? "À régler en espèces à notre siège"
                                 : "Adhésion valable pour 1 an à partir de la date de paiement"}
                             </div>
                           </div>
@@ -1034,30 +1041,50 @@ export default function Membership() {
                   {/* Terms and Conditions */}
                   <div className="mb-8 p-6 border border-gray-300 rounded-lg bg-gray-50">
                     <h3 className="text-lg font-semibold text-blue-800 mb-4">
-                      {selectedPaymentMethod === "cash" 
-                        ? "Instructions pour le paiement en espèces" 
+                      {selectedPaymentMethod === "cash"
+                        ? "Instructions pour le paiement en espèces"
                         : "Conditions générales de paiement et de vente"}
                     </h3>
                     <div className="text-sm text-gray-700 space-y-3 max-h-80 overflow-y-auto pr-2">
                       {selectedPaymentMethod === "cash" ? (
                         <>
                           <p>
-                            <strong>Instructions pour le paiement en espèces :</strong>
+                            <strong>
+                              Instructions pour le paiement en espèces :
+                            </strong>
                           </p>
                           <p>
-                            Vous avez choisi de payer en espèces. Voici les étapes à suivre :
+                            Vous avez choisi de payer en espèces. Voici les
+                            étapes à suivre :
                           </p>
                           <ol className="list-decimal list-inside space-y-2 pl-2">
-                            <li>Votre demande d'adhésion a été enregistrée avec succès</li>
-                            <li>Vous recevrez un email de confirmation avec votre numéro de dossier</li>
-                            <li>Présentez-vous à notre siège avec :
+                            <li>
+                              Votre demande d'adhésion a été enregistrée avec
+                              succès
+                            </li>
+                            <li>
+                              Vous recevrez un email de confirmation avec votre
+                              numéro de dossier
+                            </li>
+                            <li>
+                              Présentez-vous à notre siège avec :
                               <ul className="list-disc list-inside ml-4 mt-1">
                                 <li>Votre pièce d'identité</li>
-                                <li>Votre diplôme de pharmacien (ou carte d'étudiant)</li>
-                                <li>Le montant de {getPlanAmount().toLocaleString()} DA en espèces</li>
+                                <li>
+                                  Votre diplôme de pharmacien (ou carte
+                                  d'étudiant)
+                                </li>
+                                <li>
+                                  Le montant de{" "}
+                                  {getPlanAmount().toLocaleString()} DA en
+                                  espèces
+                                </li>
                               </ul>
                             </li>
-                            <li>Vous recevrez immédiatement votre carte de membre après paiement</li>
+                            <li>
+                              Vous recevrez immédiatement votre carte de membre
+                              après paiement
+                            </li>
                           </ol>
                           <p>
                             <strong>Adresse de notre siège :</strong>
@@ -1083,36 +1110,39 @@ export default function Membership() {
                               Article 2 - Prix et modalités de paiement
                             </strong>
                             <br />
-                            Les prix sont indiqués en Dinars Algériens (DA) toutes
-                            taxes comprises. Le paiement s'effectue exclusivement en
-                            ligne via la plateforme sécurisée SATIM.
+                            Les prix sont indiqués en Dinars Algériens (DA)
+                            toutes taxes comprises. Le paiement s'effectue
+                            exclusivement en ligne via la plateforme sécurisée
+                            SATIM.
                           </p>
                           <p>
-                            <strong>Article 3 - Sécurité des transactions</strong>
+                            <strong>
+                              Article 3 - Sécurité des transactions
+                            </strong>
                             <br />
-                            Toutes les transactions sont sécurisées par le protocole
-                            SSL 256-bit et certifiées PCI-DSS. Aucune information
-                            bancaire n'est stockée sur nos serveurs.
+                            Toutes les transactions sont sécurisées par le
+                            protocole SSL 256-bit et certifiées PCI-DSS. Aucune
+                            information bancaire n'est stockée sur nos serveurs.
                           </p>
                           <p>
                             <strong>Article 4 - Droit de rétractation</strong>
                             <br />
-                            Conformément à la législation en vigueur, vous disposez
-                            d'un délai de 7 jours ouvrables pour exercer votre droit
-                            de rétractation.
+                            Conformément à la législation en vigueur, vous
+                            disposez d'un délai de 7 jours ouvrables pour
+                            exercer votre droit de rétractation.
                           </p>
                           <p>
                             <strong>Article 5 - Traitement des données</strong>
                             <br />
-                            Vos données personnelles sont traitées conformément à
-                            notre politique de confidentialité et ne sont en aucun
-                            cas transmises à des tiers.
+                            Vos données personnelles sont traitées conformément
+                            à notre politique de confidentialité et ne sont en
+                            aucun cas transmises à des tiers.
                           </p>
                           <p>
                             <strong>Article 6 - Service client</strong>
                             <br />
-                            Pour toute question relative à votre paiement, contactez
-                            le service client SATIM au numéro vert :{" "}
+                            Pour toute question relative à votre paiement,
+                            contactez le service client SATIM au numéro vert :{" "}
                             <strong className="text-green-600">3020</strong>.
                           </p>
                         </>
@@ -1304,7 +1334,7 @@ export default function Membership() {
                 Votre adhésion à la Fédération Algérienne des Pharmaciens a été
                 enregistrée avec succès.
               </p>
-              
+
               {selectedPaymentMethod === "cash" ? (
                 <>
                   <div className="bg-blue-50 p-4 rounded-lg mb-8">
@@ -1312,16 +1342,28 @@ export default function Membership() {
                       Paiement par cash - Instructions :
                     </h3>
                     <ul className="text-left list-disc list-inside text-gray-700 space-y-2">
-                      <li>Présentez-vous à notre siège avec :
+                      <li>
+                        Présentez-vous à notre siège avec :
                         <ul className="list-circle list-inside ml-4 mt-1">
                           <li>Votre pièce d'identité</li>
-                          <li>Votre diplôme de pharmacien (ou carte d'étudiant)</li>
-                          <li>Le montant de {getPlanAmount().toLocaleString()} DA en espèces</li>
+                          <li>
+                            Votre diplôme de pharmacien (ou carte d'étudiant)
+                          </li>
+                          <li>
+                            Le montant de {getPlanAmount().toLocaleString()} DA
+                            en espèces
+                          </li>
                         </ul>
                       </li>
-                      <li>Adresse : Fédération Algérienne des Pharmaciens - [Adresse à compléter]</li>
+                      <li>
+                        Adresse : Fédération Algérienne des Pharmaciens -
+                        [Adresse à compléter]
+                      </li>
                       <li>Horaires : [Horaires à compléter]</li>
-                      <li>Vous recevrez immédiatement votre carte de membre après paiement</li>
+                      <li>
+                        Vous recevrez immédiatement votre carte de membre après
+                        paiement
+                      </li>
                     </ul>
                   </div>
                   <p className="text-gray-600 mb-8">
@@ -1337,7 +1379,7 @@ export default function Membership() {
                   <span className="font-medium">{formData.email}</span>.
                 </p>
               )}
-              
+
               <div className="bg-blue-50 p-4 rounded-lg mb-8">
                 <h3 className="font-semibold text-blue-800 mb-2">
                   Prochaines étapes :
