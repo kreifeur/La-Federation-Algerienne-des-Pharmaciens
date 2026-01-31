@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import Link from "next/link";
 const VIDEO_EXTENSIONS = ["mp4", "webm", "ogg", "mov"];
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
@@ -75,9 +75,7 @@ const Gallery = () => {
         </h2>
 
         {galleryMessage && (
-          <div className="text-center mb-6 text-red-600">
-            {galleryMessage}
-          </div>
+          <div className="text-center mb-6 text-red-600">{galleryMessage}</div>
         )}
 
         {galleryItems.length === 0 ? (
@@ -98,7 +96,7 @@ const Gallery = () => {
               const finalVideoUrl = isVideo
                 ? mediaUrl.replace(
                     "/image/upload/",
-                    "/video/upload/f_mp4,vc_h264,ac_aac/"
+                    "/video/upload/f_mp4,vc_h264,ac_aac/",
                   )
                 : null;
 
@@ -144,6 +142,15 @@ const Gallery = () => {
             })}
           </div>
         )}
+      </div>
+
+      <div className="text-center mt-10">
+        <Link
+          href="/gallery"
+          className="px-6 py-3 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
+        >
+          Voir toute la galerie
+        </Link>
       </div>
     </section>
   );
