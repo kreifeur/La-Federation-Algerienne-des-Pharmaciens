@@ -76,11 +76,18 @@ export default function RegisterSuccess() {
           <>
             <div className="text-green-500 text-5xl mb-4">✓</div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Inscription réussie !
+              {data.params.respCode_desc}
             </h1>
             <p className="text-gray-600 mb-6">
               Bienvenue dans La Fédération Algérienne des Pharmaciens. Un email
               de confirmation a été envoyé à votre adresse.
+
+              L’identifiant de la transaction  :
+              Le numéro de commande : {data.orderNumber}
+              Le numéro d’autorisation : {data.approvalCode}
+              La date et l’heure de la transaction : 
+              Le montant de paiement avec la devise : {data.currency}
+              Le mode de paiement : CIB/EDAHABIA
             </p>
 
             {status && status.orderStatus === 2 && (
@@ -89,7 +96,7 @@ export default function RegisterSuccess() {
                   Paiement confirmé !
                 </h3>
                 <p className="text-sm text-green-600">
-                  Votre paiement a été traité avec succès.
+                  {data.params.respCode_desc}
                 </p>
               </div>
             )}
