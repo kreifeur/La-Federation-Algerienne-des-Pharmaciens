@@ -1,4 +1,3 @@
-// components/Events.js
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -12,6 +11,7 @@ const Events = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [userInfo, setUserInfo] = useState(null); // Nouveau état pour les infos utilisateur
   const router = useRouter();
 
   // Fonction pour récupérer le profil utilisateur
@@ -21,7 +21,7 @@ const Events = () => {
 
       if (!authToken) {
         console.log("Utilisateur non connecté");
-        return null; // Pas d'erreur, juste pas connecté
+        return null;
       }
 
       const response = await fetch("/api/profile", {
@@ -39,9 +39,9 @@ const Events = () => {
       const result = await response.json();
 
       if (result.success && result.data && result.data._id) {
-        // Utiliser userId depuis les données du profil
         const userId = result.data.userId || result.data._id;
         setCurrentUserId(userId);
+        setUserInfo(result.data); // Sauvegarder les infos utilisateur
         console.log("Utilisateur connecté, ID:", userId);
         return userId;
       }
@@ -59,7 +59,6 @@ const Events = () => {
       setLoading(true);
       setError("");
 
-      // Essayer de récupérer le profil utilisateur (peut retourner null si non connecté)
       const userId = await fetchUserProfile();
 
       const response = await fetch("/api/events", {
@@ -73,7 +72,6 @@ const Events = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Séparer les événements en "à venir"
         const now = new Date();
         const upcomingEvents = [];
 
@@ -81,21 +79,18 @@ const Events = () => {
           const eventDate = new Date(event.startDate);
 
           if (eventDate >= now) {
-            // Si l'utilisateur est connecté, vérifier s'il est inscrit
-            // Sinon, le statut est toujours "available"
             const isRegistered = userId
               ? event.participants?.includes(userId)
               : false;
 
             upcomingEvents.push({
               ...event,
-              status: isRegistered ? "registered" : "available", // Toujours "available" si pas connecté
+              status: isRegistered ? "registered" : "available",
               type: getEventTypeFromData(event),
             });
           }
         });
 
-        // Prendre seulement les 3 premiers événements à venir pour l'affichage
         setEvents(upcomingEvents.slice(0, 3));
       } else {
         throw new Error(
@@ -105,7 +100,6 @@ const Events = () => {
     } catch (error) {
       console.error("Erreur:", error);
       setError(error.message);
-      // Données de démonstration en cas d'erreur
       const demoEvents = [
         {
           _id: "1",
@@ -113,13 +107,13 @@ const Events = () => {
           startDate: "2024-09-15T09:00:00Z",
           location: "Paris, France",
           type: "congress",
-          status: "available", // Toujours "available" pour les démos
+          status: "available",
           description:
             "Le plus grand rassemblement de professionnels de la cosmétologie en France.",
           isOnline: false,
           isMemberOnly: false,
           participants: [],
-          memberPrice: 0,
+          memberPrice: 2000,
           nonMemberPrice: 5000,
           maxParticipants: 200,
         },
@@ -129,13 +123,13 @@ const Events = () => {
           startDate: "2024-10-05T14:00:00Z",
           location: "Lyon, France",
           type: "workshop",
-          status: "available", // Toujours "available" pour les démos
+          status: "available",
           description:
             "Apprenez à formuler des produits cosmétiques avec des ingrédients naturels.",
           isOnline: false,
           isMemberOnly: true,
           participants: [],
-          memberPrice: 0,
+          memberPrice: 1000,
           nonMemberPrice: 3000,
           maxParticipants: 50,
         },
@@ -145,14 +139,14 @@ const Events = () => {
           startDate: "2024-11-20T10:00:00Z",
           location: "Marseille, France",
           type: "exhibition",
-          status: "available", // Toujours "available" pour les démos
+          status: "available",
           description:
             "Découvrez les dernières innovations produits et technologies lors de ce salon professionnel.",
           isOnline: false,
           isMemberOnly: false,
           participants: [],
           memberPrice: 0,
-          nonMemberPrice: 2000,
+          nonMemberPrice: 0,
           maxParticipants: 100,
         },
       ];
@@ -176,7 +170,7 @@ const Events = () => {
     )
       return "workshop";
     if (event.title?.toLowerCase().includes("formation")) return "workshop";
-    return "congress"; // défaut
+    return "congress";
   };
 
   // Charger les événements au montage du composant
@@ -195,7 +189,7 @@ const Events = () => {
       case "completed":
         return { text: "Terminé", color: "bg-gray-100 text-gray-800" };
       default:
-        return { text: "Disponible", color: "bg-blue-100 text-blue-800" }; // Par défaut "Disponible"
+        return { text: "Disponible", color: "bg-blue-100 text-blue-800" };
     }
   };
 
@@ -232,19 +226,18 @@ const Events = () => {
     });
   };
 
-  const handleRegister = async (eventId) => {
+  const handleRegister = async (event) => {
     try {
-      setRegisteringEvent(eventId);
+      setRegisteringEvent(event._id);
 
       const authToken = localStorage.getItem("authToken");
 
       if (!authToken) {
-        setSelectedEvent(events.find((event) => event._id === eventId));
+        setSelectedEvent(event);
         setShowLoginAlert(true);
         return;
       }
 
-      // S'assurer que nous avons l'ID utilisateur
       let userId = currentUserId;
       if (!userId) {
         userId = await fetchUserProfile();
@@ -254,42 +247,46 @@ const Events = () => {
         throw new Error("Impossible de récupérer l'ID utilisateur");
       }
 
-      console.log("Inscription à l'événement:", eventId);
-      console.log("User ID:", userId);
+      // Vérifier si l'événement est gratuit
+      const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+      
+      if (isFreeEvent) {
+        // Pour les événements gratuits, procéder à l'inscription directe
+        const response = await fetch(`/api/events/${event._id}/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ userId }),
+        });
 
-      const response = await fetch(`/api/events/${eventId}/register`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
+        const result = await response.json();
 
-      const result = await response.json();
-      console.log("Réponse de l'API:", result);
+        if (!response.ok) {
+          throw new Error(result.message || "Erreur lors de l'inscription");
+        }
 
-      if (!response.ok) {
-        throw new Error(result.message || "Erreur lors de l'inscription");
-      }
+        if (result.success) {
+          setEvents((prev) =>
+            prev.map((ev) =>
+              ev._id === event._id
+                ? {
+                    ...ev,
+                    status: "registered",
+                    participants: [...(ev.participants || []), { userId }],
+                  }
+                : ev
+            )
+          );
 
-      if (result.success) {
-        // Mettre à jour le statut de l'événement localement
-        setEvents((prev) =>
-          prev.map((event) =>
-            event._id === eventId
-              ? {
-                  ...event,
-                  status: "registered", // Change le statut à "registered"
-                  participants: [...(event.participants || []), userId],
-                }
-              : event
-          )
-        );
-
-        alert(
-          "✅ Inscription réussie ! Vous êtes maintenant inscrit à cet événement."
-        );
+          alert("✅ Inscription réussie ! Vous êtes maintenant inscrit à cet événement.");
+        } else {
+          throw new Error(result.message || "Erreur lors de l'inscription");
+        }
       } else {
-        throw new Error(result.message || "Erreur lors de l'inscription");
+        // Pour les événements payants, rediriger vers la page de paiement
+        redirectToPaymentPage(event);
       }
     } catch (error) {
       console.error("Erreur:", error);
@@ -297,6 +294,37 @@ const Events = () => {
     } finally {
       setRegisteringEvent(null);
     }
+  };
+
+  const redirectToPaymentPage = (event) => {
+    // Préparer les données de l'événement pour la page de paiement
+    const paymentData = {
+      eventId: event._id,
+      eventTitle: event.title,
+      eventDate: event.startDate,
+      eventLocation: event.location,
+      
+      // Déterminer le prix en fonction du statut de membre
+      amount: userInfo?.isMember ? event.memberPrice : event.nonMemberPrice,
+      priceType: userInfo?.isMember ? "member" : "non-member",
+      memberPrice: event.memberPrice,
+      nonMemberPrice: event.nonMemberPrice,
+      
+      userId: currentUserId,
+      userName: userInfo?.fullName || userInfo?.email,
+      userEmail: userInfo?.email,
+      
+      // Autres informations utiles
+      isOnlineEvent: event.isOnline,
+      maxParticipants: event.maxParticipants,
+      currentParticipants: event.participants?.length || 0,
+    };
+
+    // Stocker les données temporairement dans localStorage
+    localStorage.setItem("pendingPayment", JSON.stringify(paymentData));
+    
+    // Rediriger vers la page de paiement
+    router.push("/payment");
   };
 
   const handleLoginRedirect = () => {
@@ -310,27 +338,29 @@ const Events = () => {
     const participantsCount = event.participants?.length || 0;
     const maxParticipants = event.maxParticipants || "Illimité";
 
+    // Vérifier si l'événement est gratuit ou payant
+    const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+    const priceInfo = isFreeEvent ? "Gratuit" : 
+      `Prix membre: ${event.memberPrice || 0}DA\nPrix non-membre: ${event.nonMemberPrice || 0}DA`;
+
     alert(
       `Détails de l'événement:\n\n` +
         `📌 ${event.title}\n\n` +
         `📝 ${event.description || "Aucune description"}\n\n` +
-        `📅 Date: ${formatDateTime(event.startDate)}\n` +
+        `📅 Date de début: ${formatDateTime(event.startDate)}\n` +
         `📍 Lieu: ${event.location}\n` +
+        (event.isOnline ? `🌐 Événement en ligne\n` : '') +
+        (event.isMemberOnly ? `🔒 Réservé aux membres seulement\n` : '') +
         `👥 Participants: ${participantsCount}/${maxParticipants}\n` +
-        `💰 Prix membre: ${event.memberPrice || 0}DA\n` +
-        `💰 Prix non-membre: ${event.nonMemberPrice || 0}DA\n` +
-        `${
-          event.isOnline ? "💻 Événement en ligne" : "🏢 Événement présentiel"
-        }\n` +
-        `${
-          event.isMemberOnly ? "🔒 Réservé aux membres" : "🔓 Ouvert à tous"
-        }\n` +
+        `💰 ${priceInfo}\n` +
         `${
           isConnected
             ? isRegistered
               ? "✅ Vous êtes inscrit à cet événement"
-              : "❌ Vous n'êtes pas inscrit - Statut: Disponible"
-            : "🔐 Connectez-vous pour vous inscrire - Statut: Disponible"
+              : isFreeEvent
+                ? "❌ Vous n'êtes pas inscrit - Statut: Disponible (Gratuit)"
+                : "❌ Vous n'êtes pas inscrit - Statut: Disponible (Payant)"
+            : "🔐 Connectez-vous pour vous inscrire"
         }`
     );
   };
@@ -338,6 +368,47 @@ const Events = () => {
   // Vérifier si l'utilisateur est déjà inscrit à un événement
   const isUserRegistered = (event) => {
     return event.status === "registered";
+  };
+
+  // Afficher le prix selon le statut de l'utilisateur
+  const displayPrice = (event) => {
+    const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+    
+    if (isFreeEvent) {
+      return (
+        <span className="text-green-600 font-semibold">
+          Gratuit
+        </span>
+      );
+    } else {
+      const userPrice = userInfo?.isMember ? event.memberPrice : event.nonMemberPrice;
+      const otherPrice = userInfo?.isMember ? event.nonMemberPrice : event.memberPrice;
+      
+      return (
+        <div className="text-right">
+          <div className="text-blue-800 font-semibold">
+            {userPrice || 0} DA / membre
+          </div>
+         {/*  <div className="text-sm text-gray-500">
+            {otherPrice || 0} DA {userInfo?.isMember ? "(Non-membre)" : "(Membre)"}
+          </div> */}
+        </div>
+      );
+    }
+  };
+
+  // Déterminer le texte du bouton
+  const getButtonText = (event) => {
+    if (event.status === "registered") {
+      return "Inscrit";
+    }
+    if (event.maxParticipants && (event.participants?.length || 0) >= event.maxParticipants) {
+      return "Complet";
+    }
+    
+    // Afficher "Payer" pour les événements payants
+    const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+    return isFreeEvent ? "S'inscrire" : "S'inscrire & Payer";
   };
 
   if (loading) {
@@ -402,11 +473,13 @@ const Events = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {events.map((event) => {
                 const isRegistered = isUserRegistered(event);
-                const status = getEventStatus(event.status); // Utilise directement event.status
+                const status = getEventStatus(event.status);
                 const isRegistering = registeringEvent === event._id;
                 const participantsCount = event.participants?.length || 0;
                 const maxParticipants = event.maxParticipants || "Illimité";
                 const isConnected = currentUserId !== null;
+                const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+                const buttonText = getButtonText(event);
 
                 return (
                   <div
@@ -422,23 +495,19 @@ const Events = () => {
                           }}
                         ></div>
                       ) : (
-                        <div className="text-4xl">
-                          {/* {getEventTypeIcon(event.type)} */}
-                          <div className="text-gray-600">Image événement</div>
+                        <div className="text-gray-600 flex flex-col items-center">
+                          <span className="text-4xl mb-2">📅</span>
+                          <span className="text-sm">Image événement</span>
                         </div>
                       )}
                     </div>
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-3">
-                        {/*  <div className="text-2xl">
-                          {getEventTypeIcon(event.type)}
-                        </div> */}
                         <div className="flex flex-col items-end space-y-1">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${status.color}`}
                           >
-                            {status.text}{" "}
-                            {/* Affiche "Disponible" si pas connecté */}
+                            {status.text}
                           </span>
                           {event.isMemberOnly && (
                             <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
@@ -450,6 +519,11 @@ const Events = () => {
                               En ligne
                             </span>
                           )}
+                          {!isFreeEvent && (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                              💰 Payant
+                            </span>
+                          )}
                         </div>
                       </div>
                       <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-blue-800">
@@ -458,26 +532,6 @@ const Events = () => {
                       <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                         {event.description || "Description non disponible"}
                       </p>
-
-                      {/* Informations sur les participants */}
-                      {/*  <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <svg
-                          className="w-4 h-4 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
-                        <span>
-                          {participantsCount}/{maxParticipants} participants
-                        </span>
-                      </div> */}
 
                       <div className="flex items-center text-sm text-gray-500 mb-2">
                         <svg
@@ -521,22 +575,12 @@ const Events = () => {
                       </div>
 
                       <div className="flex justify-between items-center mb-4">
-                        <div className="text-right">
-                          {event.nonMemberPrice === 0 ? (
-                            <span className="text-green-600 font-semibold">
-                              Gratuit
-                            </span>
-                          ) : (
-                            <>
-                              {/* <div className="text-gray-500 line-through text-sm">
-                                {event.nonMemberPrice} DA
-                              </div> */}
-                              <div className="text-blue-800 font-semibold">
-                                {event.memberPrice} DA membres
-                              </div>
-                            </>
-                          )}
+                        <div className="text-left">
+                          {/* <div className="text-sm text-gray-500 mb-1">
+                            Participants: {participantsCount}/{maxParticipants}
+                          </div> */}
                         </div>
+                        {displayPrice(event)}
                       </div>
 
                       <div className="flex space-x-2">
@@ -562,9 +606,9 @@ const Events = () => {
                           </button>
                         ) : (
                           <button
-                            onClick={() => handleRegister(event._id)}
-                            disabled={isRegistering}
-                            className="flex-1 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-sm flex items-center justify-center"
+                            onClick={() => handleRegister(event)}
+                            disabled={isRegistering || (event.maxParticipants && participantsCount >= event.maxParticipants)}
+                            className="flex-1 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm flex items-center justify-center"
                           >
                             {isRegistering ? (
                               <>
@@ -572,7 +616,7 @@ const Events = () => {
                                 Inscription...
                               </>
                             ) : (
-                              "S'inscrire"
+                              buttonText
                             )}
                           </button>
                         )}
