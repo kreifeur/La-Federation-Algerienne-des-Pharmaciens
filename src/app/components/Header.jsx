@@ -178,24 +178,24 @@ const Header = () => {
 
                 {/* Dropdown menu */}
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border border-gray-200">
-                  <Link
+                 {/*  <Link
                     href="/dashboard"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
                   >
                     Dashboard
-                  </Link>
+                  </Link> */}
                   <Link
                     href="/dashboard/profile"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
                   >
                     Mon Profil
                   </Link>
-                  <Link
+                  {/* <Link
                     href="/dashboard/events"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800"
                   >
                     Mes Événements
-                  </Link>
+                  </Link> */}
 
                   <Link
                     href="/dashboard/directory"
@@ -303,7 +303,7 @@ const Header = () => {
             {isConnected ? (
               <div className="space-y-3">
                 <Link
-                  href="/dashboard"
+                  href="/dashboard/profile"
                   className="flex items-center space-x-2 px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -319,13 +319,13 @@ const Header = () => {
                 >
                   Mon Profil
                 </Link>
-                <Link
+                {/* <Link
                   href="/dashboard/events"
                   className="block px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Mes Événements
-                </Link>
+                </Link> */}
                 <Link
                   href="/dashboard/directory"
                   className="block px-3 py-2 bg-blue-700 rounded-md hover:bg-blue-600 transition-colors"

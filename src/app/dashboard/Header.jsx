@@ -49,12 +49,12 @@ export default function Header({ user }) {
                   Accueil
                 </a>
 
-                <a
+                {/* <a
                   href="/dashboard"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   Tableau de bord
-                </a>
+                </a> */}
                 <a
                   href="/dashboard/profile"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -62,12 +62,12 @@ export default function Header({ user }) {
                   Mon profil
                 </a>
 
-                <a
+              {/*   <a
                   href="/dashboard/events"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   Événements
-                </a>
+                </a> */}
 
                 <a
                   href="/dashboard/directory"
