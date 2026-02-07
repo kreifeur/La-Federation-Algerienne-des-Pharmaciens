@@ -243,7 +243,6 @@ export default function PaymentPage() {
         } catch (err) {
           console.error(err);
           alert("Erreur lors de la redirection vers le paiement en ligne");
-          setIsProcessing(false);
         }
       }
     } catch (error) {
