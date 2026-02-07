@@ -232,12 +232,18 @@ export default function PaymentPage() {
           }),
         );
 
-        const res = await axios.post("/api/pay", paymentRequest);
+        const res = await axios.get("/api/pay");
 
-        if (res.data.formUrl) {
-          window.location.href = res.data.formUrl;
-        } else {
-          throw new Error("URL de paiement non disponible");
+        try {
+          const res = await axios.get("/api/pay");
+          console.log("SATIM RESPONSE:", res.data);
+          if (res.data.formUrl) {
+            window.location.href = res.data.formUrl;
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Erreur lors de la redirection vers le paiement en ligne");
+          setIsProcessing(false);
         }
       }
     } catch (error) {
@@ -913,15 +919,15 @@ export default function PaymentPage() {
                       </>
                     ) : (
                       <>
-                        
                         <img
-                            src="/cib_logo.png"
-                            alt="CIB"
-                            className="h-8 ml-4"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.style.display = "none";
-                            }}/>
+                          src="/cib_logo.png"
+                          alt="CIB"
+                          className="h-8 ml-4"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = "none";
+                          }}
+                        />
                         <span className="text-sm ml-2">Payer maintenant</span>
                       </>
                     )}
