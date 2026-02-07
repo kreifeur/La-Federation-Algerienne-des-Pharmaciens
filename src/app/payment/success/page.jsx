@@ -141,7 +141,7 @@ export default function RegisterSuccess() {
         <div class="footer">
           <p>Merci de votre confiance !</p>
           <p>Pour toute question, contactez-nous à : support@federation-pharmaciens.dz</p>
-          <p>Document généré le : ${new Date().toLocaleString('fr-FR')}</p>
+          <p>Document généré le : ${new Date().toLocaleString("fr-FR")}</p>
         </div>
         <script>
           window.onload = function() {
@@ -160,14 +160,18 @@ export default function RegisterSuccess() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <Head>
-        <title>Inscription réussie - La Fédération Algérienne des Pharmaciens</title>
+        <title>
+          Inscription réussie - La Fédération Algérienne des Pharmaciens
+        </title>
       </Head>
 
       <div className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-md">
         {loading ? (
           <div className="py-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
-            <p className="text-gray-600">Confirmation du paiement en cours...</p>
+            <p className="text-gray-600">
+              Confirmation du paiement en cours...
+            </p>
           </div>
         ) : error ? (
           <div className="text-center">
@@ -208,28 +212,44 @@ export default function RegisterSuccess() {
                     <span className="font-bold text-green-600">Confirmé</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium text-gray-600">Numéro de commande :</span>
-                    <span className="font-mono">{status?.orderNumber || "N/A"}</span>
+                    <span className="font-medium text-gray-600">
+                      Numéro de commande :
+                    </span>
+                    <span className="font-mono">
+                      {status?.orderNumber || "N/A"}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium text-gray-600">Numéro d'autorisation :</span>
-                    <span className="font-mono">{status?.approvalCode || "N/A"}</span>
+                    <span className="font-medium text-gray-600">
+                      Numéro d'autorisation :
+                    </span>
+                    <span className="font-mono">
+                      {status?.approvalCode || "N/A"}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium text-gray-600">Date de la transaction :</span>
+                    <span className="font-medium text-gray-600">
+                      Date de la transaction :
+                    </span>
                     <span>{now}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium text-gray-600">Montant :</span>
-                    <span className="font-bold">{status?.amount || "0"} {status?.currency || "DZD"}</span>
+                    <span className="font-bold">
+                      {status?.amount || "0"} {status?.currency || "DZD"}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-medium text-gray-600">Mode de paiement :</span>
+                    <span className="font-medium text-gray-600">
+                      Mode de paiement :
+                    </span>
                     <span>CIB/EDAHABIA</span>
                   </div>
                   {status?.params?.payid && (
                     <div className="flex justify-between">
-                      <span className="font-medium text-gray-600">ID de transaction :</span>
+                      <span className="font-medium text-gray-600">
+                        ID de transaction :
+                      </span>
                       <span className="font-mono">{status.params.payid}</span>
                     </div>
                   )}
@@ -247,18 +267,28 @@ export default function RegisterSuccess() {
                   Payé
                 </span>
               </div>
-              
+
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-600">Numéro de commande :</span>
-                  <span className="font-mono text-gray-800">{status?.orderNumber || "N/A"}</span>
+                  <span className="font-medium text-gray-600">
+                    Numéro de commande :
+                  </span>
+                  <span className="font-mono text-gray-800">
+                    {status?.orderNumber || "N/A"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-600">Numéro d'autorisation :</span>
-                  <span className="font-mono text-gray-800">{status?.approvalCode || "N/A"}</span>
+                  <span className="font-medium text-gray-600">
+                    Numéro d'autorisation :
+                  </span>
+                  <span className="font-mono text-gray-800">
+                    {status?.approvalCode || "N/A"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-600">Date de la transaction :</span>
+                  <span className="font-medium text-gray-600">
+                    Date de la transaction :
+                  </span>
                   <span className="text-gray-800">{now}</span>
                 </div>
                 <div className="flex justify-between">
@@ -268,7 +298,9 @@ export default function RegisterSuccess() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-600">Mode de paiement :</span>
+                  <span className="font-medium text-gray-600">
+                    Mode de paiement :
+                  </span>
                   <span className="text-gray-800">CIB/EDAHABIA</span>
                 </div>
               </div>
@@ -277,10 +309,34 @@ export default function RegisterSuccess() {
                 onClick={handlePrintReceipt}
                 className="w-full bg-blue-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                  />
                 </svg>
                 Imprimer le reçu
+              </button>
+
+              <button
+                onClick={handlePrintReceipt}
+                className="w-full bg-green-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                envoyer le reçu
+              </button>
+
+              <button
+                onClick={handlePrintReceipt}
+                className="w-full bg-orange-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                telecharger le reçu
               </button>
             </div>
 
@@ -289,7 +345,8 @@ export default function RegisterSuccess() {
                 Paiement confirmé avec succès !
               </h3>
               <p className="text-sm text-green-600">
-                {status?.params?.respCode_desc || "Votre paiement a été traité avec succès."}
+                {status?.params?.respCode_desc ||
+                  "Votre paiement a été traité avec succès."}
               </p>
             </div>
 
