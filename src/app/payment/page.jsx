@@ -232,7 +232,7 @@ export default function PaymentPage() {
           }),
         );
 
-        const res = await axios.post("/api/pay/event", paymentRequest);
+        const res = await axios.post("/api/pay", paymentRequest);
 
         if (res.data.formUrl) {
           window.location.href = res.data.formUrl;
