@@ -21,12 +21,15 @@ export default function PaymentPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [userInfo, setUserInfo] = useState(null);
+  const [formData, setFormData] = useState({
+    acceptTerms: false,
+  });
 
   const recaptchaRef = useRef(null);
 
   useEffect(() => {
     loadPaymentData();
-    
+
     // Check if page is loaded with HTTPS
     if (window.location.protocol === "https:") {
       setSslVerified(true);
@@ -37,10 +40,18 @@ export default function PaymentPage() {
     setRecaptchaToken(token);
   };
 
+  const handleChange = (e) => {
+    const { name, type, checked, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
+
   const loadPaymentData = () => {
     try {
       const storedPayment = localStorage.getItem("pendingPayment");
-      
+
       if (!storedPayment) {
         router.push("/events");
         return;
@@ -48,10 +59,10 @@ export default function PaymentPage() {
 
       const parsedPayment = JSON.parse(storedPayment);
       setPaymentData(parsedPayment);
-      
+
       // Charger les infos utilisateur depuis localStorage ou API
       loadUserInfo();
-      
+
       setLoading(false);
     } catch (error) {
       console.error("Erreur de chargement:", error);
@@ -86,11 +97,11 @@ export default function PaymentPage() {
   const formatDate = (dateString) => {
     if (!dateString) return "À confirmer";
     try {
-      const options = { 
-        weekday: 'long',
-        day: "numeric", 
-        month: "long", 
-        year: "numeric" 
+      const options = {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
       };
       return new Date(dateString).toLocaleDateString("fr-FR", options);
     } catch (error) {
@@ -101,10 +112,10 @@ export default function PaymentPage() {
   const formatTime = (dateString) => {
     if (!dateString) return "À confirmer";
     try {
-      const options = { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        timeZone: 'UTC'
+      const options = {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "UTC",
       };
       return new Date(dateString).toLocaleTimeString("fr-FR", options);
     } catch (error) {
@@ -116,6 +127,18 @@ export default function PaymentPage() {
     const newErrors = {};
     if (!selectedPaymentMethod) {
       newErrors.paymentMethod = "Veuillez sélectionner un mode de paiement";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const newErrors = {};
+    if (!formData.acceptTerms) {
+      newErrors.acceptTerms = "Vous devez accepter les conditions générales";
+    }
+    if (!recaptchaToken) {
+      newErrors.recaptcha = "Veuillez compléter le CAPTCHA";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -133,14 +156,14 @@ export default function PaymentPage() {
   };
 
   const handlePayment = async () => {
-    if (!recaptchaToken) {
-      alert("Veuillez compléter le CAPTCHA pour continuer");
-      recaptchaRef.current?.reset();
+    if (!validateStep2()) {
       return;
     }
 
     if (!sslVerified) {
-      alert("Veuillez utiliser une connexion sécurisée (HTTPS) pour procéder au paiement");
+      alert(
+        "Veuillez utiliser une connexion sécurisée (HTTPS) pour procéder au paiement",
+      );
       return;
     }
 
@@ -159,21 +182,26 @@ export default function PaymentPage() {
         userId: paymentData.userId,
         amount: paymentData.amount,
         paymentMethod: selectedPaymentMethod,
-        paymentStatus: selectedPaymentMethod === "cash" ? "pending" : "pending_payment",
+        paymentStatus:
+          selectedPaymentMethod === "cash" ? "pending" : "pending_payment",
         transactionId: `TXN-${Date.now()}`,
         recaptchaToken: recaptchaToken,
+        acceptTerms: formData.acceptTerms,
       };
 
       if (selectedPaymentMethod === "cash") {
         // Pour le cash, enregistrer l'inscription immédiatement
-        const registerResponse = await fetch(`/api/events/${paymentData.eventId}/register`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`
+        const registerResponse = await fetch(
+          `/api/events/${paymentData.eventId}/register`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify(registrationData),
           },
-          body: JSON.stringify(registrationData),
-        });
+        );
 
         const registerResult = await registerResponse.json();
 
@@ -192,16 +220,20 @@ export default function PaymentPage() {
           transactionId: registrationData.transactionId,
           returnUrl: `${window.location.origin}/payment/success`,
           cancelUrl: `${window.location.origin}/payment/cancel`,
+          acceptTerms: formData.acceptTerms,
         };
 
         // Enregistrer les données temporaires
-        localStorage.setItem("tempRegistration", JSON.stringify({
-          ...registrationData,
-          eventId: paymentData.eventId
-        }));
+        localStorage.setItem(
+          "tempRegistration",
+          JSON.stringify({
+            ...registrationData,
+            eventId: paymentData.eventId,
+          }),
+        );
 
         const res = await axios.post("/api/pay/event", paymentRequest);
-        
+
         if (res.data.formUrl) {
           window.location.href = res.data.formUrl;
         } else {
@@ -247,12 +279,14 @@ export default function PaymentPage() {
       <main className="py-16 px-6">
         <div className="container mx-auto max-w-md text-center">
           <div className="text-red-500 text-6xl mb-6">❌</div>
-          <h2 className="text-2xl font-bold text-blue-800 mb-4">Aucun paiement en attente</h2>
+          <h2 className="text-2xl font-bold text-blue-800 mb-4">
+            Aucun paiement en attente
+          </h2>
           <p className="text-gray-700 mb-8">
             Vous n'avez pas d'événement en attente de paiement.
           </p>
-          <Link 
-            href="/events" 
+          <Link
+            href="/events"
             className="px-8 py-3 bg-yellow-500 text-blue-900 rounded-md hover:bg-yellow-400 transition-colors font-medium text-lg"
           >
             Retour aux événements
@@ -266,7 +300,9 @@ export default function PaymentPage() {
   const SuccessScreen = () => (
     <div className="min-h-screen bg-white">
       <Head>
-        <title>Inscription Confirmée - Fédération Algérienne des Pharmaciens</title>
+        <title>
+          Inscription Confirmée - Fédération Algérienne des Pharmaciens
+        </title>
       </Head>
       <Header />
       <main className="py-16 px-6">
@@ -274,46 +310,61 @@ export default function PaymentPage() {
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <div className="text-green-500 text-6xl mb-6">✅</div>
             <h2 className="text-2xl font-bold text-blue-800 mb-6">
-              {selectedPaymentMethod === "cash" 
-                ? "Demande d'inscription enregistrée !" 
+              {selectedPaymentMethod === "cash"
+                ? "Demande d'inscription enregistrée !"
                 : "Paiement en cours de traitement !"}
             </h2>
-            
+
             <div className="mb-8">
-              <h3 className="font-semibold text-blue-800 mb-4">Détails de l'inscription :</h3>
+              <h3 className="font-semibold text-blue-800 mb-4">
+                Détails de l'inscription :
+              </h3>
               <div className="bg-blue-50 rounded-lg p-6 mb-6 text-left">
                 <p className="text-gray-700 mb-2">
-                  <span className="font-medium">Événement :</span> {paymentData.eventTitle}
+                  <span className="font-medium">Événement :</span>{" "}
+                  {paymentData.eventTitle}
                 </p>
                 <p className="text-gray-700 mb-2">
-                  <span className="font-medium">Montant :</span> {paymentData.amount} DA
+                  <span className="font-medium">Montant :</span>{" "}
+                  {paymentData.amount} DA
                 </p>
                 <p className="text-gray-700 mb-2">
-                  <span className="font-medium">Date :</span> {formatDate(paymentData.eventDate)}
+                  <span className="font-medium">Date :</span>{" "}
+                  {formatDate(paymentData.eventDate)}
                 </p>
                 <p className="text-gray-700 mb-2">
-                  <span className="font-medium">Heure :</span> {formatTime(paymentData.eventDate)}
+                  <span className="font-medium">Heure :</span>{" "}
+                  {formatTime(paymentData.eventDate)}
                 </p>
                 <p className="text-gray-700">
-                  <span className="font-medium">Mode de paiement :</span> 
-                  {selectedPaymentMethod === "cash" ? " Paiement par cash" : " Paiement en ligne"}
+                  <span className="font-medium">Mode de paiement :</span>
+                  {selectedPaymentMethod === "cash"
+                    ? " Paiement par cash"
+                    : " Paiement en ligne"}
                 </p>
               </div>
             </div>
 
             {selectedPaymentMethod === "cash" ? (
               <div className="bg-blue-50 p-4 rounded-lg mb-8">
-                <h3 className="font-semibold text-blue-800 mb-2">Instructions pour le paiement en espèces :</h3>
+                <h3 className="font-semibold text-blue-800 mb-2">
+                  Instructions pour le paiement en espèces :
+                </h3>
                 <ul className="text-left list-disc list-inside text-gray-700 space-y-2">
                   <li>Votre demande d'inscription a été enregistrée</li>
                   <li>Vous recevrez un email de confirmation</li>
-                  <li>Présentez-vous à l'événement avec pièce d'identité et montant en espèces</li>
+                  <li>
+                    Présentez-vous à l'événement avec pièce d'identité et
+                    montant en espèces
+                  </li>
                   <li>Votre inscription sera validée sur place</li>
                 </ul>
               </div>
             ) : (
               <div className="bg-blue-50 p-4 rounded-lg mb-8">
-                <h3 className="font-semibold text-blue-800 mb-2">Instructions pour le paiement en ligne :</h3>
+                <h3 className="font-semibold text-blue-800 mb-2">
+                  Instructions pour le paiement en ligne :
+                </h3>
                 <ul className="text-left list-disc list-inside text-gray-700 space-y-2">
                   <li>Votre paiement est en cours de traitement</li>
                   <li>Vous recevrez un email de confirmation</li>
@@ -347,7 +398,7 @@ export default function PaymentPage() {
     </div>
   );
 
-  const ErrorAlert = () => (
+  const ErrorAlert = () =>
     error && (
       <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
         <div className="flex items-center">
@@ -358,8 +409,7 @@ export default function PaymentPage() {
           </div>
         </div>
       </div>
-    )
-  );
+    );
 
   // Rendu principal
   if (loading) return <LoadingScreen />;
@@ -370,7 +420,10 @@ export default function PaymentPage() {
     <div className="min-h-screen bg-white">
       <Head>
         <title>Paiement - Fédération Algérienne des Pharmaciens</title>
-        <meta name="description" content="Finalisez votre inscription à l'événement" />
+        <meta
+          name="description"
+          content="Finalisez votre inscription à l'événement"
+        />
       </Head>
 
       <Header />
@@ -383,7 +436,8 @@ export default function PaymentPage() {
               Finaliser l'inscription
             </h1>
             <p className="text-gray-700">
-              Choisissez comment vous souhaitez payer pour confirmer votre participation
+              Choisissez comment vous souhaitez payer pour confirmer votre
+              participation
             </p>
           </div>
 
@@ -391,15 +445,31 @@ export default function PaymentPage() {
           <div className="text-center mb-4">
             {sslVerified ? (
               <div className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-lg text-xs font-semibold">
-                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Connexion sécurisée
               </div>
             ) : (
               <div className="inline-flex items-center bg-red-100 text-red-800 px-3 py-1 rounded-lg text-xs font-semibold">
-                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Utilisez HTTPS
               </div>
@@ -409,15 +479,25 @@ export default function PaymentPage() {
           {/* Progress Steps */}
           <div className="mb-8">
             <div className="flex justify-between items-center">
-              <div className={`flex flex-col items-center ${currentStep >= 1 ? "text-blue-800" : "text-gray-400"}`}>
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm ${currentStep >= 1 ? "bg-blue-800 text-white" : "bg-gray-200"}`}>
+              <div
+                className={`flex flex-col items-center ${currentStep >= 1 ? "text-blue-800" : "text-gray-400"}`}
+              >
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center text-sm ${currentStep >= 1 ? "bg-blue-800 text-white" : "bg-gray-200"}`}
+                >
                   1
                 </div>
                 <span className="mt-1 text-xs font-medium">Paiement</span>
               </div>
-              <div className={`h-1 flex-1 mx-2 ${currentStep >= 2 ? "bg-blue-800" : "bg-gray-200"}`}></div>
-              <div className={`flex flex-col items-center ${currentStep >= 2 ? "text-blue-800" : "text-gray-400"}`}>
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm ${currentStep >= 2 ? "bg-blue-800 text-white" : "bg-gray-200"}`}>
+              <div
+                className={`h-1 flex-1 mx-2 ${currentStep >= 2 ? "bg-blue-800" : "bg-gray-200"}`}
+              ></div>
+              <div
+                className={`flex flex-col items-center ${currentStep >= 2 ? "text-blue-800" : "text-gray-400"}`}
+              >
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center text-sm ${currentStep >= 2 ? "bg-blue-800 text-white" : "bg-gray-200"}`}
+                >
                   2
                 </div>
                 <span className="mt-1 text-xs font-medium">Confirmation</span>
@@ -433,13 +513,18 @@ export default function PaymentPage() {
               <>
                 {/* Event Summary */}
                 <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">Votre inscription</h2>
-                  
+                  <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+                    Votre inscription
+                  </h2>
+
                   <div className="space-y-4">
                     <div className="text-center">
-                      <h3 className="text-lg font-medium text-gray-800 mb-1">{paymentData.eventTitle}</h3>
+                      <h3 className="text-lg font-medium text-gray-800 mb-1">
+                        {paymentData.eventTitle}
+                      </h3>
                       <p className="text-sm text-gray-700">
-                        {formatDate(paymentData.eventDate)} • {formatTime(paymentData.eventDate)}
+                        {formatDate(paymentData.eventDate)} •{" "}
+                        {formatTime(paymentData.eventDate)}
                       </p>
                     </div>
 
@@ -452,36 +537,55 @@ export default function PaymentPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-700">Lieu :</span>
-                        <span className="font-medium">{paymentData.eventLocation || "À confirmer"}</span>
+                        <span className="font-medium">
+                          {paymentData.eventLocation || "À confirmer"}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Type :</span>
-                        <span className="font-medium">{paymentData.isOnlineEvent ? "En ligne" : "Présentiel"}</span>
+                        <span className="font-medium">
+                          {paymentData.isOnlineEvent
+                            ? "En ligne"
+                            : "Présentiel"}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Tarif :</span>
-                        <span className="font-medium">{paymentData.priceType === "member" ? "Membre" : "Non-membre"}</span>
+                        <span className="font-medium">
+                          {paymentData.priceType === "member"
+                            ? "Membre"
+                            : "Non-membre"}
+                        </span>
                       </div>
                     </div>
 
                     <div className="bg-blue-50 rounded-lg p-4 text-center">
-                      <p className="text-gray-700 mb-1 text-sm">Montant à payer :</p>
+                      <p className="text-gray-700 mb-1 text-sm">
+                        Montant à payer :
+                      </p>
                       <div className="text-2xl font-bold text-blue-800">
                         {paymentData.amount} DA
                       </div>
-                      {paymentData.priceType === "member" && paymentData.nonMemberPrice > paymentData.memberPrice && (
-                        <p className="text-green-600 text-sm mt-1">
-                          ⭐ Économie de {paymentData.nonMemberPrice - paymentData.memberPrice} DA
-                        </p>
-                      )}
+                      {paymentData.priceType === "member" &&
+                        paymentData.nonMemberPrice >
+                          paymentData.memberPrice && (
+                          <p className="text-green-600 text-sm mt-1">
+                            ⭐ Économie de{" "}
+                            {paymentData.nonMemberPrice -
+                              paymentData.memberPrice}{" "}
+                            DA
+                          </p>
+                        )}
                     </div>
                   </div>
                 </div>
 
                 {/* Payment Methods */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-blue-800 mb-3 text-center">Mode de paiement</h3>
-                  
+                  <h3 className="text-lg font-semibold text-blue-800 mb-3 text-center">
+                    Mode de paiement
+                  </h3>
+
                   <div className="space-y-3">
                     <div
                       className={`border p-3 cursor-pointer rounded-md transition-all ${
@@ -539,7 +643,9 @@ export default function PaymentPage() {
                   </div>
 
                   {errors.paymentMethod && (
-                    <p className="text-red-500 text-xs mt-2 text-center">{errors.paymentMethod}</p>
+                    <p className="text-red-500 text-xs mt-2 text-center">
+                      {errors.paymentMethod}
+                    </p>
                   )}
                 </div>
 
@@ -548,22 +654,34 @@ export default function PaymentPage() {
                   <div className="flex items-start">
                     <span className="text-lg mr-2">📋</span>
                     <div>
-                      <p className="font-medium text-gray-800 text-sm">Confirmation requise</p>
-                      <p className="text-xs text-gray-600">Inscription confirmée après paiement</p>
+                      <p className="font-medium text-gray-800 text-sm">
+                        Confirmation requise
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Inscription confirmée après paiement
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <span className="text-lg mr-2">⏰</span>
                     <div>
-                      <p className="font-medium text-gray-800 text-sm">Délai de traitement</p>
-                      <p className="text-xs text-gray-600">24-48h pour les virements</p>
+                      <p className="font-medium text-gray-800 text-sm">
+                        Délai de traitement
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        24-48h pour les virements
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <span className="text-lg mr-2">📧</span>
                     <div>
-                      <p className="font-medium text-gray-800 text-sm">Email de confirmation</p>
-                      <p className="text-xs text-gray-600">Instructions envoyées par email</p>
+                      <p className="font-medium text-gray-800 text-sm">
+                        Email de confirmation
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Instructions envoyées par email
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -588,18 +706,26 @@ export default function PaymentPage() {
               <>
                 {/* Confirmation Header */}
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-semibold text-blue-800 mb-2">Confirmer l'inscription</h2>
-                  <p className="text-sm text-gray-700">Vérifiez les détails avant de procéder</p>
+                  <h2 className="text-xl font-semibold text-blue-800 mb-2">
+                    Confirmer l'inscription
+                  </h2>
+                  <p className="text-sm text-gray-700">
+                    Vérifiez les détails avant de procéder
+                  </p>
                 </div>
 
                 {/* Order Summary */}
                 <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold text-blue-800 mb-3 text-center text-sm">Récapitulatif</h3>
-                  
+                  <h3 className="font-semibold text-blue-800 mb-3 text-center text-sm">
+                    Récapitulatif
+                  </h3>
+
                   <div className="space-y-3">
                     <div className="flex justify-between items-center pb-2 border-b">
                       <div>
-                        <span className="text-sm font-medium">Événement : </span>
+                        <span className="text-sm font-medium">
+                          Événement :{" "}
+                        </span>
                         <span className="text-blue-800 font-semibold text-sm">
                           {paymentData.eventTitle}
                         </span>
@@ -650,16 +776,48 @@ export default function PaymentPage() {
                   </div>
                 </div>
 
-                {/* Terms */}
-                <div className="mb-6 p-3 border border-gray-300 rounded-lg bg-gray-50">
-                  <h3 className="font-semibold text-blue-800 mb-2 text-center text-sm">
-                    Conditions
-                  </h3>
-                  <div className="text-xs text-gray-700 space-y-1">
-                    <p>• Inscription confirmée après paiement</p>
-                    <p>• Annulation possible jusqu'à 7 jours avant</p>
-                    <p>• Paiements sécurisés SSL 256-bit</p>
+                {/* Terms and Conditions */}
+                <div className="mb-6">
+                  <div className="flex items-start">
+                    <input
+                      type="checkbox"
+                      id="acceptTerms"
+                      name="acceptTerms"
+                      checked={formData.acceptTerms}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                      required
+                    />
+                    <label
+                      htmlFor="acceptTerms"
+                      className="ml-2 block text-sm text-gray-700"
+                    >
+                      J'accepte les{" "}
+                      <a
+                        href="/conditions-generales"
+                        className="text-blue-600 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        conditions générales
+                      </a>{" "}
+                      et la{" "}
+                      <a
+                        href="/politique-confidentialite"
+                        className="text-blue-600 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        politique de confidentialité
+                      </a>{" "}
+                      *
+                    </label>
                   </div>
+                  {errors.acceptTerms && (
+                    <p className="text-red-500 text-xs mt-2">
+                      {errors.acceptTerms}
+                    </p>
+                  )}
                 </div>
 
                 {/* ReCAPTCHA */}
@@ -680,20 +838,37 @@ export default function PaymentPage() {
                       size="normal"
                     />
                   </div>
+                  {errors.recaptcha && (
+                    <p className="text-red-500 text-xs mt-2 text-center">
+                      {errors.recaptcha}
+                    </p>
+                  )}
                 </div>
 
                 {/* Payment Gateway Info */}
                 {selectedPaymentMethod === "online" && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-center justify-center">
+                    <img
+                      src="/satim_logo.jpg"
+                      alt="SATIM Payment Gateway"
+                      className="h-10 mr-3"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = "none";
+                      }}
+                    />
+
                     <div className="mb-2 text-center">
-                      <p className="font-semibold text-gray-800 text-sm">Paiement sécurisé SATIM</p>
+                      <p className="font-semibold text-gray-800 text-sm">
+                        Paiement sécurisé SATIM
+                      </p>
                       <p className="text-xs text-gray-600">
                         CIB / EDAHABIA / Cartes
                       </p>
+                      <p className="text-xs text-gray-600 text-center">
+                        Redirection vers la plateforme sécurisée
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-600 text-center">
-                      Redirection vers la plateforme sécurisée
-                    </p>
                   </div>
                 )}
 
@@ -701,12 +876,15 @@ export default function PaymentPage() {
                 <div className="mb-6 text-center">
                   <button
                     onClick={handleSubmit}
-                    disabled={processing || !recaptchaToken}
-                    className={`relative inline-flex items-center justify-center px-4 py-3 rounded-md font-medium w-full ${processing || !recaptchaToken 
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-                      : selectedPaymentMethod === "cash" 
-                        ? "bg-green-600 text-white hover:bg-green-700" 
-                        : "bg-blue-800 text-white hover:bg-blue-700"
+                    disabled={
+                      processing || !recaptchaToken || !formData.acceptTerms
+                    }
+                    className={`relative inline-flex items-center justify-center px-4 py-3 rounded-md font-medium w-full ${
+                      processing || !recaptchaToken || !formData.acceptTerms
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : selectedPaymentMethod === "cash"
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-blue-800 text-white hover:bg-blue-700"
                     }`}
                   >
                     {processing ? (
@@ -716,17 +894,35 @@ export default function PaymentPage() {
                       </>
                     ) : selectedPaymentMethod === "cash" ? (
                       <>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
-                        <span className="text-sm">Confirmer (paiement cash)</span>
+                        <span className="text-sm">
+                          Confirmer (paiement cash)
+                        </span>
                       </>
                     ) : (
                       <>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                        <span className="text-sm">Payer maintenant</span>
+                        
+                        <img
+                            src="/cib_logo.png"
+                            alt="CIB"
+                            className="h-8 ml-4"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = "none";
+                            }}/>
+                        <span className="text-sm ml-2">Payer maintenant</span>
                       </>
                     )}
                   </button>
@@ -734,11 +930,24 @@ export default function PaymentPage() {
                   {selectedPaymentMethod === "online" && !processing && (
                     <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center justify-center">
-                        <svg className="w-4 h-4 text-green-600 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4 text-green-600 mr-1"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"
+                            clipRule="evenodd"
+                          />
                         </svg>
-                        <span className="font-medium text-green-800 text-xs mr-1">SATIM :</span>
-                        <a href="tel:3020" className="text-green-700 font-bold text-sm hover:text-green-800">
+                        <span className="font-medium text-green-800 text-xs mr-1">
+                          SATIM :
+                        </span>
+                        <a
+                          href="tel:3020"
+                          className="text-green-700 font-bold text-sm hover:text-green-800"
+                        >
                           30 20
                         </a>
                       </div>
@@ -765,7 +974,9 @@ export default function PaymentPage() {
 
           {/* Support */}
           <div className="mt-8 text-center">
-            <h3 className="font-semibold text-gray-800 text-sm mb-1">Besoin d'aide ?</h3>
+            <h3 className="font-semibold text-gray-800 text-sm mb-1">
+              Besoin d'aide ?
+            </h3>
             <p className="text-gray-700 text-xs mb-3">
               Contactez notre équipe pour toute question
             </p>
