@@ -293,7 +293,7 @@ export default function Membership() {
         try {
           const amount = getPlanAmount();
           console.log(amount);
-          const res = await axios.get(`/api/pay?amount=${amount}`);
+          const res = await axios.get(`/api/pay?am-ount=${amount}`);
           console.log("SATIM RESPONSE:", res.data);
           
           if (res.data.formUrl) {
