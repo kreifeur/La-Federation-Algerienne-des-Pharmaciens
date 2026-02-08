@@ -3,14 +3,30 @@ import axios from "axios";
 
 export async function GET(request) {
   try {
-    // If you want mdOrder dynamic, you can also read it from query params
-    // const { searchParams } = new URL(request.url);
-    // const mdOrder = searchParams.get("mdOrder");
+    // Get mdOrder from query parameters
+    const { searchParams } = new URL(request.url);
+    const mdOrder = searchParams.get("mdOrder");
+
+    // Validate required parameters
+    if (!mdOrder) {
+      return NextResponse.json(
+        { error: "mdOrder is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate mdOrder format
+    if (typeof mdOrder !== "string" || mdOrder.trim() === "") {
+      return NextResponse.json(
+        { error: "mdOrder must be a non-empty string" },
+        { status: 400 }
+      );
+    }
 
     const params = new URLSearchParams({
       userName: "SAT2601031358",
       password: "satim120",
-      mdOrder: "8Z6VB6CQPffVAMAABK3Y",
+      mdOrder: mdOrder.trim(), // Use dynamic mdOrder from query parameter
       language: "FR",
     }).toString();
 
@@ -22,7 +38,7 @@ export async function GET(request) {
   } catch (err) {
     return NextResponse.json(
       { error: err.response?.data || err.message },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

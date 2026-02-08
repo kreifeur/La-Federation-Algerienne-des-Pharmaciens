@@ -3,42 +3,56 @@
 import { useEffect, useState, useRef } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function RegisterSuccess() {
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mdOrder, setMdOrder] = useState(null);
   const receiptRef = useRef(null);
   const now = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
 
   useEffect(() => {
-    const confirmPayment = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/confirmation");
+    // Get mdOrder from URL query parameters
+    const mdOrderParam = searchParams.get("mdOrder");
+    
+    if (mdOrderParam) {
+      setMdOrder(mdOrderParam);
+      confirmPayment(mdOrderParam);
+    } else {
+      setError("Aucun identifiant de transaction trouvé");
+      setLoading(false);
+    }
+  }, [searchParams]);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+  const confirmPayment = async (transactionId) => {
+    try {
+      setLoading(true);
+      // Pass mdOrder to the API endpoint
+      const response = await fetch(`/api/confirmation?mdOrder=${transactionId}`);
 
-        const data = await response.json();
-        setStatus(data);
-
-        if (data.ErrorCode === "0") {
-          console.log("Payment confirmed:", data);
-        } else {
-          console.error("Payment failed:", data);
-        }
-      } catch (err) {
-        console.error("Error confirming payment:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
 
-    confirmPayment();
-  }, []);
+      const data = await response.json();
+      setStatus(data);
+
+      if (data.ErrorCode === "0" || data.errorCode === "0") {
+        console.log("Payment confirmed:", data);
+      } else {
+        console.error("Payment failed:", data);
+        setError(data.ErrorMessage || data.errorMessage || "Le paiement a échoué");
+      }
+    } catch (err) {
+      console.error("Error confirming payment:", err);
+      setError(err.message || "Erreur lors de la confirmation du paiement");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePrintReceipt = () => {
     if (!receiptRef.current) return;
@@ -157,6 +171,95 @@ export default function RegisterSuccess() {
     printWindow.document.close();
   };
 
+  const handleEmailReceipt = () => {
+    alert("Fonctionnalité d'envoi par email à implémenter");
+    // À implémenter : API call pour envoyer le reçu par email
+  };
+
+  const handleDownloadReceipt = () => {
+    if (!receiptRef.current) return;
+
+    const receiptContent = receiptRef.current.innerHTML;
+    const fullReceipt = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reçu de paiement - Fédération Algérienne des Pharmaciens</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .receipt-header {
+            text-align: center;
+            border-bottom: 2px solid #1e40af;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          .receipt-header h1 {
+            color: #1e40af;
+            margin: 10px 0;
+            font-size: 24px;
+          }
+          .receipt-header h2 {
+            color: #333;
+            margin: 5px 0;
+            font-size: 18px;
+          }
+          .success-badge {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-header">
+          <h1>Fédération Algérienne des Pharmaciens</h1>
+          <h2>Reçu de paiement</h2>
+          <div class="success-badge">
+            ✓ Paiement confirmé avec succès
+          </div>
+        </div>
+        ${receiptContent}
+        <div class="footer">
+          <p>Merci de votre confiance !</p>
+          <p>Pour toute question, contactez-nous à : support@federation-pharmaciens.dz</p>
+          <p>Document généré le : ${new Date().toLocaleString("fr-FR")}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([fullReceipt], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reçu-paiement-${mdOrder || "transaction"}-${now}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <Head>
@@ -177,13 +280,21 @@ export default function RegisterSuccess() {
           <div className="text-center">
             <div className="text-red-500 text-5xl mb-4">✗</div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Erreur de confirmation
+              {status?.ErrorCode === "1" ? "Paiement refusé" : "Erreur de confirmation"}
             </h1>
             <p className="text-gray-600 mb-6">
-              Une erreur est survenue lors de la confirmation de votre paiement.
-              Veuillez contacter le support.
+              {error || "Une erreur est survenue lors de la confirmation de votre paiement."}
             </p>
-            <p className="text-sm text-red-500 mb-6">{error}</p>
+            {status?.ErrorMessage && (
+              <p className="text-sm text-red-500 mb-6">{status.ErrorMessage}</p>
+            )}
+            {mdOrder && (
+              <div className="bg-gray-50 p-4 rounded mb-6">
+                <p className="text-sm text-gray-600">
+                  Référence transaction : <span className="font-mono">{mdOrder}</span>
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -211,6 +322,14 @@ export default function RegisterSuccess() {
                     <span className="font-medium text-gray-600">Statut :</span>
                     <span className="font-bold text-green-600">Confirmé</span>
                   </div>
+                  {mdOrder && (
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-600">
+                        Référence transaction (mdOrder) :
+                      </span>
+                      <span className="font-mono">{mdOrder}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="font-medium text-gray-600">
                       Numéro de commande :
@@ -248,7 +367,7 @@ export default function RegisterSuccess() {
                   {status?.params?.payid && (
                     <div className="flex justify-between">
                       <span className="font-medium text-gray-600">
-                        ID de transaction :
+                        ID de paiement :
                       </span>
                       <span className="font-mono">{status.params.payid}</span>
                     </div>
@@ -269,6 +388,14 @@ export default function RegisterSuccess() {
               </div>
 
               <div className="space-y-3 mb-6">
+                {mdOrder && (
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">
+                      Référence transaction :
+                    </span>
+                    <span className="font-mono text-gray-800">{mdOrder}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="font-medium text-gray-600">
                     Numéro de commande :
@@ -305,39 +432,67 @@ export default function RegisterSuccess() {
                 </div>
               </div>
 
-              <button
-                onClick={handlePrintReceipt}
-                className="w-full bg-blue-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button
+                  onClick={handlePrintReceipt}
+                  className="bg-blue-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                  />
-                </svg>
-                Imprimer le reçu
-              </button>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                    />
+                  </svg>
+                  Imprimer
+                </button>
 
-              <button
-                onClick={handlePrintReceipt}
-                className="w-full bg-green-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-              >
-                envoyer le reçu
-              </button>
+                <button
+                  onClick={handleEmailReceipt}
+                  className="bg-green-800 text-white py-3 px-4 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Envoyer
+                </button>
 
-              <button
-                onClick={handlePrintReceipt}
-                className="w-full bg-orange-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-              >
-                telecharger le reçu
-              </button>
+                <button
+                  onClick={handleDownloadReceipt}
+                  className="bg-orange-800 text-white py-3 px-4 rounded-md hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  Télécharger
+                </button>
+              </div>
             </div>
 
             <div className="bg-green-50 p-4 rounded-lg mb-6">
@@ -348,6 +503,11 @@ export default function RegisterSuccess() {
                 {status?.params?.respCode_desc ||
                   "Votre paiement a été traité avec succès."}
               </p>
+              {status?.ErrorCode && (
+                <p className="text-xs text-green-700 mt-1">
+                  Code de confirmation : {status.ErrorCode}
+                </p>
+              )}
             </div>
 
             <div className="bg-blue-50 p-4 rounded-lg mb-8 text-left">
@@ -382,6 +542,11 @@ export default function RegisterSuccess() {
         <div className="mt-6 text-center text-sm text-gray-500">
           <p>Conservez ce reçu pour vos archives.</p>
           <p>Pour toute assistance : support@federation-pharmaciens.dz</p>
+          {mdOrder && (
+            <p className="mt-2 text-xs">
+              Référence : <span className="font-mono">{mdOrder}</span>
+            </p>
+          )}
         </div>
       </div>
     </div>
