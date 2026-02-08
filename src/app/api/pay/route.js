@@ -1,15 +1,38 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 
-export async function GET() {
+export async function GET(request) {
   try {
+    // Get the URL object to access query parameters
+    const { searchParams } = new URL(request.url);
+    
+    // Get dynamic amount from query string
+    const amount = searchParams.get('amount');
+    
+    // Validate required parameters
+    if (!amount) {
+      return NextResponse.json(
+        { error: "Amount is required" },
+        { status: 400 }
+      );
+    }
+    
+    // Validate amount is a positive number
+    const amountNum = parseFloat(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      return NextResponse.json(
+        { error: "Amount must be a positive number" },
+        { status: 400 }
+      );
+    }
+
     const params = new URLSearchParams({
       userName: "SAT2601031358",
       password: "satim120",
       orderNumber: "YAF-" + Date.now(), // MUST be unique
-      amount: "1000",
+      amount: amount.toString(), // Use dynamic amount from frontend
       currency: "012",
-      language: "FR",
+      language: "FR", // Always French language
       returnUrl: "https://fapharmacie.dz/payment/success",
       failUrl: "https://fapharmacie.dz/payment/failed",
       jsonParams: JSON.stringify({

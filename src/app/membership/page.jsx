@@ -8,7 +8,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Membership() {
   const [selectedPlan, setSelectedPlan] = useState("individual");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(""); // New state for payment method
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -24,7 +24,7 @@ export default function Membership() {
     country: "Algerie",
     membershipType: "individual",
     professionalStatus: "professional",
-    domainOfInterest: ["skincare", "research"], // skincare, makeup, research, teaching, business, technology
+    domainOfInterest: ["skincare", "research"],
     biography: "",
     plan: "individual",
     acceptTerms: false,
@@ -41,7 +41,6 @@ export default function Membership() {
   const recaptchaRef = useRef(null);
 
   useEffect(() => {
-    // Check if page is loaded with HTTPS
     if (window.location.protocol === "https:") {
       setSslVerified(true);
     }
@@ -71,7 +70,6 @@ export default function Membership() {
     }));
   };
 
-  // Add function to handle payment method selection
   const handlePaymentMethodChange = (method) => {
     setSelectedPaymentMethod(method);
   };
@@ -264,9 +262,10 @@ export default function Membership() {
         plan: selectedPlan,
         recaptchaToken: recaptchaToken,
         professionalStatus: formData.profession,
-        domainOfInterest: ["skincare", "research"], // skincare, makeup, research, teaching, business, technology
+        domainOfInterest: ["skincare", "research"],
         biography: "",
-        paymentMethod: selectedPaymentMethod, // Add payment method to registration data
+        paymentMethod: selectedPaymentMethod,
+        amount: getPlanAmount(),
       };
 
       console.log(registerData);
@@ -290,17 +289,23 @@ export default function Membership() {
         setIsSubmitted(true);
         setIsProcessing(false);
       } else {
-        // For online payment, redirect to payment gateway
+        // For online payment, redirect to payment gateway with dynamic amount
         try {
-          const res = await axios.get("/api/pay");
+          const amount = getPlanAmount();
+          console.log(amount);
+          const res = await axios.get(`/api/pay?amount=${amount}`);
           console.log("SATIM RESPONSE:", res.data);
+          
           if (res.data.formUrl) {
             window.location.href = res.data.formUrl;
+          } else if (res.data.error) {
+            throw new Error(res.data.error);
           }
         } catch (err) {
-          console.error(err);
-          alert("Erreur lors de la redirection vers le paiement en ligne");
+          console.error("Payment API error:", err);
+          alert(`Erreur lors de la redirection vers le paiement en ligne: ${err.message}`);
           setIsProcessing(false);
+          recaptchaRef.current?.reset();
         }
       }
     } catch (error) {
@@ -314,7 +319,6 @@ export default function Membership() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if payment method is selected
     if (!selectedPaymentMethod) {
       alert("Veuillez sélectionner un mode de paiement");
       return;
@@ -841,7 +845,7 @@ export default function Membership() {
                       </div>
                     </div>
 
-                    {/* Payment Method Selection - MODIFIED */}
+                    {/* Payment Method Selection */}
                     <div className="flex flex-col gap-2 my-6">
                       <div
                         className={`border p-3 cursor-pointer rounded-md transition-all ${
@@ -1168,7 +1172,7 @@ export default function Membership() {
                     </div>
                   </div>
 
-                  {/* Payment Button - MODIFIED */}
+                  {/* Payment Button */}
                   <div className="mb-8 text-center">
                     {selectedPaymentMethod === "online" && (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
@@ -1262,7 +1266,6 @@ export default function Membership() {
                     </button>
 
                     {selectedPaymentMethod === "online" && (
-                      /* SATIM Green Number - Only show for online payment */
                       <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                         <div className="flex items-center justify-center">
                           <svg
