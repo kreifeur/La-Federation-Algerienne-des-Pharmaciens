@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-
+export const dynamic = "force-dynamic";
 export default function RegisterSuccess() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState(null);
@@ -17,7 +17,7 @@ export default function RegisterSuccess() {
   useEffect(() => {
     // Get mdOrder from URL query parameters
     const mdOrderParam = searchParams.get("mdOrder");
-    
+
     if (mdOrderParam) {
       setMdOrder(mdOrderParam);
       confirmPayment(mdOrderParam);
@@ -31,7 +31,9 @@ export default function RegisterSuccess() {
     try {
       setLoading(true);
       // Pass mdOrder to the API endpoint
-      const response = await fetch(`/api/confirmation?mdOrder=${transactionId}`);
+      const response = await fetch(
+        `/api/confirmation?mdOrder=${transactionId}`,
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -44,7 +46,9 @@ export default function RegisterSuccess() {
         console.log("Payment confirmed:", data);
       } else {
         console.error("Payment failed:", data);
-        setError(data.ErrorMessage || data.errorMessage || "Le paiement a échoué");
+        setError(
+          data.ErrorMessage || data.errorMessage || "Le paiement a échoué",
+        );
       }
     } catch (err) {
       console.error("Error confirming payment:", err);
@@ -280,10 +284,13 @@ export default function RegisterSuccess() {
           <div className="text-center">
             <div className="text-red-500 text-5xl mb-4">✗</div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              {status?.ErrorCode === "1" ? "Paiement refusé" : "Erreur de confirmation"}
+              {status?.ErrorCode === "1"
+                ? "Paiement refusé"
+                : "Erreur de confirmation"}
             </h1>
             <p className="text-gray-600 mb-6">
-              {error || "Une erreur est survenue lors de la confirmation de votre paiement."}
+              {error ||
+                "Une erreur est survenue lors de la confirmation de votre paiement."}
             </p>
             {status?.ErrorMessage && (
               <p className="text-sm text-red-500 mb-6">{status.ErrorMessage}</p>
@@ -291,7 +298,8 @@ export default function RegisterSuccess() {
             {mdOrder && (
               <div className="bg-gray-50 p-4 rounded mb-6">
                 <p className="text-sm text-gray-600">
-                  Référence transaction : <span className="font-mono">{mdOrder}</span>
+                  Référence transaction :{" "}
+                  <span className="font-mono">{mdOrder}</span>
                 </p>
               </div>
             )}
