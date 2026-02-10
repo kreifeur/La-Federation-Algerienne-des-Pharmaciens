@@ -1,11 +1,11 @@
 // app/payment/failed/page.js
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-export const dynamic = "force-dynamic";
-export default function PaymentFailed() {
+
+function PaymentFailedContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -135,6 +135,31 @@ export default function PaymentFailed() {
                   </p>
                 </div>
               )}
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <Link
+                  href="/membership"
+                  className="w-full bg-red-600 text-white py-3 px-4 rounded-md hover:bg-red-700 transition-colors block font-medium text-center"
+                >
+                  Réessayer l'inscription
+                </Link>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    href="/contact"
+                    className="border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 transition-colors text-sm text-center"
+                  >
+                    Contactez-nous
+                  </Link>
+                  <Link
+                    href="/"
+                    className="border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 transition-colors text-sm text-center"
+                  >
+                    Accueil
+                  </Link>
+                </div>
+              </div>
             </div>
           </>
         ) : (
@@ -338,5 +363,22 @@ export default function PaymentFailed() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PaymentFailed() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+          <div className="py-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Chargement...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <PaymentFailedContent />
+    </Suspense>
   );
 }

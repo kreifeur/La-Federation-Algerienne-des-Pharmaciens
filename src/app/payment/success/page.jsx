@@ -1,11 +1,11 @@
-// pages/register/success.js
+// app/register/success/page.js
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-export const dynamic = "force-dynamic";
-export default function RegisterSuccess() {
+
+function RegisterSuccessContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -303,6 +303,20 @@ export default function RegisterSuccess() {
                 </p>
               </div>
             )}
+            <div className="space-y-3 mt-8">
+              <Link
+                href="/membership"
+                className="w-full bg-red-600 text-white py-3 px-4 rounded-md hover:bg-red-700 transition-colors block text-center"
+              >
+                Réessayer l'inscription
+              </Link>
+              <Link
+                href="/"
+                className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-md hover:bg-gray-50 transition-colors block text-center"
+              >
+                Retour à l'accueil
+              </Link>
+            </div>
           </div>
         ) : (
           <>
@@ -529,34 +543,51 @@ export default function RegisterSuccess() {
                 <li>• Explorez les ressources exclusives</li>
               </ul>
             </div>
+
+            <div className="space-y-3 mt-8">
+              <Link
+                href="/login"
+                className="w-full bg-blue-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors block text-center"
+              >
+                Se connecter à mon espace
+              </Link>
+              <Link
+                href="/"
+                className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-md hover:bg-gray-50 transition-colors block text-center"
+              >
+                Retour à l'accueil
+              </Link>
+            </div>
+
+            <div className="mt-6 text-center text-sm text-gray-500">
+              <p>Conservez ce reçu pour vos archives.</p>
+              <p>Pour toute assistance : support@federation-pharmaciens.dz</p>
+              {mdOrder && (
+                <p className="mt-2 text-xs">
+                  Référence : <span className="font-mono">{mdOrder}</span>
+                </p>
+              )}
+            </div>
           </>
         )}
-
-        <div className="space-y-3 mt-8">
-          <Link
-            href="/login"
-            className="w-full bg-blue-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors block text-center"
-          >
-            Se connecter à mon espace
-          </Link>
-          <Link
-            href="/"
-            className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-md hover:bg-gray-50 transition-colors block text-center"
-          >
-            Retour à l'accueil
-          </Link>
-        </div>
-
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Conservez ce reçu pour vos archives.</p>
-          <p>Pour toute assistance : support@federation-pharmaciens.dz</p>
-          {mdOrder && (
-            <p className="mt-2 text-xs">
-              Référence : <span className="font-mono">{mdOrder}</span>
-            </p>
-          )}
-        </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterSuccess() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-md">
+          <div className="py-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
+            <p className="text-gray-600">Chargement...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <RegisterSuccessContent />
+    </Suspense>
   );
 }

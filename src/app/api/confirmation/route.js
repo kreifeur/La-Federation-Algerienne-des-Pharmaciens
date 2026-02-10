@@ -26,7 +26,7 @@ export async function GET(request) {
     const params = new URLSearchParams({
       userName: "SAT2601031358",
       password: "satim120",
-      mdOrder: mdOrder.trim(), // Use dynamic mdOrder from query parameter
+      mdOrder: mdOrder.trim(),
       language: "FR",
     }).toString();
 
