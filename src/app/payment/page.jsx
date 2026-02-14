@@ -572,14 +572,7 @@ export default function PaymentPage() {
                       </div>
                       {paymentData.priceType === "member" &&
                         paymentData.nonMemberPrice >
-                          paymentData.memberPrice && (
-                          <p className="text-green-600 text-sm mt-1">
-                            ⭐ Économie de{" "}
-                            {paymentData.nonMemberPrice -
-                              paymentData.memberPrice}{" "}
-                            DA
-                          </p>
-                        )}
+                          paymentData.memberPrice}
                     </div>
                   </div>
                 </div>
