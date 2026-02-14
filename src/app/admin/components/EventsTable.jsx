@@ -385,11 +385,11 @@ export default function EventsTable({ events, loading, onRefresh }) {
                                 {event.maxParticipants || "∞"}
                               </div>
                               <div className="text-xs text-gray-500">
-                                Membre: {event.memberPrice || 0}DA
+                                Prix : {event.memberPrice || 0}DA
                               </div>
-                              <div className="text-xs text-gray-500">
+                              {/* <div className="text-xs text-gray-500">
                                 Non-membre: {event.nonMemberPrice || 0}DA
-                              </div>
+                              </div> */}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">

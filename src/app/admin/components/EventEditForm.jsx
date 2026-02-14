@@ -442,7 +442,7 @@ export default function EventEditForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Prix membre (DA)
+              Prix (DA)
             </label>
             <input
               type="number"
@@ -457,7 +457,7 @@ export default function EventEditForm({
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Prix non-membre (DA)
             </label>
@@ -472,11 +472,11 @@ export default function EventEditForm({
               placeholder="0.00"
               disabled={eventLoading || uploadProgress > 0}
             />
-          </div>
+          </div> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <input
               type="checkbox"
               name="isOnline"
@@ -489,7 +489,7 @@ export default function EventEditForm({
               Événement en ligne
             </label>
           </div>
-
+ */}
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -504,7 +504,7 @@ export default function EventEditForm({
             </label>
           </div>
 
-          <div className="flex items-center">
+         {/*  <div className="flex items-center">
             <input
               type="checkbox"
               name="registrationRequired"
@@ -516,7 +516,7 @@ export default function EventEditForm({
             <label className="ml-2 text-sm text-gray-700">
               Inscription requise
             </label>
-          </div>
+          </div> */}
         </div>
 
         <div className="flex justify-end space-x-3 pt-4">

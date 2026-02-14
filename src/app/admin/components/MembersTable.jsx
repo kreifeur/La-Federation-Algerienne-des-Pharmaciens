@@ -441,7 +441,7 @@ export default function MembersTable({ members, loading, onRefresh }) {
                             <div className="text-sm text-gray-500">
                               {member.email}
                             </div>
-                            {member.profile?.domainOfInterest && (
+                           {/*  {member.profile?.domainOfInterest && (
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {member.profile.domainOfInterest.map(
                                   (domain, index) => (
@@ -454,7 +454,7 @@ export default function MembersTable({ members, loading, onRefresh }) {
                                   ),
                                 )}
                               </div>
-                            )}
+                            )} */}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -466,7 +466,7 @@ export default function MembersTable({ members, loading, onRefresh }) {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="space-y-1 flex gap-1 items-center ">
                             {getRoleBadge(member.role)}
-                            {getStatusBadge(member.profile?.membershipStatus)}
+                            {/* {getStatusBadge(member.profile?.membershipStatus)} */}
                             <div
                               className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
                                 member.isActive

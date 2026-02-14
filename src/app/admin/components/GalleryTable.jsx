@@ -340,7 +340,7 @@ export default function GalleryTable({
                   )}
                 </div>
               </th>
-              <th 
+              {/* <th 
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('views')}
               >
@@ -352,7 +352,7 @@ export default function GalleryTable({
                     </svg>
                   )}
                 </div>
-              </th>
+              </th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Accès
               </th>
@@ -507,9 +507,9 @@ export default function GalleryTable({
                   </td>
 
                   {/* Views */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {item.views?.toLocaleString() || 0}
-                  </td>
+                  </td> */}
 
                   {/* Access Status */}
                   <td className="px-6 py-4 whitespace-nowrap">

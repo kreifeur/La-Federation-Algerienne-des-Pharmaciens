@@ -300,14 +300,7 @@ export default function EventsPage() {
         `📅 Date: ${formatEventDate(event.startDate)}\n` +
         `📍 Lieu: ${event.location}\n` +
         `👥 Participants: ${participantsCount}/${maxParticipants}\n` +
-        `💰 Prix membre: ${event.memberPrice || 0}DA\n` +
-        `💰 Prix non-membre: ${event.nonMemberPrice || 0}DA\n` +
-        `${
-          event.isOnline ? "💻 Événement en ligne" : "🏢 Événement présentiel"
-        }\n` +
-        `${
-          event.isMemberOnly ? "🔒 Réservé aux membres" : "🔓 Ouvert à tous"
-        }\n` +
+        `💰 Prix: ${event.memberPrice || 0}DA\n` +
         `${
           isRegistered
             ? "✅ Vous êtes inscrit à cet événement"

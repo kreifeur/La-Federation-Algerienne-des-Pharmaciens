@@ -826,7 +826,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Prix membre (DA)
+                  Prix (DA)
                 </label>
                 <input
                   type="number"
@@ -840,7 +840,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   disabled={eventLoading}
                 />
               </div>
-              <div>
+             {/*  <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Prix non-membre (DA)
                 </label>
@@ -855,11 +855,11 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   placeholder="0.00"
                   disabled={eventLoading}
                 />
-              </div>
+              </div> */}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center">
+             {/*  <div className="flex items-center">
                 <input
                   type="checkbox"
                   name="isOnline"
@@ -871,7 +871,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                 <label className="ml-2 text-sm text-gray-700">
                   Événement en ligne
                 </label>
-              </div>
+              </div> */}
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -885,7 +885,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                   Réservé aux membres
                 </label>
               </div>
-              <div className="flex items-center">
+              {/* <div className="flex items-center">
                 <input
                   type="checkbox"
                   name="registrationRequired"
@@ -897,7 +897,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
                 <label className="ml-2 text-sm text-gray-700">
                   Inscription requise
                 </label>
-              </div>
+              </div> */}
             </div>
 
             <div className="flex justify-end space-x-4 pt-6">

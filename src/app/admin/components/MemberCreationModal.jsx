@@ -232,7 +232,7 @@ export default function MemberCreationModal({ onClose, onMemberCreated }) {
               </div>
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Domaines d'intérêt *
               </label>
@@ -253,7 +253,7 @@ export default function MemberCreationModal({ onClose, onMemberCreated }) {
                 ))}
               </div>
             </div>
-
+ */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Rôle

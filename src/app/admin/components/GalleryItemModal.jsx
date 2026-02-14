@@ -373,7 +373,7 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-blue-700">
-                  Upload en cours vers Cloudinary...
+                  Upload en cours ...
                 </span>
                 <span className="text-sm font-bold text-blue-600">
                   {uploadProgress}%
@@ -474,9 +474,9 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                           <p className="text-xs text-gray-500">
                             Images, vidéos, audio, documents jusqu'à 10MB
                           </p>
-                          <p className="text-xs text-blue-600 mt-1">
+                          {/* <p className="text-xs text-blue-600 mt-1">
                             Le fichier sera uploadé sur Cloudinary
-                          </p>
+                          </p> */}
                         </>
                       )}
                     </div>
@@ -499,11 +499,11 @@ export default function GalleryItemModal({ onClose, onItemCreated }) {
                         ? "Document"
                         : fileType}
                     </p>
-                    {fileType === "image" && (
+                    {/* {fileType === "image" && (
                       <p className="text-xs text-blue-600 mt-1">
                         Image sera optimisée par Cloudinary
                       </p>
-                    )}
+                    )} */}
                   </div>
                 )}
 

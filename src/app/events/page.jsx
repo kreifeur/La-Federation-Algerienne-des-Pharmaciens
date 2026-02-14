@@ -294,7 +294,7 @@ export default function Events() {
     // Vérifier si l'événement est gratuit ou payant
     const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
     const priceInfo = isFreeEvent ? "Gratuit" : 
-      `Prix membre: ${event.memberPrice || 0}DA\nPrix non-membre: ${event.nonMemberPrice || 0}DA`;
+      `Prix : ${event.memberPrice || 0}DA`;
 
     alert(
       `Détails de l'événement:\n\n` +

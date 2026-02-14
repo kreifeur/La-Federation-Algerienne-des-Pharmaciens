@@ -142,7 +142,7 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Entreprise
             </label>
@@ -157,7 +157,7 @@ export default function ProfilePage() {
             ) : (
               <p className="text-gray-900">{user.company}</p>
             )}
-          </div>
+          </div> */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -166,13 +166,13 @@ export default function ProfilePage() {
             {isEditing ? (
               <input
                 type="text"
-                name="position"
-                value={user.position}
+                name="professionalStatus"
+                value={user.professionalStatus}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             ) : (
-              <p className="text-gray-900">{user.position}</p>
+              <p className="text-gray-900">{user.professionalStatus}</p>
             )}
           </div>
 
@@ -193,12 +193,12 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Type d'adhésion
             </label>
             <p className="text-gray-900 capitalize">{user.membershipType}</p>
-          </div>
+          </div> */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
