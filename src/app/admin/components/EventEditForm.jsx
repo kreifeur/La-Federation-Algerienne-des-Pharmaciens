@@ -202,7 +202,7 @@ export default function EventEditForm({
       {uploadProgress > 0 && (
         <div className="mb-4 p-3 bg-blue-50 text-blue-700 border border-blue-200 rounded-md">
           <div className="flex items-center justify-between mb-2">
-            <span>📤 Upload de l'image vers Cloudinary...</span>
+            <span>Upload de l'image ...</span>
             <span className="text-sm font-medium">{uploadProgress}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">

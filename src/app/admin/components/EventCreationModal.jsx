@@ -350,7 +350,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
       // Uploader l'image vers Cloudinary si elle existe
       if (selectedImage) {
         try {
-          setEventMessage("📤 Upload de l'image vers Cloudinary...");
+          setEventMessage("Upload de l'image ...");
           imgUrl = await uploadImageToCloudinary(selectedImage);
           setEventMessage("✅ Image uploadée avec succès sur Cloudinary !");
         } catch (uploadError) {
