@@ -20,7 +20,7 @@ export default function Events() {
   const [filters, setFilters] = useState([
     { key: "all", label: "Tous les événements" },
     { key: "upcoming", label: "Événements à venir" },
-    { key: "past", label: "Événements passés" }
+    { key: "past", label: "Événements passés" },
   ]);
 
   useEffect(() => {
@@ -35,15 +35,17 @@ export default function Events() {
       if (data.success && data.data && data.data.categories) {
         const categoriesData = data.data.categories;
         setCategories(categoriesData);
-        
-        const categoryFilters = categoriesData.map(category => ({
-          key: category.name.toLowerCase().replace(/\s+/g, '-'),
-          label: category.name
+
+        const categoryFilters = categoriesData.map((category) => ({
+          key: category.name.toLowerCase().replace(/\s+/g, "-"),
+          label: category.name,
         }));
-        
-        setFilters(prev => [
-          ...prev.filter(f => f.key === "all" || f.key === "upcoming" || f.key === "past"),
-          ...categoryFilters
+
+        setFilters((prev) => [
+          ...prev.filter(
+            (f) => f.key === "all" || f.key === "upcoming" || f.key === "past",
+          ),
+          ...categoryFilters,
         ]);
       }
     } catch (error) {
@@ -103,20 +105,24 @@ export default function Events() {
 
       if (data.success && data.data) {
         console.log(data.data);
-        const eventsArray = Array.isArray(data.data) ? data.data : (data.data.events || []);
-        
-        const eventsWithStatus = eventsArray.map(event => {
-          const isRegistered = userId ? 
-            (event.participants?.some(p => 
-              (typeof p === 'object' ? p.userId || p._id : p) === userId
-            ) || false) : false;
-          
+        const eventsArray = Array.isArray(data.data)
+          ? data.data
+          : data.data.events || [];
+
+        const eventsWithStatus = eventsArray.map((event) => {
+          const isRegistered = userId
+            ? event.participants?.some(
+                (p) =>
+                  (typeof p === "object" ? p.userId || p._id : p) === userId,
+              ) || false
+            : false;
+
           return {
             ...event,
-            status: isRegistered ? "registered" : "available"
+            status: isRegistered ? "registered" : "available",
           };
         });
-        
+
         setEvents(eventsWithStatus);
       } else {
         setEvents([]);
@@ -163,9 +169,11 @@ export default function Events() {
         return isPastEvent(event);
       default:
         if (!event.category) return false;
-        const categoryFilter = filters.find(f => f.key === activeFilter);
+        const categoryFilter = filters.find((f) => f.key === activeFilter);
         if (!categoryFilter) return false;
-        return event.category.toLowerCase() === categoryFilter.label.toLowerCase();
+        return (
+          event.category.toLowerCase() === categoryFilter.label.toLowerCase()
+        );
     }
   });
 
@@ -202,8 +210,8 @@ export default function Events() {
       }
 
       // Vérifier si l'événement est gratuit
-      const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
-      
+      const isFreeEvent = event.memberPrice === 0 && event.nonMemberPrice === 0;
+
       if (isFreeEvent) {
         // Pour les événements gratuits, procéder à l'inscription directe
         const response = await fetch(`/api/events/${event._id}/register`, {
@@ -230,11 +238,13 @@ export default function Events() {
                     status: "registered",
                     participants: [...(ev.participants || []), { userId }],
                   }
-                : ev
-            )
+                : ev,
+            ),
           );
 
-          alert("✅ Inscription réussie ! Vous êtes maintenant inscrit à cet événement.");
+          alert(
+            "✅ Inscription réussie ! Vous êtes maintenant inscrit à cet événement.",
+          );
         } else {
           throw new Error(result.message || "Erreur lors de l'inscription");
         }
@@ -257,17 +267,17 @@ export default function Events() {
       eventTitle: event.title,
       eventDate: event.startDate,
       eventLocation: event.location,
-      
+
       // Déterminer le prix en fonction du statut de membre
-      amount: userInfo?.isMember ? event.memberPrice : event.nonMemberPrice,
-      priceType: userInfo?.isMember ? "member" : "non-member",
+      amount: event.memberPrice ,
+      priceType: "member",
       memberPrice: event.memberPrice,
       nonMemberPrice: event.nonMemberPrice,
-      
+
       userId: currentUserId,
       userName: userInfo?.fullName || userInfo?.email,
       userEmail: userInfo?.email,
-      
+
       // Autres informations utiles
       isOnlineEvent: event.isOnline,
       maxParticipants: event.maxParticipants,
@@ -276,7 +286,7 @@ export default function Events() {
 
     // Stocker les données temporairement dans localStorage
     localStorage.setItem("pendingPayment", JSON.stringify(paymentData));
-    
+
     // Rediriger vers la page de paiement
     router.push("/payment");
   };
@@ -293,20 +303,23 @@ export default function Events() {
     const maxParticipants = event.maxParticipants || "Illimité";
 
     // Vérifier si l'événement est gratuit ou payant
-    const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
-    const priceInfo = isFreeEvent ? "Gratuit" : 
-      `Prix : ${event.memberPrice || 0}DA`;
+    const isFreeEvent = event.memberPrice === 0 && event.nonMemberPrice === 0;
+    const priceInfo = isFreeEvent
+      ? "Gratuit"
+      : `Prix : ${event.memberPrice || 0}DA`;
 
     alert(
       `Détails de l'événement:\n\n` +
         `📌 ${event.title}\n\n` +
         `📝 ${event.description || "Aucune description"}\n\n` +
         `📅 Date de début: ${formatDate(event.startDate)}\n` +
-        (event.endDate ? `📅 Date de fin: ${formatDate(event.endDate)}\n` : '') +
+        (event.endDate
+          ? `📅 Date de fin: ${formatDate(event.endDate)}\n`
+          : "") +
         `⏰ Heure: ${formatTime(event.startDate)}\n` +
         `📍 Lieu: ${event.location || "Lieu à confirmer"}\n` +
-        (event.isOnline ? `🌐 Événement en ligne\n` : '') +
-        (event.isMemberOnly ? `🔒 Réservé aux membres seulement\n` : '') +
+        (event.isOnline ? `🌐 Événement en ligne\n` : "") +
+        (event.isMemberOnly ? `🔒 Réservé aux membres seulement\n` : "") +
         `👥 Participants: ${participantsCount}/${maxParticipants}\n` +
         `💰 ${priceInfo}\n` +
         `📋 Catégorie: ${formatCategory(event.category)}\n` +
@@ -318,18 +331,18 @@ export default function Events() {
                 ? "❌ Vous n'êtes pas inscrit - Statut: Disponible (Gratuit)"
                 : "❌ Vous n'êtes pas inscrit - Statut: Disponible (Payant)"
             : "🔐 Connectez-vous pour vous inscrire"
-        }`
+        }`,
     );
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date à confirmer";
     try {
-      const options = { 
-        weekday: 'long',
-        day: "numeric", 
-        month: "long", 
-        year: "numeric" 
+      const options = {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
       };
       return new Date(dateString).toLocaleDateString("fr-FR", options);
     } catch (error) {
@@ -340,10 +353,10 @@ export default function Events() {
   const formatTime = (dateString) => {
     if (!dateString) return "Heure à confirmer";
     try {
-      const options = { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        timeZone: 'UTC'
+      const options = {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "UTC",
       };
       return new Date(dateString).toLocaleTimeString("fr-FR", options);
     } catch (error) {
@@ -353,7 +366,7 @@ export default function Events() {
 
   const formatCategory = (category) => {
     if (!category) return "Non spécifiée";
-    const foundCategory = categories.find(cat => cat.name === category);
+    const foundCategory = categories.find((cat) => cat.name === category);
     if (foundCategory) {
       return foundCategory.name;
     }
@@ -367,21 +380,27 @@ export default function Events() {
     if (event.status === "registered") {
       return "Inscrit";
     }
-    if (event.maxParticipants && (event.participants?.length || 0) >= event.maxParticipants) {
+    if (
+      event.maxParticipants &&
+      (event.participants?.length || 0) >= event.maxParticipants
+    ) {
       return "Complet";
     }
-    
+
     // Afficher "Payer" pour les événements payants
-    const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+    const isFreeEvent = event.memberPrice === 0 && event.nonMemberPrice === 0;
     return isFreeEvent ? "S'inscrire" : "S'inscrire & Payer";
   };
 
   const isButtonDisabled = (event) => {
-    return isPastEvent(event) || 
-           event.status === "registered" || 
-           (event.maxParticipants && (event.participants?.length || 0) >= event.maxParticipants) ||
-           registeringEvent === event._id ||
-           (event.isMemberOnly && !currentUserId);
+    return (
+      isPastEvent(event) ||
+      event.status === "registered" ||
+      (event.maxParticipants &&
+        (event.participants?.length || 0) >= event.maxParticipants) ||
+      registeringEvent === event._id ||
+      (event.isMemberOnly && !currentUserId)
+    );
   };
 
   const getEventKey = (event, index) => {
@@ -392,32 +411,6 @@ export default function Events() {
     fetchEvents();
   };
 
-  // Afficher le prix selon le statut de l'utilisateur
-  const displayPrice = (event) => {
-    const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
-    
-    if (isFreeEvent) {
-      return (
-        <span className="text-green-600 font-semibold">
-          Gratuit
-        </span>
-      );
-    } else {
-      const userPrice = userInfo?.isMember ? event.memberPrice : event.nonMemberPrice;
-      const otherPrice = userInfo?.isMember ? event.nonMemberPrice : event.memberPrice;
-      
-      return (
-        <div className="text-right">
-          <div className="text-blue-800 font-semibold">
-            {userPrice || 0} DA {userInfo?.isMember ? "(Membre)" : "(Non-membre)"}
-          </div>
-          <div className="text-sm text-gray-500">
-            {otherPrice || 0} DA {userInfo?.isMember ? "(Non-membre)" : "(Membre)"}
-          </div>
-        </div>
-      );
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -495,7 +488,8 @@ export default function Events() {
                 const isDisabled = isButtonDisabled(event);
                 const participantsCount = event.participants?.length || 0;
                 const maxParticipants = event.maxParticipants || "Illimité";
-                const isFreeEvent = (event.memberPrice === 0 && event.nonMemberPrice === 0);
+                const isFreeEvent =
+                  event.memberPrice === 0 && event.nonMemberPrice === 0;
 
                 return (
                   <div
@@ -525,7 +519,9 @@ export default function Events() {
                             <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                               {formatCategory(event.category)}
                             </span>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
+                            <span
+                              className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${status.color}`}
+                            >
                               {status.text}
                             </span>
                             {!isFreeEvent && (
@@ -542,15 +538,18 @@ export default function Events() {
                           <div className="text-sm text-gray-500">
                             {formatDate(event.startDate)}
                           </div>
-                          {event.endDate && event.endDate !== event.startDate && (
-                            <div className="text-sm text-gray-500">
-                              au {formatDate(event.endDate)}
-                            </div>
-                          )}
+                          {event.endDate &&
+                            event.endDate !== event.startDate && (
+                              <div className="text-sm text-gray-500">
+                                au {formatDate(event.endDate)}
+                              </div>
+                            )}
                         </div>
                       </div>
 
-                      <p className="text-gray-700 mb-4 line-clamp-2">{event.description}</p>
+                      <p className="text-gray-700 mb-4 line-clamp-2">
+                        {event.description}
+                      </p>
 
                       {/* Badges pour événement spécial */}
                       <div className="flex gap-2 mb-4">
@@ -573,19 +572,25 @@ export default function Events() {
                             {event.location || "Lieu à confirmer"}
                           </span>
                         </div>
-                        {displayPrice(event)}
+                        <div className="text-blue-800 font-semibold">
+                          {event.memberPrice} DA
+                        </div>
                       </div>
 
                       <div className="flex justify-between items-center">
                         <button
-                          onClick={() => isPastEvent(event) ? handleViewDetails(event) : handleRegister(event)}
+                          onClick={() =>
+                            isPastEvent(event)
+                              ? handleViewDetails(event)
+                              : handleRegister(event)
+                          }
                           disabled={isDisabled}
                           className={`px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center min-w-[120px] ${
                             isPastEvent(event)
                               ? "bg-gray-600 text-white hover:bg-gray-700"
                               : event.status === "registered"
-                              ? "bg-green-600 text-white hover:bg-green-700"
-                              : "bg-blue-800 text-white hover:bg-blue-700"
+                                ? "bg-green-600 text-white hover:bg-green-700"
+                                : "bg-blue-800 text-white hover:bg-blue-700"
                           } transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed`}
                         >
                           {isRegistering ? (
@@ -596,15 +601,25 @@ export default function Events() {
                           ) : (
                             <>
                               {event.status === "registered" && (
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                <svg
+                                  className="w-4 h-4 mr-1"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
                                 </svg>
                               )}
                               {buttonText}
                             </>
                           )}
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleViewDetails(event)}
                           className="px-4 py-2 border border-blue-800 text-blue-800 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
                         >
