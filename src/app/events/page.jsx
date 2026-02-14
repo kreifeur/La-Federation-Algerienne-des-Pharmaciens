@@ -102,6 +102,7 @@ export default function Events() {
       const data = await response.json();
 
       if (data.success && data.data) {
+        console.log(data.data);
         const eventsArray = Array.isArray(data.data) ? data.data : (data.data.events || []);
         
         const eventsWithStatus = eventsArray.map(event => {

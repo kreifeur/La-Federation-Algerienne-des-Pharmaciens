@@ -545,22 +545,22 @@ export default function PaymentPage() {
                           {paymentData.eventLocation || "À confirmer"}
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      {/* <div className="flex justify-between">
                         <span className="text-gray-700">Type :</span>
                         <span className="font-medium">
                           {paymentData.isOnlineEvent
                             ? "En ligne"
                             : "Présentiel"}
                         </span>
-                      </div>
-                      <div className="flex justify-between">
+                      </div> */}
+                  {/*     <div className="flex justify-between">
                         <span className="text-gray-700">Tarif :</span>
                         <span className="font-medium">
                           {paymentData.priceType === "member"
                             ? "Membre"
                             : "Non-membre"}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="bg-blue-50 rounded-lg p-4 text-center">
