@@ -305,7 +305,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
     const result = await response.json();
     
     if (!response.ok) {
-      throw new Error(result.error?.message || "Erreur lors de l'upload de l'image vers Cloudinary");
+      throw new Error(result.error?.message || "Erreur lors de l'upload de l'image");
     }
     
     setUploadProgress(100);
@@ -352,7 +352,7 @@ export default function EventCreationModal({ onClose, onEventCreated }) {
         try {
           setEventMessage("Upload de l'image ...");
           imgUrl = await uploadImageToCloudinary(selectedImage);
-          setEventMessage("✅ Image uploadée avec succès sur Cloudinary !");
+          setEventMessage("✅ Image uploadée avec succè !");
         } catch (uploadError) {
           throw new Error("Échec de l'upload de l'image: " + uploadError.message);
         }
