@@ -1177,15 +1177,7 @@ export default function Membership() {
                     {selectedPaymentMethod === "online" && (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                         <div className="flex items-center justify-center mb-3">
-                          <img
-                            src="/satim_logo.jpg"
-                            alt="SATIM Payment Gateway"
-                            className="h-10 mr-3"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.style.display = "none";
-                            }}
-                          />
+                        
                           <div>
                             <p className="font-semibold text-gray-800">
                               Paiement sécurisé via SATIM
