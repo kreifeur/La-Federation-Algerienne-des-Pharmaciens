@@ -6,8 +6,8 @@ const Footer = () => {
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-xl font-semibold mb-4">La Fédération Algérienne des Pharmaciens</h3>
-            <p className="mb-4">organisation professionnelle qui regroupe et représente les pharmaciens exerçant dans différents secteurs</p>
+            <h3 className="text-xl font-semibold mb-4">La Fédération Algérienne de Pharmacie</h3>
+            <p className="mb-4">La Fédération Algérienne de Pharmacie est une une association à but non lucratif  qui regroupe et représente les pharmaciens exerçant dans différents secteurs</p>
             <div className="flex space-x-4">
               <a href="https://web.facebook.com/fapdz/" className="h-10 w-10 bg-blue-800 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
                 <span className="sr-only">Facebook</span>
@@ -45,13 +45,13 @@ const Footer = () => {
               <p className="mb-2">Chez pharma invest , 
 Centre commercial et des affaires ElQods cheraga , Alger .</p>
               <p className="mb-2">Tél: +213 550 51 07</p>
-              <p className="mb-2">Email: dr.y.zebbiche@gmail.com</p>
+              <p className="mb-2">Email: contact@fapharmacie.dz</p>
             </address>
           </div>
         </div>
         
         <div className="border-t border-blue-800 mt-10 pt-6 text-center">
-          <p>&copy; 2025 La Fédération Algérienne des Pharmaciens. Tous droits réservés.</p>
+          <p>&copy; 2025 La Fédération Algérienne de Pharmacie. Tous droits réservés.</p>
         </div>
       </div>
     </footer>

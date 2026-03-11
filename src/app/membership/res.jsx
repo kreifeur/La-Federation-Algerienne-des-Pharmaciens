@@ -306,10 +306,10 @@ export default function Membership() {
   return (
     <div>
       <Head>
-        <title>Adhésion - Fédération Algérienne des Pharmaciens</title>
+        <title>Adhésion - Fédération Algérienne de Pharmacie</title>
         <meta
           name="description"
-          content="Rejoignez la Fédération Algérienne des Pharmaciens et bénéficiez d'avantages exclusifs"
+          content="Rejoignez la Fédération Algérienne de Pharmacie et bénéficiez d'avantages exclusifs"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -1157,7 +1157,7 @@ export default function Membership() {
                 Félicitations !
               </h2>
               <p className="text-lg text-gray-700 mb-6">
-                Votre adhésion à la Fédération Algérienne des Pharmaciens a été
+                Votre adhésion à la Fédération Algérienne de Pharmacie a été
                 enregistrée avec succès.
               </p>
               <p className="text-gray-600 mb-8">

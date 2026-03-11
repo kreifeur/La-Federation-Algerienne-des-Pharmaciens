@@ -305,7 +305,7 @@ export default function PaymentPage() {
     <div className="min-h-screen bg-white">
       <Head>
         <title>
-          Inscription Confirmée - Fédération Algérienne des Pharmaciens
+          Inscription Confirmée - Fédération Algérienne de Pharmacie
         </title>
       </Head>
       <Header />
@@ -423,7 +423,7 @@ export default function PaymentPage() {
   return (
     <div className="min-h-screen bg-white">
       <Head>
-        <title>Paiement - Fédération Algérienne des Pharmaciens</title>
+        <title>Paiement - Fédération Algérienne de Pharmacie</title>
         <meta
           name="description"
           content="Finalisez votre inscription à l'événement"

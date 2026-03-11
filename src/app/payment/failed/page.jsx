@@ -105,7 +105,7 @@ function PaymentFailedContent() {
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
       <Head>
         <title>
-          Paiement échoué - La Fédération Algérienne des Pharmaciens
+          Paiement échoué - La Fédération Algérienne de Pharmacie
         </title>
       </Head>
 

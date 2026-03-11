@@ -81,43 +81,14 @@ export default function Membership() {
       price: "2500",
       period: "an",
       description: "Pour les étudiants en pharmacie",
-      features: [
-        "Accès aux événements à tarif réduit",
-        "Newsletter mensuelle",
-        "Accès aux ressources en ligne",
-        "Certificat de membre étudiant",
-      ],
       recommended: false,
     },
     {
       id: "individual",
-      title: "Individuel",
-      price: "8000",
+      title: "Pharmacien diplômé",
+      price: "4000",
       period: "an",
-      description: "Pour les pharmaciens indépendants",
-      features: [
-        "Accès à tous les événements",
-        "Formations à tarif préférentiel",
-        "Accès à l'annuaire des membres",
-        "Revue trimestrielle",
-        "Certificat de membre",
-      ],
-      recommended: true,
-    },
-    {
-      id: "corporate",
-      title: "Entreprise",
-      price: "35000",
-      period: "an",
-      description: "Pour les pharmacies et institutions",
-      features: [
-        "5 membres inclus",
-        "Accès VIP aux événements",
-        "Espace exposant privilégié",
-        "Logo sur notre site web",
-        "Newsletter personnalisée",
-        "Support prioritaire",
-      ],
+      description: "Pour les pharmaciens diplômés",
       recommended: false,
     },
   ];
@@ -295,7 +266,7 @@ export default function Membership() {
           console.log(amount);
           const res = await axios.get(`/api/pay?amount=${amount}`);
           console.log("SATIM RESPONSE:", res.data);
-          
+
           if (res.data.formUrl) {
             window.location.href = res.data.formUrl;
           } else if (res.data.error) {
@@ -303,7 +274,9 @@ export default function Membership() {
           }
         } catch (err) {
           console.error("Payment API error:", err);
-          alert(`Erreur lors de la redirection vers le paiement en ligne: ${err.message}`);
+          alert(
+            `Erreur lors de la redirection vers le paiement en ligne: ${err.message}`,
+          );
           setIsProcessing(false);
           recaptchaRef.current?.reset();
         }
@@ -330,10 +303,10 @@ export default function Membership() {
   return (
     <div>
       <Head>
-        <title>Adhésion - Fédération Algérienne des Pharmaciens</title>
+        <title>Adhésion - Fédération Algérienne de Pharmacie</title>
         <meta
           name="description"
-          content="Rejoignez la Fédération Algérienne des Pharmaciens et bénéficiez d'avantages exclusifs"
+          content="Rejoignez la Fédération Algérienne de Pharmacie et bénéficiez d'avantages exclusifs"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -651,7 +624,7 @@ export default function Membership() {
                         )}
                       </div>
                     </div>
-                   {/* <div className="mb-6">
+                    {/* <div className="mb-6">
                       <label
                         htmlFor="company"
                         className="block text-sm font-medium text-gray-700 mb-1"
@@ -822,7 +795,7 @@ export default function Membership() {
                             <p className="text-sm text-gray-600 mt-1">
                               {plan.description}
                             </p>
-                            <ul className="mt-3 text-sm text-gray-700 space-y-1">
+                            {/*                             <ul className="mt-3 text-sm text-gray-700 space-y-1">
                               {plan.features.slice(0, 2).map((feature, idx) => (
                                 <li key={idx} className="flex items-start">
                                   <svg
@@ -839,7 +812,7 @@ export default function Membership() {
                                   {feature}
                                 </li>
                               ))}
-                            </ul>
+                            </ul> */}
                           </div>
                         ))}
                       </div>
@@ -1092,7 +1065,7 @@ export default function Membership() {
                           <p>
                             <strong>Adresse de notre siège :</strong>
                             <br />
-                            Fédération Algérienne des Pharmaciens
+                            Fédération Algérienne de Pharmacie
                             <br />
                             [Adresse complète à compléter]
                             <br />
@@ -1177,7 +1150,6 @@ export default function Membership() {
                     {selectedPaymentMethod === "online" && (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                         <div className="flex items-center justify-center mb-3">
-                        
                           <div>
                             <p className="font-semibold text-gray-800">
                               Paiement sécurisé via SATIM
@@ -1325,7 +1297,7 @@ export default function Membership() {
                 Félicitations !
               </h2>
               <p className="text-lg text-gray-700 mb-6">
-                Votre adhésion à la Fédération Algérienne des Pharmaciens a été
+                Votre adhésion à la Fédération Algérienne de Pharmacie a été
                 enregistrée avec succès.
               </p>
 
@@ -1350,8 +1322,8 @@ export default function Membership() {
                         </ul>
                       </li>
                       <li>
-                        Adresse : Fédération Algérienne des Pharmaciens -
-                        [Adresse à compléter]
+                        Adresse : Fédération Algérienne de Pharmacie - [Adresse
+                        à compléter]
                       </li>
                       <li>Horaires : [Horaires à compléter]</li>
                       <li>

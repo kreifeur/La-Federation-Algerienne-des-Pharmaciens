@@ -327,10 +327,10 @@ export default function Membership() {
   return (
     <div>
       <Head>
-        <title>Adhésion - Fédération Algérienne des Pharmaciens</title>
+        <title>Adhésion - Fédération Algérienne de Pharmacie</title>
         <meta
           name="description"
-          content="Rejoignez la Fédération Algérienne des Pharmaciens et bénéficiez d'avantages exclusifs"
+          content="Rejoignez la Fédération Algérienne de Pharmacie et bénéficiez d'avantages exclusifs"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -1061,7 +1061,7 @@ export default function Membership() {
                           <p>
                             <strong>Adresse de notre siège :</strong>
                             <br />
-                            Fédération Algérienne des Pharmaciens
+                            Fédération Algérienne de Pharmacie
                             <br />
                             [Adresse complète à compléter]
                             <br />
@@ -1300,7 +1300,7 @@ export default function Membership() {
                 Félicitations !
               </h2>
               <p className="text-lg text-gray-700 mb-6">
-                Votre adhésion à la Fédération Algérienne des Pharmaciens a été
+                Votre adhésion à la Fédération Algérienne de Pharmacie a été
                 enregistrée avec succès.
               </p>
               
@@ -1318,7 +1318,7 @@ export default function Membership() {
                           <li>Le montant de {getPlanAmount().toLocaleString()} DA en espèces</li>
                         </ul>
                       </li>
-                      <li>Adresse : Fédération Algérienne des Pharmaciens - [Adresse à compléter]</li>
+                      <li>Adresse : Fédération Algérienne de Pharmacie - [Adresse à compléter]</li>
                       <li>Horaires : [Horaires à compléter]</li>
                       <li>Vous recevrez immédiatement votre carte de membre après paiement</li>
                     </ul>

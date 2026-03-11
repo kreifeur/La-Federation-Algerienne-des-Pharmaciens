@@ -77,7 +77,7 @@ export default function Contact() {
   return (
     <div>
       <Head>
-        <title>Contact - La Fédération Algérienne des Pharmaciens</title>
+        <title>Contact - La Fédération Algérienne de Pharmacie</title>
         <meta name="description" content="Contactez l'Association de Cosmétologie pour toute question ou demande d'information" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -291,7 +291,7 @@ Centre commercial et des affaires ElQods cheraga , Alger .</p>
           </div>
           
           {/* Carte de localisation */}
-          <div className="mt-16">
+          {/* <div className="mt-16">
             <h2 className="text-2xl font-semibold text-center text-blue-800 mb-6">Notre localisation</h2>
             <div className="bg-white rounded-lg shadow-md p-4">
               <div className="h-96 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -302,7 +302,7 @@ Centre commercial et des affaires ElQods cheraga , Alger .</p>
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* FAQ */}
           <div className="mt-16">

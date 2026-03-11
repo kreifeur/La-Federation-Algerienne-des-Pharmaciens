@@ -27,10 +27,10 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen flex flex-col">
       <Head>
-        <title>Politique de Confidentialité - Fédération Algérienne des Pharmaciens</title>
+        <title>Politique de Confidentialité - Fédération Algérienne de Pharmacie</title>
         <meta
           name="description"
-          content="Politique de confidentialité de la Fédération Algérienne des Pharmaciens. Nous protégeons vos données personnelles conformément à la loi algérienne."
+          content="Politique de confidentialité de la Fédération Algérienne de Pharmacie. Nous protégeons vos données personnelles conformément à la loi algérienne."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -45,7 +45,7 @@ export default function PrivacyPolicy() {
               Politique de Confidentialité
             </h1>
             <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-              La <span className="font-semibold text-blue-800">Fédération Algérienne des Pharmaciens</span> s'engage à protéger la confidentialité de vos données personnelles conformément aux lois en vigueur en Algérie.
+              La <span className="font-semibold text-blue-800">Fédération Algérienne de Pharmacie</span> s'engage à protéger la confidentialité de vos données personnelles conformément aux lois en vigueur en Algérie.
             </p>
             <div className="mt-8">
               <div className="inline-flex items-center bg-blue-100 text-blue-800 px-4 py-2 rounded-lg text-sm font-semibold">
@@ -105,7 +105,7 @@ export default function PrivacyPolicy() {
                 {/* Introduction */}
                 <div className="mb-10">
                   <p className="text-gray-700 leading-relaxed">
-                    La <span className="font-semibold text-blue-800">Fédération Algérienne des Pharmaciens</span> s'engage à protéger la confidentialité de vos données personnelles conformément aux lois en vigueur en Algérie, notamment la Loi n° 18-07 relative à la protection des données à caractère personnel. Ce document explique comment nous collectons, utilisons et partageons vos informations personnelles.
+                    La <span className="font-semibold text-blue-800">Fédération Algérienne de Pharmacie</span> s'engage à protéger la confidentialité de vos données personnelles conformément aux lois en vigueur en Algérie, notamment la Loi n° 18-07 relative à la protection des données à caractère personnel. Ce document explique comment nous collectons, utilisons et partageons vos informations personnelles.
                   </p>
                 </div>
 

@@ -1,11 +1,11 @@
 // components/About.js
-import members from "../../../public/members.png"
+import members from "../../../public/DSC02038.jpg"
 const About = () => {
   return (
     <section id="about" className="py-16 px-6 bg-white">
       <div className="container mx-auto">
         <h2 className="text-3xl font-bold text-center mb-12 text-blue-800">
-          À propos de la Fédération
+          La FAP en action
         </h2>
 
         <div className="flex flex-col md:flex-row gap-10 items-center">
@@ -15,12 +15,7 @@ const About = () => {
                 Nos missions
               </h3>
               <p className="mb-4">
-                La Fédération Algérienne des Pharmaciens est une organisation
-                professionnelle qui regroupe et représente les pharmaciens
-                exerçant dans différents secteurs : officine, industrie,
-                hôpital, recherche et distribution. Elle œuvre pour la
-                valorisation de la profession, le renforcement des compétences
-                et la protection de la santé publique.
+                La Fédération Algérienne de Pharmacie est une une association à but non lucratif  qui regroupe et représente les pharmaciens exerçant dans différents secteurs : officine, industrie, biologie, hôpital et recherche. Elle œuvre pour la valorisation de la profession, le renforcement des compétences et la protection de la santé publique.
               </p>
               <p className="mb-4">Nous œuvrons pour :</p>
               <ul className="list-disc pl-5 mb-4 space-y-2">

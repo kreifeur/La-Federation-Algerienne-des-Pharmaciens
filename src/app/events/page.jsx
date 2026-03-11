@@ -415,7 +415,7 @@ export default function Events() {
   return (
     <div className="min-h-screen flex flex-col">
       <Head>
-        <title>Événements - La Fédération Algérienne des Pharmaciens</title>
+        <title>Événements - La Fédération Algérienne de Pharmacie</title>
         <meta
           name="description"
           content="Découvrez tous les événements organisés par l'Association de Cosmétologie : congrès, ateliers, formations et networking"

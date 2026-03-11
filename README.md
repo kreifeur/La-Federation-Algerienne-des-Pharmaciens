@@ -1,7 +1,7 @@
-# La Fédération Algérienne des Pharmaciens Website
+# La Fédération Algérienne de Pharmacie Website
 
 > **URL**: https://la-federation-algerienne-des-pharma.vercel.app/  
-> (La Fédération Algérienne des Pharmaciens)
+> (La Fédération Algérienne de Pharmacie)
 
 ---
 
@@ -22,7 +22,7 @@
 
 ## Description
 
-La Fédération Algérienne des Pharmaciens (FAP) est une organisation professionnelle qui représente et regroupe les pharmaciens exerçant dans différents secteurs (officine, industrie, hôpital, recherche, distribution).  
+La Fédération Algérienne de Pharmacie (FAP) est une organisation professionnelle qui représente et regroupe les pharmaciens exerçant dans différents secteurs (officine, industrie, hôpital, recherche, distribution).  
 Le site vise à :
 
 - Mettre en valeur la mission et les actions de la fédération  
@@ -98,7 +98,7 @@ npm start
 ---
 
 ## License
-© 2025 La Fédération Algérienne des Pharmaciens
+© 2025 La Fédération Algérienne de Pharmacie
 ---
 
 ## Contact

@@ -3,9 +3,9 @@ const Membership = () => {
   const benefits = [
     "Accès à tous nos événements à tarif préférentiel",
     "Formations continues et développement professionnel",
-    "Réseautage avec les experts du secteur",
-    "Accès à l'espace membre avec ressources exclusives",
-    "Revue professionnelle trimestrielle"
+    "Opportunités de réseautage avec les experts du secteur",
+    "Accès à l’espace membre et à des ressources exclusives",
+    "Réception régulière de la revue professionnelle"
   ];
 
   return (
@@ -15,7 +15,7 @@ const Membership = () => {
         
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-lg mb-6">
-            Rejoignez notre communauté de professionnels et bénéficiez de tous les avantages réservés à nos membres :
+            Rejoignez notre communauté de professionnels et bénéficiez des avantages exclusivement réservés à nos membres :
           </p>
           
           <ul className="list-disc list-inside text-left mb-8 space-y-2 mx-auto max-w-md">

@@ -32,10 +32,10 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>La Fédération Algérienne des Pharmaciens</title>
+        <title>La Fédération Algérienne de Pharmacie</title>
         <meta
           name="description"
-          content="La Fédération Algérienne des Pharmaciens"
+          content="La Fédération Algérienne de Pharmacie"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>

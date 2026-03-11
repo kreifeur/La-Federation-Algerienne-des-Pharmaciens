@@ -113,13 +113,7 @@ export default function Register() {
       id: "individual",
       label: "Individuel",
       price: "80DA/an",
-      description: "Pour les professionnels indépendants",
-    },
-    {
-      id: "corporate",
-      label: "Entreprise",
-      price: "350DA/an",
-      description: "Pour les entreprises et institutions",
+      description: "Pharmacien diplômé",
     },
   ];
 
@@ -129,7 +123,7 @@ export default function Register() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4">
         <Head>
           <title>
-            Inscription réussie - La Fédération Algérienne des Pharmaciens
+            Inscription réussie - La Fédération Algérienne de Pharmacie
           </title>
         </Head>
 
@@ -139,7 +133,7 @@ export default function Register() {
             Inscription réussie !
           </h1>
           <p className="text-gray-600 mb-6">
-            Bienvenue dans La Fédération Algérienne des Pharmaciens. Un email de
+            Bienvenue à la Fédération Algérienne de Pharmacie. Un email de
             confirmation a été envoyé à votre adresse.
           </p>
 

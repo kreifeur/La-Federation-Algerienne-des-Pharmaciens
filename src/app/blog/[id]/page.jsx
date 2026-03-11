@@ -168,7 +168,7 @@ export default function BlogPost() {
     <div>
       <Head>
         <title>
-          {selectedPost.title} - Blog La Fédération Algérienne des Pharmaciens
+          {selectedPost.title} - Blog La Fédération Algérienne de Pharmacie
         </title>
         <meta name="description" content={selectedPost.excerpt} />
         <link rel="icon" href="/favicon.ico" />

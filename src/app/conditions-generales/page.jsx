@@ -32,10 +32,10 @@ export default function TermsConditions() {
   return (
     <div className="min-h-screen flex flex-col">
       <Head>
-        <title>Conditions Générales - Fédération Algérienne des Pharmaciens</title>
+        <title>Conditions Générales - Fédération Algérienne de Pharmacie</title>
         <meta
           name="description"
-          content="Conditions générales d'adhésion à la Fédération Algérienne des Pharmaciens. Règles, droits et obligations des membres."
+          content="Conditions générales d'adhésion à la Fédération Algérienne de Pharmacie. Règles, droits et obligations des membres."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -67,7 +67,7 @@ export default function TermsConditions() {
               Conditions Générales
             </h1>
             <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-              Règles et conditions régissant l'adhésion à la <span className="font-semibold text-blue-800">Fédération Algérienne des Pharmaciens</span>.
+              Règles et conditions régissant l'adhésion à la <span className="font-semibold text-blue-800">Fédération Algérienne de Pharmacie</span>.
             </p>
             
             {/* Important Notice */}
@@ -81,7 +81,7 @@ export default function TermsConditions() {
                     <h3 className="font-semibold text-yellow-800 mb-2">Note Importante</h3>
                     <p className="text-yellow-700 text-sm">
                       En souscrivant à une adhésion, vous reconnaissez avoir lu, compris et accepté l'intégralité des présentes conditions générales. 
-                      Ces conditions constituent le contrat complet entre vous et la Fédération Algérienne des Pharmaciens.
+                      Ces conditions constituent le contrat complet entre vous et la Fédération Algérienne de Pharmacie.
                     </p>
                   </div>
                 </div>
@@ -158,13 +158,13 @@ export default function TermsConditions() {
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900">Conditions Générales d'Adhésion</h2>
-                      <p className="text-gray-600">Fédération Algérienne des Pharmaciens</p>
+                      <p className="text-gray-600">Fédération Algérienne de Pharmacie</p>
                     </div>
                   </div>
                   
                   <div className="bg-gray-50 rounded-lg p-5">
                     <p className="text-gray-700 leading-relaxed">
-                      Les présentes conditions générales régissent les relations entre la <span className="font-semibold">Fédération Algérienne des Pharmaciens</span>, 
+                      Les présentes conditions générales régissent les relations entre la <span className="font-semibold">Fédération Algérienne de Pharmacie</span>, 
                       ci-après dénommée "la Fédération", et ses membres, ci-après dénommés "le Membre" ou "les Membres". 
                       Toute adhésion à la Fédération implique l'acceptation sans réserve des présentes conditions générales.
                     </p>
@@ -194,7 +194,7 @@ export default function TermsConditions() {
                           <div className="bg-blue-50 rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                             <span className="text-blue-800 text-sm">1.1</span>
                           </div>
-                          <span>L'adhésion à la Fédération Algérienne des Pharmaciens</span>
+                          <span>L'adhésion à la Fédération Algérienne de Pharmacie</span>
                         </li>
                         <li className="flex items-start">
                           <div className="bg-blue-50 rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
@@ -266,7 +266,7 @@ export default function TermsConditions() {
                                 <svg className="w-4 h-4 text-green-600 mt-1 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
-                                Être inscrit à l'Ordre des Pharmaciens
+                                Être inscrit à l'Ordre de Pharmacie
                               </li>
                               <li className="flex items-start">
                                 <svg className="w-4 h-4 text-green-600 mt-1 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -1098,7 +1098,7 @@ export default function TermsConditions() {
                         <p className="text-blue-100 text-sm">
                           Fait à [Ville], le [Date]
                           <br />
-                          Pour la Fédération Algérienne des Pharmaciens
+                          Pour la Fédération Algérienne de Pharmacie
                         </p>
                       </div>
                     </div>
@@ -1112,7 +1112,7 @@ export default function TermsConditions() {
                           <h3 className="font-semibold text-green-800 mb-2">Acceptation des conditions</h3>
                           <p className="text-green-700">
                             En souscrivant à une adhésion, vous déclarez avoir lu, compris et accepté l'intégralité des présentes conditions générales. 
-                            Ces conditions constituent le contrat complet entre vous et la Fédération Algérienne des Pharmaciens.
+                            Ces conditions constituent le contrat complet entre vous et la Fédération Algérienne de Pharmacie.
                           </p>
                         </div>
                       </div>

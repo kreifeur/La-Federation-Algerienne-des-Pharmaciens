@@ -242,7 +242,7 @@ export default function Gallery() {
   return (
     <div>
       <Head>
-        <title>Galerie - La Fédération Algérienne des Pharmaciens</title>
+        <title>Galerie - La Fédération Algérienne de Pharmacie</title>
         <meta name="description" content="Galerie photos et vidéos des événements de l'Association de Cosmétologie" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -511,7 +511,7 @@ export default function Gallery() {
           )}
 
           {/* Section Témoignages */}
-          <section className="mt-16">
+          {/* <section className="mt-16">
             <h2 className="text-3xl font-bold text-center text-blue-800 mb-12">Ils témoignent</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -563,7 +563,7 @@ export default function Gallery() {
                 </p>
               </div>
             </div>
-          </section>
+          </section> */}
 
           {/* Newsletter */}
           <section className="mt-16 bg-blue-800 rounded-lg p-8 text-center text-white">

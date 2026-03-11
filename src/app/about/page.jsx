@@ -2,53 +2,18 @@
 import Head from "next/head";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import aboutimage from '../../../public/about.png'
+import aboutimage from '../../../public/FB_IMG_1773061832719.jpg'
+import member1 from '../../../public/_R4A4361.JPG'
+import member2 from '../../../public/_R4A3926.JPG'
+import member3 from '../../../public/_R4A4037.JPG'
+import member4 from '../../../public/_R4A4291.JPG'
+import member5 from '../../../public/_R4A4601.JPG'
+import member6 from '../../../public/nassima.jpeg'
+import member7 from '../../../public/0fb1d278-a943-4e93-ad9f-0644750cb5ce~1.JPG'
+
 export default function About() {
   // Données de l'équipe
-  const teamMembers = [
-    {
-      id: 1,
-      name: "Dr. Sophie Martin",
-      role: "Présidente",
-      bio: "Docteure en pharmacie avec 15 ans d'expérience dans l'industrie cosmétique. Ancienne directrice R&D chez L'Oréal.",
-      image: "/team/sophie-martin.jpg",
-    },
-    {
-      id: 2,
-      name: "Pierre Dubois",
-      role: "Vice-président",
-      bio: "Expert en réglementation cosmétique avec une carrière de 20 ans chez Chanel et Dior. Enseignant à l'ISIPCA.",
-      image: "/team/pierre-dubois.jpg",
-    },
-    {
-      id: 3,
-      name: "Marie-Laurence Leroy",
-      role: "Secrétaire générale",
-      bio: "Spécialiste en marketing cosmétique. Fondatrice de l'agence de conseil en stratégie beauté ML Conseil.",
-      image: "/team/marie-laurence-leroy.jpg",
-    },
-    {
-      id: 4,
-      name: "Thomas Moreau",
-      role: "Trésorier",
-      bio: "Expert-comptable spécialisé dans les entreprises de cosmétiques. Ancien directeur financier chez Yves Rocher.",
-      image: "/team/thomas-moreau.jpg",
-    },
-    {
-      id: 5,
-      name: "Dr. Chloé Zhang",
-      role: "Responsable scientifique",
-      bio: "Docteure en chimie des produits naturels. Research Fellow à l'Université de Paris en cosmétologie.",
-      image: "/team/chloe-zhang.jpg",
-    },
-    {
-      id: 6,
-      name: "Michel Bernard",
-      role: "Responsable des événements",
-      bio: "Organisateur d'événements professionnels depuis 12 ans. Fondateur de l'agence Événements & Cosmétiques.",
-      image: "/team/michel-bernard.jpg",
-    },
-  ];
+
 
   // Chiffres clés
   const keyFigures = [
@@ -74,7 +39,7 @@ export default function About() {
         <title>À propos de la Fédération</title>
         <meta
           name="description"
-          content="Découvrez l'Association de Cosmétologie : notre histoire, notre mission, notre équipe et nos valeurs"
+          content="Découvrez l’histoire, la mission et les valeurs de la Fédération Algérienne de Pharmacie, acteur majeur du secteur pharmaceutique depuis sa création."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -89,9 +54,7 @@ export default function About() {
               À propos de la Fédération
             </h1>
             <p className="text-xl max-w-3xl mx-auto">
-              Découvrez l’histoire, la mission et les valeurs de la Fédération
-              Algérienne des Pharmaciens, acteur majeur du secteur depuis sa
-              création.
+              Découvrez l’histoire, la mission et les valeurs de la Fédération Algérienne de Pharmacie, acteur majeur du secteur pharmaceutique depuis sa création.
             </p>
           </div>
         </section>
@@ -106,12 +69,8 @@ export default function About() {
                 </h2>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    La Fédération Algérienne des Pharmaciens est une
-                    organisation professionnelle qui regroupe et représente les
-                    pharmaciens exerçant dans différents secteurs : officine,
-                    industrie, hôpital, recherche et distribution. Elle œuvre
-                    pour la valorisation de la profession, le renforcement des
-                    compétences et la protection de la santé publique.
+                    La Fédération Algérienne de Pharmacie est une association à but non lucratif qui regroupe et représente les pharmaciens exerçant dans différents secteurs : officine, industrie, biologie, hôpital et recherche.<br />
+                    Elle œuvre pour la valorisation de la profession, le renforcement des compétences et la protection de la santé publique.
                   </p>
                 </div>
               </div>
@@ -263,91 +222,84 @@ export default function About() {
       Membres du bureau
     </h2>
     <p className="text-lg text-center text-gray-700 max-w-3xl mx-auto mb-12">
-      Voici les membres qui composent le bureau de la Fédération Algérienne des Pharmaciens.
+      Voici les membres qui composent le bureau de la Fédération Algérienne de Pharmacie.
     </p>
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {/* Président */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-        <div className="h-48 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500">Photo de Boudis Abdelhakim</span>
+        <div style={{backgroundImage:`url(${member1.src})`}} className="h-48 bg-center bg-contain bg-no-repeat bg-white ">
+          
         </div>
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-blue-800 mb-1">Boudis Abdelhakim</h3>
+          <h3 className="text-xl font-semibold text-blue-800 mb-1">Pr. Boudis Abdelhakim</h3>
           <p className="text-yellow-600 font-medium mb-4">Président</p>
-          <p className="text-gray-700">Engagé dans la défense de la profession, il œuvre à renforcer la place du pharmacien dans la société algérienne.</p>
         </div>
       </div>
 
       {/* Vice président 1 */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-        <div className="h-48 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500">Photo de Selka Mohamed Adil</span>
+        <div style={{backgroundImage:`url(${member2.src})`}} className="h-48 bg-center bg-contain bg-no-repeat bg-white ">
         </div>
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-blue-800 mb-1">Selka Mohamed Adil</h3>
+          <h3 className="text-xl font-semibold text-blue-800 mb-1">Pr. Selka Mohamed Adil</h3>
           <p className="text-yellow-600 font-medium mb-4">Vice-président 1</p>
-          <p className="text-gray-700">Passionné par l’innovation pharmaceutique, il contribue au développement de solutions modernes pour la santé.</p>
+          
         </div>
       </div>
 
       {/* Vice président 2 */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-        <div className="h-48 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500">Photo de Mezaour Yacine</span>
+        <div style={{backgroundImage:`url(${member3.src})`}} className="h-48 bg-center bg-contain bg-no-repeat bg-white ">
         </div>
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-blue-800 mb-1">Mezaour Yacine</h3>
+          <h3 className="text-xl font-semibold text-blue-800 mb-1">Dr. Mezaour Yacine</h3>
           <p className="text-yellow-600 font-medium mb-4">Vice-président 2</p>
-          <p className="text-gray-700">Spécialiste en santé publique, il met son expertise au service de la prévention et de la sensibilisation.</p>
+          
         </div>
       </div>
 
       {/* SG */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-        <div className="h-48 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500">Photo de Achouri Mohamed Yacine</span>
+        <div style={{backgroundImage:`url(${member4.src})`}} className="h-48 bg-center bg-contain bg-no-repeat bg-white ">
         </div>
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-blue-800 mb-1">Achouri Mohamed Yacine</h3>
+          <h3 className="text-xl font-semibold text-blue-800 mb-1">Pr. Achouri Mohamed Yacine</h3>
           <p className="text-yellow-600 font-medium mb-4">Secrétaire Général</p>
-          <p className="text-gray-700">Organisé et rigoureux, il assure la coordination et la bonne gestion administrative de la Fédération.</p>
+        
         </div>
       </div>
 
       {/* Trésorier */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-        <div className="h-48 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500">Photo de Zebbiche Younes</span>
+        <div style={{backgroundImage:`url(${member5.src})`}} className="h-48 bg-center bg-contain bg-no-repeat bg-white ">
         </div>
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-blue-800 mb-1">Zebbiche Younes</h3>
+          <h3 className="text-xl font-semibold text-blue-800 mb-1">Pr. Zebbiche Younes</h3>
           <p className="text-yellow-600 font-medium mb-4">Trésorier</p>
-          <p className="text-gray-700">Garant de la transparence financière, il veille à la bonne gestion des ressources de la Fédération.</p>
+          
         </div>
       </div>
 
       {/* SG adjoint */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-        <div className="h-48 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500">Photo de Khouader Nassima</span>
+        <div style={{backgroundImage:`url(${member6.src})`}} className="h-48 bg-center bg-contain bg-no-repeat bg-white ">
         </div>
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-blue-800 mb-1">Khouader Nassima</h3>
+          <h3 className="text-xl font-semibold text-blue-800 mb-1">Dr. Khouader Nassima</h3>
           <p className="text-yellow-600 font-medium mb-4">Secrétaire Général Adjoint</p>
-          <p className="text-gray-700">Dynamique et impliquée, elle contribue activement à l’organisation des événements et projets de la Fédération.</p>
+         
         </div>
       </div>
 
       {/* Trésorier Adjoint */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-        <div className="h-48 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500">Photo de Lakhlef Oussama</span>
+       <div style={{backgroundImage:`url(${member7.src})`}} className="h-48 bg-center bg-contain bg-no-repeat bg-white ">
         </div>
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-blue-800 mb-1">Lakhlef Oussama</h3>
+          <h3 className="text-xl font-semibold text-blue-800 mb-1">M. Lakhlef Oussama</h3>
           <p className="text-yellow-600 font-medium mb-4">Trésorier Adjoint</p>
-          <p className="text-gray-700">Jeune et motivé, il apporte son soutien à la gestion financière et au suivi des projets budgétaires.</p>
+          
         </div>
       </div>
     </div>
@@ -386,7 +338,7 @@ export default function About() {
           <div className="container mx-auto text-center">
             <h2 className="text-3xl font-bold mb-6">Rejoignez-nous</h2>
             <p className="text-xl max-w-3xl mx-auto mb-8">
-              Devenez membre de La Fédération Algérienne des Pharmaciens et bénéficiez de
+              Devenez membre de La Fédération Algérienne de Pharmacie et bénéficiez de
               tous nos services exclusifs, ressources privilégiées et d'un
               réseau de qualité.
             </p>

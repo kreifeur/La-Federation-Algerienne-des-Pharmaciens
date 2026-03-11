@@ -74,7 +74,7 @@ function RegisterSuccessContent() {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Reçu de paiement - Fédération Algérienne des Pharmaciens</title>
+        <title>Reçu de paiement - Fédération Algérienne de Pharmacie</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -149,7 +149,7 @@ function RegisterSuccessContent() {
       </head>
       <body>
         <div class="receipt-header">
-          <h1>Fédération Algérienne des Pharmaciens</h1>
+          <h1>Fédération Algérienne de Pharmacie</h1>
           <h2>Reçu de paiement</h2>
           <div class="success-badge">
             ✓ Paiement confirmé avec succès
@@ -190,7 +190,7 @@ function RegisterSuccessContent() {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Reçu de paiement - Fédération Algérienne des Pharmaciens</title>
+        <title>Reçu de paiement - Fédération Algérienne de Pharmacie</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -237,7 +237,7 @@ function RegisterSuccessContent() {
       </head>
       <body>
         <div class="receipt-header">
-          <h1>Fédération Algérienne des Pharmaciens</h1>
+          <h1>Fédération Algérienne de Pharmacie</h1>
           <h2>Reçu de paiement</h2>
           <div class="success-badge">
             ✓ Paiement confirmé avec succès
@@ -268,7 +268,7 @@ function RegisterSuccessContent() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <Head>
         <title>
-          Inscription réussie - La Fédération Algérienne des Pharmaciens
+          Inscription réussie - La Fédération Algérienne de Pharmacie
         </title>
       </Head>
 
@@ -326,7 +326,7 @@ function RegisterSuccessContent() {
                 {status?.params?.respCode_desc || "Inscription réussie !"}
               </h1>
               <p className="text-gray-600">
-                Bienvenue dans La Fédération Algérienne des Pharmaciens.
+                Bienvenue à la Fédération Algérienne de Pharmacie.
               </p>
               <p className="text-gray-600">
                 Un email de confirmation a été envoyé à votre adresse.
