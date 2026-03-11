@@ -9,7 +9,7 @@ import member3 from '../../../public/_R4A4037.JPG'
 import member4 from '../../../public/_R4A4291.JPG'
 import member5 from '../../../public/_R4A4601.JPG'
 import member6 from '../../../public/nassima.jpeg'
-import member7 from '../../../public/membr.JPG'
+import member7 from '../../../public/membr.jpg'
 
 export default function About() {
   // Données de l'équipe
