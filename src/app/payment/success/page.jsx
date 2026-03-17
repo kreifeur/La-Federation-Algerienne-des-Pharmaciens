@@ -328,9 +328,6 @@ function RegisterSuccessContent() {
               <p className="text-gray-600">
                 Bienvenue à la Fédération Algérienne de Pharmacie.
               </p>
-              <p className="text-gray-600">
-                Un email de confirmation a été envoyé à votre adresse.
-              </p>
             </div>
 
             {/* Section reçu - visible uniquement pour l'impression */}
@@ -537,7 +534,6 @@ function RegisterSuccessContent() {
                 Prochaines étapes :
               </h3>
               <ul className="text-sm text-blue-600 space-y-1">
-                <li>• Vérifiez votre email pour confirmer votre compte</li>
                 <li>• Accédez à votre espace membre</li>
                 <li>• Découvrez les événements à venir</li>
                 <li>• Explorez les ressources exclusives</li>

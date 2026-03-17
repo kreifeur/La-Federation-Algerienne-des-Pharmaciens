@@ -66,7 +66,9 @@ function RegisterSuccessContent() {
       <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
         {/* En-tête du reçu */}
         <div className="text-center border-b-2 border-blue-800 pb-4 mb-4">
-          <h1 className="text-xl font-bold text-blue-800">Fédération Algérienne de Pharmacie</h1>
+          <h1 className="text-xl font-bold text-blue-800">
+            Fédération Algérienne de Pharmacie
+          </h1>
           <h2 className="text-lg text-gray-700 mt-1">Reçu de paiement</h2>
           <div className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full font-bold mt-2">
             ✓ Paiement confirmé avec succès
@@ -77,36 +79,55 @@ function RegisterSuccessContent() {
         <div className="space-y-3">
           {mdOrder && (
             <div className="flex justify-between py-2 border-b border-gray-200">
-              <span className="font-medium text-gray-600">Référence transaction :</span>
+              <span className="font-medium text-gray-600">
+                Référence transaction :
+              </span>
               <span className="font-mono text-gray-800">{mdOrder}</span>
             </div>
           )}
           <div className="flex justify-between py-2 border-b border-gray-200">
-            <span className="font-medium text-gray-600">Numéro de commande :</span>
-            <span className="font-mono text-gray-800">{status?.orderNumber || 'N/A'}</span>
+            <span className="font-medium text-gray-600">
+              Numéro de commande :
+            </span>
+            <span className="font-mono text-gray-800">
+              {status?.orderNumber || "N/A"}
+            </span>
           </div>
           <div className="flex justify-between py-2 border-b border-gray-200">
-            <span className="font-medium text-gray-600">Numéro d'autorisation :</span>
-            <span className="font-mono text-gray-800">{status?.approvalCode || 'N/A'}</span>
+            <span className="font-medium text-gray-600">
+              Numéro d'autorisation :
+            </span>
+            <span className="font-mono text-gray-800">
+              {status?.approvalCode || "N/A"}
+            </span>
           </div>
           <div className="flex justify-between py-2 border-b border-gray-200">
-            <span className="font-medium text-gray-600">Date de la transaction :</span>
+            <span className="font-medium text-gray-600">
+              Date de la transaction :
+            </span>
             <span className="text-gray-800">{now}</span>
           </div>
           <div className="flex justify-between py-2 border-b border-gray-200">
             <span className="font-medium text-gray-600">Montant :</span>
             <span className="font-bold text-blue-800">
-              {status?.amount ? `${status.amount} ${status.currency || 'DZD'}` : 'N/A'}
+            {status.depositAmount} DZD
+              
             </span>
           </div>
           <div className="flex justify-between py-2 border-b border-gray-200">
-            <span className="font-medium text-gray-600">Mode de paiement :</span>
+            <span className="font-medium text-gray-600">
+              Mode de paiement :
+            </span>
             <span className="text-gray-800">CIB/EDAHABIA</span>
           </div>
           {status?.params?.payid && (
             <div className="flex justify-between py-2 border-b border-gray-200">
-              <span className="font-medium text-gray-600">ID de paiement :</span>
-              <span className="font-mono text-gray-800">{status.params.payid}</span>
+              <span className="font-medium text-gray-600">
+                ID de paiement :
+              </span>
+              <span className="font-mono text-gray-800">
+                {status.params.payid}
+              </span>
             </div>
           )}
         </div>
@@ -114,7 +135,8 @@ function RegisterSuccessContent() {
         {/* Message de confirmation */}
         <div className="mt-4 p-3 bg-green-50 rounded-lg">
           <p className="text-green-700 text-sm">
-            {status?.params?.respCode_desc || 'Votre paiement a été traité avec succès.'}
+            {status?.params?.respCode_desc ||
+              "Votre paiement a été traité avec succès."}
           </p>
           {status?.ErrorCode && status.ErrorCode === "0" && (
             <p className="text-green-600 text-xs mt-1">
@@ -127,7 +149,9 @@ function RegisterSuccessContent() {
         <div className="mt-4 pt-4 border-t border-gray-200 text-center text-gray-500 text-xs">
           <p>Merci de votre confiance !</p>
           <p className="mt-1">support@federation-pharmaciens.dz</p>
-          <p className="mt-1">Document généré le : {new Date().toLocaleString("fr-FR")}</p>
+          <p className="mt-1">
+            Document généré le : {new Date().toLocaleString("fr-FR")}
+          </p>
           {mdOrder && <p className="mt-1 font-mono">Réf: {mdOrder}</p>}
         </div>
       </div>
@@ -145,7 +169,7 @@ function RegisterSuccessContent() {
 
     // Utiliser le même contenu que le reçu affiché
     const receiptContent = receiptRef.current.innerHTML;
-    
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html lang="fr">
@@ -184,7 +208,7 @@ function RegisterSuccessContent() {
     if (!receiptRef.current) return;
 
     const receiptContent = receiptRef.current.innerHTML;
-    
+
     // Ici, vous feriez un appel API pour envoyer l'email
     // Pour l'instant, on ouvre un aperçu
     const emailWindow = window.open("", "_blank");
@@ -232,36 +256,44 @@ function RegisterSuccessContent() {
 
     try {
       setLoading(true);
-      
+
       // Utiliser le MÊME élément que pour l'impression
       const element = receiptRef.current;
-      
+
       // Générer le PDF
       const canvas = await html2canvas(element, {
         scale: 2,
-        backgroundColor: '#ffffff',
+        backgroundColor: "#ffffff",
         logging: false,
         allowTaint: false,
-        useCORS: true
+        useCORS: true,
       });
 
       const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: 'a4'
+        orientation: "portrait",
+        unit: "px",
+        format: "a4",
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL("image/png");
       const imgWidth = pdf.internal.pageSize.getWidth();
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
-      
+
+      pdf.addImage(
+        imgData,
+        "PNG",
+        0,
+        0,
+        imgWidth,
+        imgHeight,
+        undefined,
+        "FAST",
+      );
+
       pdf.save(`reçu-paiement-${mdOrder || "transaction"}-${now}.pdf`);
-      
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Erreur lors de la génération du PDF. Veuillez réessayer.');
+      console.error("Error generating PDF:", error);
+      alert("Erreur lors de la génération du PDF. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -270,9 +302,7 @@ function RegisterSuccessContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <Head>
-        <title>
-          Paiement réussi - La Fédération Algérienne de Pharmacie
-        </title>
+        <title>Paiement réussi - La Fédération Algérienne de Pharmacie</title>
       </Head>
 
       <div className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-md">
@@ -348,9 +378,7 @@ function RegisterSuccessContent() {
               </div>
 
               {/* Ce div contient le reçu qui sera utilisé pour l'impression, l'email et le PDF */}
-              <div ref={receiptRef}>
-                {getReceiptContent()}
-              </div>
+              <div ref={receiptRef}>{getReceiptContent()}</div>
 
               {/* Boutons d'action */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
@@ -358,8 +386,18 @@ function RegisterSuccessContent() {
                   onClick={handlePrintReceipt}
                   className="bg-blue-800 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                    />
                   </svg>
                   Imprimer
                 </button>
@@ -368,8 +406,18 @@ function RegisterSuccessContent() {
                   onClick={handleEmailReceipt}
                   className="bg-green-800 text-white py-3 px-4 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                   Envoyer
                 </button>
@@ -379,10 +427,20 @@ function RegisterSuccessContent() {
                   disabled={loading}
                   className="bg-orange-800 text-white py-3 px-4 rounded-md hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
-                  {loading ? 'Génération...' : 'Télécharger PDF'}
+                  {loading ? "Génération..." : "Télécharger PDF"}
                 </button>
               </div>
             </div>
@@ -407,7 +465,6 @@ function RegisterSuccessContent() {
                 Prochaines étapes :
               </h3>
               <ul className="text-sm text-blue-600 space-y-1">
-                <li>• Vérifiez votre email pour confirmer votre compte</li>
                 <li>• Accédez à votre espace membre</li>
                 <li>• Découvrez les événements à venir</li>
                 <li>• Explorez les ressources exclusives</li>
@@ -447,16 +504,18 @@ function RegisterSuccessContent() {
 
 export default function RegisterSuccess() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-md">
-          <div className="py-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full bg-white p-8 rounded-lg shadow-md">
+            <div className="py-8 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
+              <p className="text-gray-600">Chargement...</p>
+            </div>
           </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <RegisterSuccessContent />
     </Suspense>
   );

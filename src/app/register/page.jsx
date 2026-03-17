@@ -142,7 +142,6 @@ export default function Register() {
               Prochaines étapes :
             </h3>
             <ul className="text-sm text-blue-600 space-y-1">
-              <li>• Vérifiez votre email pour confirmer votre compte</li>
               <li>• Accédez à votre espace membre</li>
               <li>• Découvrez les événements à venir</li>
               <li>• Explorez les ressources exclusives</li>
