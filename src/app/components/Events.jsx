@@ -305,10 +305,10 @@ const Events = () => {
       eventLocation: event.location,
       
       // Déterminer le prix en fonction du statut de membre
-      amount: userInfo?.isMember ? event.memberPrice : event.nonMemberPrice,
-      priceType: userInfo?.isMember ? "member" : "non-member",
+      amount: event.memberPrice,
+      priceType: "member",
       memberPrice: event.memberPrice,
-      nonMemberPrice: event.nonMemberPrice,
+      nonMemberPrice: event.memberPrice,
       
       userId: currentUserId,
       userName: userInfo?.fullName || userInfo?.email,
@@ -381,13 +381,12 @@ const Events = () => {
         </span>
       );
     } else {
-      const userPrice = userInfo?.isMember ? event.memberPrice : event.nonMemberPrice;
-      const otherPrice = userInfo?.isMember ? event.nonMemberPrice : event.memberPrice;
+      const userPrice = event.memberPrice
       
       return (
         <div className="text-right">
           <div className="text-blue-800 font-semibold">
-            {userPrice || 0} DA / membre
+            {userPrice} DA / membre
           </div>
          {/*  <div className="text-sm text-gray-500">
             {otherPrice || 0} DA {userInfo?.isMember ? "(Non-membre)" : "(Membre)"}
