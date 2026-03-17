@@ -108,7 +108,7 @@ function RegisterSuccessContent() {
             <span className="text-gray-800">{now}</span>
           </div>
           <div className="flex justify-between py-2 border-b border-gray-200">
-            <span className="font-medium text-gray-600">Montant :</span>
+            <span className="font-medium text-gray-600">Montant hello :</span>
             <span className="font-bold text-blue-800">
             {status.depositAmount} DZD
               

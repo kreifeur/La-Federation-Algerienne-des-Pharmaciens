@@ -420,7 +420,7 @@ function RegisterSuccessContent() {
                     Numéro de commande :
                   </span>
                   <span className="font-mono text-gray-800">
-                    {status?.orderNumber || "N/A"}
+                    {status?.OrderNumber || "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -440,7 +440,7 @@ function RegisterSuccessContent() {
                 <div className="flex justify-between">
                   <span className="font-medium text-gray-600">Montant :</span>
                   <span className="font-bold text-blue-800">
-                    {status?.amount || "0"} {status?.currency || "DZD"}
+                    {status?.depositAmount}DZD
                   </span>
                 </div>
                 <div className="flex justify-between">
