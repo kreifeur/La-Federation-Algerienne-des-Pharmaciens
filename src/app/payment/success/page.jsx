@@ -16,7 +16,7 @@ function RegisterSuccessContent() {
 
   useEffect(() => {
     // Get mdOrder from URL query parameters
-    const mdOrderParam = searchParams.get("mdOrder");
+    const mdOrderParam = searchParams.get("orderId");
 
     if (mdOrderParam) {
       setMdOrder(mdOrderParam);
