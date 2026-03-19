@@ -463,12 +463,9 @@ function RegisterSuccessContent() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-3xl font-bold mb-2">Félicitations !</h1>
-                  <p className="text-blue-100">Votre inscription a été confirmée avec succès</p>
+                  <p className="text-blue-100">{status.params.respCode_desc}</p>
                 </div>
-                <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl">
-                  <p className="text-sm opacity-80">Statut</p>
-                  <p className="text-2xl font-bold">✓ Actif</p>
-                </div>
+
               </div>
               
               <div className="grid grid-cols-2 gap-6 mt-8 pt-6 border-t border-white/20">
