@@ -336,8 +336,8 @@ function RegisterSuccessContent() {
                   <span class="detail-value mono">${status?.approvalCode || 'N/A'}</span>
                 </div>
                 <div class="detail-item">
-                  <span class="detail-label">ID de paiement</span>
-                  <span class="detail-value mono">${status?.params?.payid || 'N/A'}</span>
+                  <span class="detail-label">Numéro de commande</span>
+                  <span class="detail-value mono">${status?.params?.OrderNumber || 'N/A'}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Mode de paiement</span>
@@ -502,15 +502,15 @@ function RegisterSuccessContent() {
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Date de transaction</p>
-                      <p className="font-medium">{now}</p>
+                      <p className="font-medium">{now}  | {fullDate}</p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Numéro d'autorisation</p>
                       <p className="font-mono text-sm">{status?.approvalCode || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500 mb-1">ID de paiement</p>
-                      <p className="font-mono text-sm">{status?.params?.payid || 'N/A'}</p>
+                      <p className="text-sm text-slate-500 mb-1">Numéro de commande</p>
+                      <p className="font-mono text-sm">{status?.params?.OrderNumber|| 'N/A'}</p>
                     </div>
                   </div>
                 </div>

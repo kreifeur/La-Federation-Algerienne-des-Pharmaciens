@@ -7,7 +7,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     
     // Get dynamic amount from query string
-    const amount = searchParams.get('amount') * 100;
+    const amount = searchParams.get('amount');
     
     // Validate required parameters
     if (!amount) {
