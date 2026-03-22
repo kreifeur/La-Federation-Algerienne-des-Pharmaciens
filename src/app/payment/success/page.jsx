@@ -80,7 +80,7 @@ function RegisterSuccessContent() {
     }
   };
 
-  // Create a reusable function to get invoice data
+  // Get invoice data
   const getInvoiceData = () => {
     const invoiceNumber = `INV-${mdOrder || '0000'}-${now}`;
     return {
@@ -94,7 +94,7 @@ function RegisterSuccessContent() {
     };
   };
 
-  // Create the invoice HTML generator function that uses current data
+  // Generate invoice HTML
   const generateInvoiceHTML = () => {
     const data = getInvoiceData();
     
@@ -407,9 +407,8 @@ function RegisterSuccessContent() {
     `;
   };
 
-  const generatePDF = async () => {
-    setGeneratingPDF(true);
-    
+  // Generate PDF from invoice HTML (returns PDF blob)
+  const generatePDFBlob = async () => {
     try {
       // Create a temporary div to render the invoice
       const tempDiv = document.createElement('div');
@@ -421,7 +420,7 @@ function RegisterSuccessContent() {
       
       const invoiceElement = tempDiv.querySelector('#invoice-container');
       
-      // Wait for images to load if any
+      // Wait for rendering
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Generate canvas from the invoice element
@@ -458,20 +457,33 @@ function RegisterSuccessContent() {
         }
       }
       
-      const data = getInvoiceData();
-      pdf.save(`facture-fap-${data.mdOrder}-${data.now}.pdf`);
-      
       // Clean up
       document.body.removeChild(tempDiv);
       
+      return pdf;
     } catch (error) {
       console.error("Error generating PDF:", error);
+      throw error;
+    }
+  };
+
+  // Generate and download PDF
+  const handleDownloadReceipt = async () => {
+    setGeneratingPDF(true);
+    
+    try {
+      const pdf = await generatePDFBlob();
+      const data = getInvoiceData();
+      pdf.save(`facture-fap-${data.mdOrder}-${data.now}.pdf`);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
       alert("Erreur lors de la génération du PDF. Veuillez réessayer.");
     } finally {
       setGeneratingPDF(false);
     }
   };
 
+  // Print invoice
   const handlePrintReceipt = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
@@ -485,10 +497,17 @@ function RegisterSuccessContent() {
     printWindow.print();
   };
 
-  const handleEmailReceipt = () => {
-    setShowEmailModal(true);
+  // Convert blob to base64
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
+  // Send email with invoice
   const sendEmailWithInvoice = async () => {
     if (!userEmail) {
       alert("Veuillez entrer votre adresse email");
@@ -498,53 +517,10 @@ function RegisterSuccessContent() {
     setEmailSending(true);
     
     try {
-      // Generate PDF first
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '-9999px';
-      tempDiv.innerHTML = generateInvoiceHTML();
-      document.body.appendChild(tempDiv);
-      
-      const invoiceElement = tempDiv.querySelector('#invoice-container');
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const canvas = await html2canvas(invoiceElement, {
-        scale: 3,
-        backgroundColor: '#ffffff',
-        logging: false,
-        useCORS: true
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const imgWidth = 190;
-      const pageHeight = 277;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 10, 0, imgWidth, imgHeight);
-      
-      if (imgHeight > pageHeight) {
-        let heightLeft = imgHeight - pageHeight;
-        let position = -pageHeight;
-        
-        while (heightLeft > 0) {
-          position = position - pageHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-      }
-      
+      // Generate PDF using the shared function
+      const pdf = await generatePDFBlob();
       const pdfBlob = pdf.output('blob');
       const pdfBase64 = await blobToBase64(pdfBlob);
-      
-      document.body.removeChild(tempDiv);
       
       const data = getInvoiceData();
       
@@ -581,17 +557,8 @@ function RegisterSuccessContent() {
     }
   };
 
-  const blobToBase64 = (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  const handleDownloadReceipt = async () => {
-    await generatePDF();
+  const handleEmailReceipt = () => {
+    setShowEmailModal(true);
   };
 
   return (
