@@ -324,7 +324,7 @@ function RegisterSuccessContent() {
             <div class="header-top">
               <div class="logo">
                 <h1>FÉDÉRATION ALGÉRIENNE DE PHARMACIE</h1>
-                <p>Membre fondateur de l'Union Maghrébine de Pharmacie</p>
+                <p>Excellence, Engagement, Santé</p>
               </div>
               <div class="invoice-badge">
                 <div class="badge-title">Facture N°</div>
@@ -338,9 +338,8 @@ function RegisterSuccessContent() {
               <div class="detail-block">
                 <h3>Émetteur</h3>
                 <p>Fédération Algérienne de Pharmacie</p>
-                <p>12 Rue des Pharmaciens</p>
+                <p>Chez pharma invest , Centre commercial et des affaires ElQods cheraga ,</p>
                 <p>16000 Alger, Algérie</p>
-                <p>NIF: 123456789012345</p>
               </div>
               <div class="detail-block">
                 <h3>Date d'émission</h3>
