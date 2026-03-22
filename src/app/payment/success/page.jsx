@@ -48,7 +48,6 @@ function RegisterSuccessContent() {
       setStatus(data);
       if (data.ErrorCode === "0" || data.errorCode === "0") {
         console.log("Payment confirmed:", data);
-        // Fetch user email from the membership data
         await fetchUserEmail(transactionId);
       } else {
         console.error("Payment failed:", data);
@@ -97,7 +96,7 @@ function RegisterSuccessContent() {
           
           body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            background: #f8fafc;
+            background: white;
             color: #1e293b;
             line-height: 1.5;
             padding: 40px 20px;
@@ -396,6 +395,45 @@ function RegisterSuccessContent() {
     `;
   };
 
+  const generatePDF = async () => {
+    try {
+      const invoiceHTML = generateInvoiceHTML(false);
+      const response = await fetch("/api/generate-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          html: invoiceHTML,
+          filename: `facture-fap-${mdOrder || 'transaction'}-${now}.pdf`
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la génération du PDF");
+      }
+
+      // Get the PDF blob from the response
+      const blob = await response.blob();
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `facture-fap-${mdOrder || 'transaction'}-${now}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      return true;
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Erreur lors de la génération du PDF. Veuillez réessayer.");
+      return false;
+    }
+  };
+
   const handlePrintReceipt = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
@@ -420,6 +458,27 @@ function RegisterSuccessContent() {
     setEmailSending(true);
     try {
       const invoiceHTML = generateInvoiceHTML(false);
+      
+      // First generate PDF
+      const pdfResponse = await fetch("/api/generate-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          html: invoiceHTML,
+          filename: `facture-fap-${mdOrder || 'transaction'}-${now}.pdf`
+        }),
+      });
+
+      if (!pdfResponse.ok) {
+        throw new Error("Erreur lors de la génération du PDF");
+      }
+
+      const pdfBlob = await pdfResponse.blob();
+      const pdfBase64 = await blobToBase64(pdfBlob);
+
+      // Send email with PDF attachment
       const response = await fetch("/api/send-invoice", {
         method: "POST",
         headers: {
@@ -432,7 +491,9 @@ function RegisterSuccessContent() {
           transactionId: mdOrder,
           invoiceNumber: `INV-${mdOrder || '0000'}-${now}`,
           amount: status?.depositAmount || '0',
-          date: fullDate
+          date: fullDate,
+          pdfAttachment: pdfBase64,
+          pdfFilename: `facture-fap-${mdOrder || 'transaction'}-${now}.pdf`
         }),
       });
 
@@ -451,17 +512,17 @@ function RegisterSuccessContent() {
     }
   };
 
-  const handleDownloadReceipt = () => {
-    const invoiceHTML = generateInvoiceHTML(false);
-    const blob = new Blob([invoiceHTML], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `facture-fap-${mdOrder || 'transaction'}-${now}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const handleDownloadReceipt = async () => {
+    await generatePDF();
   };
 
   return (
@@ -598,7 +659,7 @@ function RegisterSuccessContent() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  Télécharger la facture
+                  Télécharger la facture (PDF)
                 </button>
               </div>
 
