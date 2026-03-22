@@ -845,15 +845,6 @@ export default function PaymentPage() {
                 {/* Payment Gateway Info */}
                 {selectedPaymentMethod === "online" && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-center justify-center">
-                    <img
-                      src="/satim_logo.jpg"
-                      alt="SATIM Payment Gateway"
-                      className="h-10 mr-3"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.style.display = "none";
-                      }}
-                    />
 
                     <div className="mb-2 text-center">
                       <p className="font-semibold text-gray-800 text-sm">
