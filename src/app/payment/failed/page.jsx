@@ -189,22 +189,9 @@ function PaymentFailedContent() {
               {(status?.ErrorCode && status.ErrorCode !== "0") ||
               (status?.errorCode && status.errorCode !== "0") ? (
                 <div className="bg-red-50 p-4 rounded-lg mb-4 border border-red-200">
-                  <p className="font-semibold text-red-800 mb-1">
-                    {getFailureReason(status.ErrorCode || status.errorCode)}
-                  </p>
                   <p className="text-red-600 text-sm mt-2">
                     {status.params.respCode_desc}
                   </p>
-                  {(status.ErrorCode || status.errorCode) && (
-                    <p className="text-xs text-red-700 mt-2">
-                      Code d'erreur : {status.ErrorCode || status.errorCode}
-                    </p>
-                  )}
-                  {status.ErrorMessage && (
-                    <p className="text-xs text-red-700">
-                      Message : {status.params.respCode_desc}
-                    </p>
-                  )}
                 </div>
               ) : (
                 <div className="bg-red-50 p-4 rounded-lg mb-4 border border-red-200">
