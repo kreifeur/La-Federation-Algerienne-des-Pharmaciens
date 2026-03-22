@@ -407,7 +407,7 @@ function RegisterSuccessContent() {
     `;
   };
 
-  // Generate PDF from invoice HTML (returns PDF blob)
+  // Generate PDF from invoice HTML (returns PDF blob URL)
   const generatePDFBlob = async () => {
     try {
       // Create a temporary div to render the invoice
@@ -467,6 +467,43 @@ function RegisterSuccessContent() {
     }
   };
 
+  // Generate PDF and open in print dialog
+  const handlePrintReceipt = async () => {
+    setGeneratingPDF(true);
+    
+    try {
+      const pdf = await generatePDFBlob();
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Open PDF in a new window
+      const printWindow = window.open(pdfUrl, '_blank');
+      
+      if (!printWindow) {
+        alert("Veuillez autoriser les fenêtres pop-up pour imprimer la facture.");
+        return;
+      }
+      
+      // Wait for PDF to load then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      };
+      
+      // Revoke the URL after a delay to clean up
+      setTimeout(() => {
+        URL.revokeObjectURL(pdfUrl);
+      }, 10000);
+      
+    } catch (error) {
+      console.error("Error printing PDF:", error);
+      alert("Erreur lors de la génération du PDF pour l'impression. Veuillez réessayer.");
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
   // Generate and download PDF
   const handleDownloadReceipt = async () => {
     setGeneratingPDF(true);
@@ -481,20 +518,6 @@ function RegisterSuccessContent() {
     } finally {
       setGeneratingPDF(false);
     }
-  };
-
-  // Print invoice
-  const handlePrintReceipt = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      alert("Veuillez autoriser les fenêtres pop-up pour imprimer la facture.");
-      return;
-    }
-
-    const invoiceHTML = generateInvoiceHTML();
-    printWindow.document.write(invoiceHTML);
-    printWindow.document.close();
-    printWindow.print();
   };
 
   // Convert blob to base64
@@ -670,12 +693,13 @@ function RegisterSuccessContent() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <button
                   onClick={handlePrintReceipt}
-                  className="bg-white border-2 border-blue-900 text-blue-900 py-3 px-4 rounded-xl hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 font-medium"
+                  disabled={generatingPDF}
+                  className="bg-white border-2 border-blue-900 text-blue-900 py-3 px-4 rounded-xl hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                   </svg>
-                  Imprimer la facture
+                  {generatingPDF ? "Préparation..." : "Imprimer la facture"}
                 </button>
 
                 <button
@@ -697,7 +721,7 @@ function RegisterSuccessContent() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  {generatingPDF ? "Génération du PDF..." : "Télécharger la facture (PDF)"}
+                  {generatingPDF ? "Génération..." : "Télécharger la facture (PDF)"}
                 </button>
               </div>
 
