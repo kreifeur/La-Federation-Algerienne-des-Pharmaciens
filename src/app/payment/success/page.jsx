@@ -684,7 +684,7 @@ function RegisterSuccessContent() {
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Numéro de commande</p>
-                      <p className="font-mono text-sm">{status?.OrderNumber|| 'N/A'}</p>
+                      <p className="font-mono text-sm">{status?.OrderNumber || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
