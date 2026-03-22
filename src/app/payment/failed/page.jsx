@@ -167,7 +167,7 @@ function PaymentFailedContent() {
             <div className="text-center mb-6">
               <div className="text-red-500 text-5xl mb-4">✗</div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Paiement échoué
+                {status.ErrorMessage}
               </h1>
               <p className="text-gray-600">
                 Votre tentative de paiement n'a pas abouti.
@@ -204,7 +204,7 @@ function PaymentFailedContent() {
                   )}
                   {status.ErrorMessage && (
                     <p className="text-xs text-red-700">
-                      Message : {status.ErrorMessage}
+                      Message : {status.params.respCode_desc}
                     </p>
                   )}
                 </div>
