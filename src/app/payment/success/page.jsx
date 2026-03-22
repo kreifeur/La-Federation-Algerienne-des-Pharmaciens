@@ -4,6 +4,8 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 function RegisterSuccessContent() {
   const searchParams = useSearchParams();
@@ -14,7 +16,8 @@ function RegisterSuccessContent() {
   const [userEmail, setUserEmail] = useState("");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
-  const receiptRef = useRef(null);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const invoiceRef = useRef(null);
   const now = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const fullDate = new Date().toLocaleString("fr-FR", {
     day: "2-digit",
@@ -77,7 +80,7 @@ function RegisterSuccessContent() {
     }
   };
 
-  const generateInvoiceHTML = (forPrint = false) => {
+  const generateInvoiceHTML = () => {
     const invoiceNumber = `INV-${mdOrder || '0000'}-${now}`;
     
     return `
@@ -297,15 +300,11 @@ function RegisterSuccessContent() {
               box-shadow: none;
               border-radius: 0;
             }
-            
-            .no-print {
-              display: none !important;
-            }
           }
         </style>
       </head>
       <body>
-        <div class="invoice-container">
+        <div class="invoice-container" id="invoice-container">
           <div class="invoice-header">
             <div class="header-top">
               <div class="logo">
@@ -388,49 +387,66 @@ function RegisterSuccessContent() {
             </div>
           </div>
         </div>
-        
-        ${forPrint ? '<script>window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 1000); };</script>' : ''}
       </body>
       </html>
     `;
   };
 
   const generatePDF = async () => {
+    setGeneratingPDF(true);
+    
     try {
-      const invoiceHTML = generateInvoiceHTML(false);
-      const response = await fetch("/api/generate-pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          html: invoiceHTML,
-          filename: `facture-fap-${mdOrder || 'transaction'}-${now}.pdf`
-        }),
+      // Create a temporary div to render the invoice
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      tempDiv.innerHTML = generateInvoiceHTML();
+      document.body.appendChild(tempDiv);
+      
+      const invoiceElement = tempDiv.querySelector('#invoice-container');
+      
+      // Generate canvas from the invoice element
+      const canvas = await html2canvas(invoiceElement, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        logging: false,
+        useCORS: true
       });
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la génération du PDF");
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 190; // mm
+      const pageHeight = 277; // mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
-
-      // Get the PDF blob from the response
-      const blob = await response.blob();
       
-      // Create a download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `facture-fap-${mdOrder || 'transaction'}-${now}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      pdf.save(`facture-fap-${mdOrder || 'transaction'}-${now}.pdf`);
       
-      return true;
+      // Clean up
+      document.body.removeChild(tempDiv);
+      
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Erreur lors de la génération du PDF. Veuillez réessayer.");
-      return false;
+    } finally {
+      setGeneratingPDF(false);
     }
   };
 
@@ -441,8 +457,10 @@ function RegisterSuccessContent() {
       return;
     }
 
-    printWindow.document.write(generateInvoiceHTML(true));
+    const invoiceHTML = generateInvoiceHTML();
+    printWindow.document.write(invoiceHTML);
     printWindow.document.close();
+    printWindow.print();
   };
 
   const handleEmailReceipt = () => {
@@ -456,28 +474,50 @@ function RegisterSuccessContent() {
     }
 
     setEmailSending(true);
+    
     try {
-      const invoiceHTML = generateInvoiceHTML(false);
+      // Generate PDF first
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      tempDiv.innerHTML = generateInvoiceHTML();
+      document.body.appendChild(tempDiv);
       
-      // First generate PDF
-      const pdfResponse = await fetch("/api/generate-pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          html: invoiceHTML,
-          filename: `facture-fap-${mdOrder || 'transaction'}-${now}.pdf`
-        }),
+      const invoiceElement = tempDiv.querySelector('#invoice-container');
+      const canvas = await html2canvas(invoiceElement, {
+        scale: 2,
+        backgroundColor: '#ffffff'
       });
-
-      if (!pdfResponse.ok) {
-        throw new Error("Erreur lors de la génération du PDF");
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 190;
+      const pageHeight = 277;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
-
-      const pdfBlob = await pdfResponse.blob();
+      
+      const pdfBlob = pdf.output('blob');
       const pdfBase64 = await blobToBase64(pdfBlob);
-
+      
+      document.body.removeChild(tempDiv);
+      
       // Send email with PDF attachment
       const response = await fetch("/api/send-invoice", {
         method: "POST",
@@ -487,7 +527,6 @@ function RegisterSuccessContent() {
         body: JSON.stringify({
           email: userEmail,
           subject: "Facture d'adhésion - Fédération Algérienne de Pharmacie",
-          html: invoiceHTML,
           transactionId: mdOrder,
           invoiceNumber: `INV-${mdOrder || '0000'}-${now}`,
           amount: status?.depositAmount || '0',
@@ -644,22 +683,24 @@ function RegisterSuccessContent() {
 
                 <button
                   onClick={handleEmailReceipt}
-                  className="bg-white border-2 border-green-600 text-green-600 py-3 px-4 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2 font-medium"
+                  disabled={emailSending}
+                  className="bg-white border-2 border-green-600 text-green-600 py-3 px-4 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  Envoyer par email
+                  {emailSending ? "Envoi en cours..." : "Envoyer par email"}
                 </button>
 
                 <button
                   onClick={handleDownloadReceipt}
-                  className="bg-white border-2 border-orange-600 text-orange-600 py-3 px-4 rounded-xl hover:bg-orange-50 transition-colors flex items-center justify-center gap-2 font-medium"
+                  disabled={generatingPDF}
+                  className="bg-white border-2 border-orange-600 text-orange-600 py-3 px-4 rounded-xl hover:bg-orange-50 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  Télécharger la facture (PDF)
+                  {generatingPDF ? "Génération du PDF..." : "Télécharger la facture (PDF)"}
                 </button>
               </div>
 
@@ -702,8 +743,7 @@ function RegisterSuccessContent() {
               </div>
 
               <div className="mt-6 text-center text-sm text-slate-500">
-                <p>Une copie de cette facture vous a été envoyée par email.</p>
-                <p className="mt-1">Pour toute assistance : support@federation-pharmaciens.dz</p>
+                <p>Pour toute assistance : support@federation-pharmaciens.dz</p>
               </div>
             </div>
           </>
@@ -749,7 +789,7 @@ function RegisterSuccessContent() {
       )}
 
       {/* Hidden receipt for reference */}
-      <div ref={receiptRef} className="hidden"></div>
+      <div ref={invoiceRef} className="hidden"></div>
     </div>
   );
 }
