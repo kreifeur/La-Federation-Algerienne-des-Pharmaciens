@@ -190,7 +190,7 @@ function PaymentFailedContent() {
               (status?.errorCode && status.errorCode !== "0") ? (
                 <div className="bg-red-50 p-4 rounded-lg mb-4 border border-red-200">
                   <p className="text-red-600 text-sm mt-2">
-                    {status.params.respCode_desc}
+                    { status.params.respCode_desc !== ''? status.params.respCode_desc : status.actionCodeDescription}
                   </p>
                 </div>
               ) : (
