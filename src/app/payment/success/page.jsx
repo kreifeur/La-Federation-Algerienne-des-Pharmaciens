@@ -11,6 +11,9 @@ function RegisterSuccessContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mdOrder, setMdOrder] = useState(null);
+  const [userEmail, setUserEmail] = useState("");
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
   const receiptRef = useRef(null);
   const now = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const fullDate = new Date().toLocaleString("fr-FR", {
@@ -45,6 +48,8 @@ function RegisterSuccessContent() {
       setStatus(data);
       if (data.ErrorCode === "0" || data.errorCode === "0") {
         console.log("Payment confirmed:", data);
+        // Fetch user email from the membership data
+        await fetchUserEmail(transactionId);
       } else {
         console.error("Payment failed:", data);
         setError(
@@ -56,6 +61,20 @@ function RegisterSuccessContent() {
       setError(err.message || "Erreur lors de la confirmation du paiement");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserEmail = async (transactionId) => {
+    try {
+      const response = await fetch(`/api/get-user-email?mdOrder=${transactionId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.email) {
+          setUserEmail(data.email);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user email:", error);
     }
   };
 
@@ -389,7 +408,47 @@ function RegisterSuccessContent() {
   };
 
   const handleEmailReceipt = () => {
-    alert("Fonctionnalité d'envoi par email à implémenter");
+    setShowEmailModal(true);
+  };
+
+  const sendEmailWithInvoice = async () => {
+    if (!userEmail) {
+      alert("Veuillez entrer votre adresse email");
+      return;
+    }
+
+    setEmailSending(true);
+    try {
+      const invoiceHTML = generateInvoiceHTML(false);
+      const response = await fetch("/api/send-invoice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          subject: "Facture d'adhésion - Fédération Algérienne de Pharmacie",
+          html: invoiceHTML,
+          transactionId: mdOrder,
+          invoiceNumber: `INV-${mdOrder || '0000'}-${now}`,
+          amount: status?.depositAmount || '0',
+          date: fullDate
+        }),
+      });
+
+      if (response.ok) {
+        alert("Facture envoyée avec succès par email !");
+        setShowEmailModal(false);
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || "Erreur lors de l'envoi de l'email");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("Erreur lors de l'envoi de l'email. Veuillez réessayer.");
+    } finally {
+      setEmailSending(false);
+    }
   };
 
   const handleDownloadReceipt = () => {
@@ -459,9 +518,8 @@ function RegisterSuccessContent() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-3xl font-bold mb-2">Félicitations !</h1>
-                  <p className="text-blue-100">{status.params.respCode_desc}</p>
+                  <p className="text-blue-100">{status?.params?.respCode_desc || "Paiement confirmé avec succès"}</p>
                 </div>
-
               </div>
               
               <div className="grid grid-cols-2 gap-6 mt-8 pt-6 border-t border-white/20">
@@ -591,7 +649,45 @@ function RegisterSuccessContent() {
         )}
       </div>
 
-      {/* Hidden receipt for reference (kept for compatibility) */}
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Envoyer la facture par email</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Adresse email
+              </label>
+              <input
+                type="email"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                placeholder="votre@email.com"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={emailSending}
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={sendEmailWithInvoice}
+                disabled={emailSending}
+                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {emailSending ? "Envoi en cours..." : "Envoyer"}
+              </button>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                disabled={emailSending}
+                className="flex-1 bg-slate-200 text-slate-700 py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden receipt for reference */}
       <div ref={receiptRef} className="hidden"></div>
     </div>
   );
