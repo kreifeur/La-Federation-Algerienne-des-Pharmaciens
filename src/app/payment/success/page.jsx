@@ -14,6 +14,8 @@ function RegisterSuccessContent() {
   const [error, setError] = useState(null);
   const [mdOrder, setMdOrder] = useState(null);
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [eventId, setEventId] = useState(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
@@ -29,8 +31,13 @@ function RegisterSuccessContent() {
 
   useEffect(() => {
     const mdOrderParam = searchParams.get("orderId");
+    const eventIdParam = searchParams.get("eventId");
+    const userIdParam = searchParams.get("userId");
+    
     if (mdOrderParam) {
       setMdOrder(mdOrderParam);
+      if (eventIdParam) setEventId(eventIdParam);
+      if (userIdParam) setUserId(userIdParam);
       confirmPayment(mdOrderParam);
     } else {
       setError("Aucun identifiant de transaction trouvé");
@@ -51,7 +58,13 @@ function RegisterSuccessContent() {
       setStatus(data);
       if (data.ErrorCode === "0" || data.errorCode === "0") {
         console.log("Payment confirmed:", data);
+        
+        // Récupérer l'email de l'utilisateur
         await fetchUserEmail(transactionId);
+        
+        // Enregistrer l'utilisateur à l'événement après paiement réussi
+        await registerUserToEvent();
+        
       } else {
         console.error("Payment failed:", data);
         setError(
@@ -74,9 +87,69 @@ function RegisterSuccessContent() {
         if (data.email) {
           setUserEmail(data.email);
         }
+        if (data.userId && !userId) {
+          setUserId(data.userId);
+        }
       }
     } catch (error) {
       console.error("Error fetching user email:", error);
+    }
+  };
+
+  const registerUserToEvent = async () => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const pendingPayment = localStorage.getItem("pendingPayment");
+      
+      // Récupérer les informations de paiement en attente
+      let pendingData = null;
+      if (pendingPayment) {
+        try {
+          pendingData = JSON.parse(pendingPayment);
+        } catch (e) {
+          console.error("Error parsing pendingPayment:", e);
+        }
+      }
+      
+      // Utiliser les IDs des paramètres URL ou du localStorage
+      const finalEventId = eventId || pendingData?.eventId;
+      const finalUserId = userId || pendingData?.userId;
+      
+      if (!finalEventId || !finalUserId) {
+        console.error("Missing eventId or userId for registration");
+        return;
+      }
+      
+      const response = await fetch(`/api/events/${finalEventId}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ 
+          userId: finalUserId,
+          transactionId: mdOrder,
+          paymentStatus: "completed",
+          paymentDate: new Date().toISOString()
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur lors de l'inscription à l'événement");
+      }
+      
+      const registrationData = await response.json();
+      console.log("User registered to event successfully:", registrationData);
+      
+      // Optionnel: supprimer les données de paiement en attente après inscription réussie
+      localStorage.removeItem("pendingPayment");
+      
+    } catch (error) {
+      console.error("Error registering user to event:", error);
+      // Ne pas bloquer l'interface utilisateur en cas d'erreur d'inscription
+      // Mais afficher un avertissement
+      console.warn("Registration to event failed but payment was successful. Please contact support.");
     }
   };
 
