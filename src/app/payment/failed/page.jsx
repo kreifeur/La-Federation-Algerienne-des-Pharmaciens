@@ -53,9 +53,9 @@ function PaymentFailedContent() {
   // Helper function to translate error codes to human-readable messages
   const getFailureReason = (errorCode) => {
     const errorMap = {
-      1: "Transaction refusée par la banque",
-      2: "Carte expirée",
-      3: "Carte invalide",
+      1: "TEMPORARILY BLOCKED",
+      2: "LOST",
+      3: "STOLEN",
       4: "Fonds insuffisants",
       5: "Limite de sécurité dépassée",
       6: "Transaction annulée par l'utilisateur",
