@@ -193,9 +193,7 @@ function PaymentFailedContent() {
                     {getFailureReason(status.ErrorCode || status.errorCode)}
                   </p>
                   <p className="text-red-600 text-sm mt-2">
-                    {getFailureDescription(
-                      status.ErrorCode || status.errorCode,
-                    )}
+                    {status.params.respCode_desc}
                   </p>
                   {(status.ErrorCode || status.errorCode) && (
                     <p className="text-xs text-red-700 mt-2">
@@ -231,46 +229,7 @@ function PaymentFailedContent() {
               </div>
             </div>
 
-            <div className="bg-red-50 p-4 rounded-lg mb-6 border border-red-100">
-              <h3 className="font-semibold text-red-800 mb-3 flex items-center">
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-                Conseils pour réussir votre prochain paiement :
-              </h3>
-              <ul className="text-sm text-red-600 space-y-2">
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Vérifiez le solde de votre compte bancaire</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Assurez-vous que votre carte n'est pas expirée</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Vérifiez les codes de sécurité (CVV/CVC)</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Contactez votre banque si votre carte est bloquée</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Essayez avec une autre carte ou via EDAHABIA</span>
-                </li>
-              </ul>
-            </div>
+      
 
             <div className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
