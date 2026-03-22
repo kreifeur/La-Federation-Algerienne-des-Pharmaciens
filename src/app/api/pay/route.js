@@ -33,8 +33,8 @@ export async function GET(request) {
       amount: amount.toString(), // Use dynamic amount from frontend
       currency: "012",
       language: "FR", // Always French language
-      returnUrl: "https://fapharmacie.dz/membership/success",
-      failUrl: "https://fapharmacie.dz/membership/failed",
+      returnUrl: "https://la-federation-algerienne-des-pharma.vercel.app/membership/success",
+      failUrl: "https://la-federation-algerienne-des-pharma.vercel.app/membership/failed",
       //failUrl: "https://fapharmacie.dz/membership/failed",
       jsonParams: JSON.stringify({
         force_terminal_id: "E010902702",
