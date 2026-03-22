@@ -235,7 +235,7 @@ export default function PaymentPage() {
         // Call payment API with dynamic amount
         const amount = paymentData.amount;
         console.log(amount);
-        const res = await axios.get(`/api/pay?amount=${amount}`);
+        const res = await axios.get(`/api/pay_event?amount=${amount}`);
         console.log("SATIM RESPONSE:", res.data);
         
         if (res.data.formUrl) {
