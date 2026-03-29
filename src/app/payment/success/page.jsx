@@ -455,7 +455,7 @@ function RegisterSuccessContent() {
             <div class="amount-table">
               <div class="amount-row">
                 <span class="amount-label">Cotisation annuelle</span>
-                <span class="amount-value">${data.amount} DZD</span>
+                <span class="amount-value">${data.amount / 100} DZD</span>
               </div>
               <div class="amount-row">
                 <span class="amount-label">Frais de dossier</span>
@@ -738,7 +738,7 @@ function RegisterSuccessContent() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center py-3 border-b border-slate-200">
                     <span className="text-slate-600">Montant total</span>
-                    <span className="text-2xl font-bold text-blue-900">{status?.depositAmount || '0'} DZD</span>
+                    <span className="text-2xl font-bold text-blue-900">{status?.depositAmount / 100 || '0'} DZD</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
