@@ -251,9 +251,6 @@ const Header = () => {
         
         {isConnected ? (
   <div className="md:hidden flex items-center gap-3">
-    <Link href="/dashboard/qr-code" className="">
-      <BsQrCode className="text-2xl" />
-    </Link>
 
     <button
       className="md:hidden text-2xl"
@@ -262,6 +259,9 @@ const Header = () => {
     >
       ☰
     </button>
+    <Link href="/dashboard/qr-code" className="">
+      <BsQrCode className="text-2xl" />
+    </Link>
   </div>
 ) : (
   <button
