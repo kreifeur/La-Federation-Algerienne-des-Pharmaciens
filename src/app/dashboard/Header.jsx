@@ -76,6 +76,13 @@ export default function Header({ user }) {
                   Annuaire
                 </a>
 
+                <a
+                  href="/dashboard/qr-code"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Qr Code
+                </a>
+
                 {/*NOTIMPORTATNT*/}
                 {/* <a href="/dashboard/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Paramètres

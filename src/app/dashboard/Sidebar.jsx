@@ -13,6 +13,7 @@ export default function Sidebar({ user }) {
     /* { name: 'Événements', href: '/dashboard/events', icon: '🎪' }, */
     /* { name: 'Ressources', href: '/dashboard/resources', icon: '📚' },*/
     { name: 'Annuaire', href: '/dashboard/directory', icon: '📇' },
+    { name: 'Qr Code', href: '/dashboard/qr-code', icon: '🔲' },
     /*{ name: 'Messages', href: '/dashboard/messages', icon: '✉️' }, */
    /*  { name: 'Notifications', href: '/dashboard/notifications', icon: '🔔' }, */
   ];
