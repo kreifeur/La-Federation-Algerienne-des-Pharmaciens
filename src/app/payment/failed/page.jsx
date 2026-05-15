@@ -127,14 +127,14 @@ function PaymentFailedContent() {
                 paiement.
               </p>
               <p className="text-sm text-red-500 mb-6">{error}</p>
-              {mdOrder && (
+            {/*   {mdOrder && (
                 <div className="bg-gray-50 p-4 rounded mb-6">
                   <p className="text-sm text-gray-600">
                     Référence transaction :{" "}
                     <span className="font-mono">{mdOrder}</span>
                   </p>
                 </div>
-              )}
+              )} */}
             </div>
             <div className="space-y-4">
               <div className="space-y-3">
@@ -176,14 +176,14 @@ function PaymentFailedContent() {
 
             <div className="mb-6">
               {/* Display transaction details if available */}
-              {mdOrder && (
+              {/* {mdOrder && (
                 <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
                   <p className="text-sm font-medium text-gray-700 mb-1">
                     Référence de transaction :
                   </p>
                   <p className="font-mono text-gray-800 text-sm">{mdOrder}</p>
                 </div>
-              )}
+              )} */}
 
               {/* Display specific error message from API */}
               {(status?.ErrorCode && status.ErrorCode !== "0") ||
@@ -296,7 +296,7 @@ function PaymentFailedContent() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+           {/*  <div className="mt-6 pt-4 border-t border-gray-100 text-center">
               <p className="text-xs text-gray-500">
                 Conservez la référence de transaction{" "}
                 <span className="font-mono text-gray-700">
@@ -304,7 +304,7 @@ function PaymentFailedContent() {
                 </span>{" "}
                 si vous contactez le support.
               </p>
-            </div>
+            </div> */}
           </>
         )}
       </div>

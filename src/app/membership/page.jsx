@@ -1229,7 +1229,7 @@ export default function Membership() {
                       )}
                     </button>
 
-                    {selectedPaymentMethod === "online" && (
+                    {/* {selectedPaymentMethod === "online" && (
                       <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                         <div className="flex items-center justify-center">
                           <svg
@@ -1257,7 +1257,7 @@ export default function Membership() {
                           Disponible 24h/24, 7j/7 pour toute assistance
                         </p>
                       </div>
-                    )}
+                    )} */}
                   </div>
 
                   <div className="flex justify-between items-center pt-6 border-t">
