@@ -260,7 +260,7 @@ function PaymentFailedContent() {
                         />
                       </svg>
                        <img
-                          src="/satim_logo.jpg"
+                          src="/satim.jpg"
                           alt="SATIM Payment Gateway"
                           className="h-10 mr-3"
                           onError={(e) => {
