@@ -674,7 +674,7 @@ function RegisterSuccessContent() {
                       <p className="font-medium">CIB/EDAHABIA</p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500 mb-1">Date de transaction</p>
+                      <p className="text-sm text-slate-500 mb-1">Date de transaction 99</p>
                       <p className="font-medium">{fullDate}</p>
                     </div>
                     <div>
