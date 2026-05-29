@@ -241,10 +241,6 @@ function PaymentFailedContent() {
                   besoin d'aide :
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <a
-                    href="tel:3020"
-                    className="text-center text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors text-sm font-medium flex-1"
-                  >
                    <img
                           src="/satim.jpg"
                           alt="SATIM Payment Gateway"
@@ -253,7 +249,7 @@ function PaymentFailedContent() {
                             e.target.onerror = null;
                             e.target.style.display = "none";
                           }}/>
-                  </a>
+                
                   <a
                     href="mailto:support@federation-pharmaciens.dz"
                     className="text-center border border-blue-600 text-blue-600 py-2 px-4 rounded-md hover:bg-blue-50 transition-colors text-sm flex-1"
