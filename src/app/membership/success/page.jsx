@@ -675,7 +675,7 @@ function RegisterSuccessContent() {
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Date de transaction</p>
-                      <p className="font-medium">{now}</p>
+                      <p className="font-medium">{data.now}</p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Numéro d'autorisation</p>
