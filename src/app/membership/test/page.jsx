@@ -60,51 +60,70 @@ export default function TestEmailsPage() {
 
   // Handle Send Email
   const handleSendEmail = async (e) => {
-    e.preventDefault();
-    setSendLoading(true);
-    setSendError('');
-    setSendSuccess('');
+  e.preventDefault();
+  setSendLoading(true);
+  setSendError('');
+  setSendSuccess('');
 
-    if (!authToken) {
-      setSendError('Please login first to get an auth token');
-      setSendLoading(false);
-      return;
+  if (!authToken) {
+    setSendError('Please login first to get an auth token');
+    setSendLoading(false);
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('to', to);
+  formData.append('subject', subject);
+  formData.append('body', body);
+  if (attachment) {
+    formData.append('attachment', attachment);
+  }
+
+  try {
+    console.log("Sending email with attachment:", attachment?.name, attachment?.type, attachment?.size);
+    
+    const response = await fetch('/api/email', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        // Remove Content-Type header - let browser handle it
+      },
+      body: formData,
+    });
+
+    // Better error handling
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error('Non-JSON response:', text);
+      throw new Error(`Server returned ${response.status}: ${text.substring(0, 200)}`);
     }
 
-    const formData = new FormData();
-    formData.append('to', to);
-    formData.append('subject', subject);
-    formData.append('body', body);
-    if (attachment) {
-      formData.append('attachment', attachment);
+    if (response.ok) {
+      setSendSuccess('Email sent successfully!');
+      setSendError('');
+      // Clear form
+      setTo('');
+      setSubject('');
+      setBody('');
+      setAttachment(null);
+      // Reset file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+    } else {
+      setSendError(data.message || data.error || 'Failed to send email');
     }
-
-    try {
-      console.log("Sending email with token:", authToken);
-      const response = await fetch('/api/email', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSendSuccess('Email sent successfully!');
-        setSendError('');
-        // Optionally clear form
-        // setTo(''); setSubject(''); setBody(''); setAttachment(null);
-      } else {
-        setSendError(data.message || data.error || 'Failed to send email');
-      }
-    } catch (err) {
-      setSendError('Network error: ' + err.message);
-    } finally {
-      setSendLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error('Error details:', err);
+    setSendError('Error: ' + err.message);
+  } finally {
+    setSendLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">

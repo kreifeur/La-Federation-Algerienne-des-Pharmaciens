@@ -30,7 +30,7 @@ export async function GET(request) {
       userName: "SAT2601031358",
       password: "satim120",
       orderNumber: "YAF-" + Date.now(), // MUST be unique
-      amount: amount.toString(), // Use dynamic amount from frontend
+      amount: amount*100, // Use dynamic amount from frontend
       currency: "012",
       language: "FR", // Always French language
       returnUrl: "https://fapharmacie.dz/membership/success",

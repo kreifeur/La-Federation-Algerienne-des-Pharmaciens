@@ -5,7 +5,6 @@ import Head from "next/head";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 function RegisterSuccessContent() {
   const searchParams = useSearchParams();
@@ -18,7 +17,6 @@ function RegisterSuccessContent() {
   const [emailSending, setEmailSending] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [loginToken, setLoginToken] = useState(null);
-  const invoiceRef = useRef(null);
   const now = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const fullDate = new Date().toLocaleString("fr-FR", {
     day: "2-digit",
@@ -57,11 +55,10 @@ function RegisterSuccessContent() {
       
       if (response.ok) {
         const data = await response.json();
-        // Match the token structure from your working test page
         const token = data.data?.token || data.token || data.access_token;
         if (token) {
           setLoginToken(token);
-          console.log("Admin token obtained successfully", token);
+          console.log("Admin token obtained successfully");
         } else {
           console.error("Token not found in response", data);
         }
@@ -114,376 +111,142 @@ function RegisterSuccessContent() {
     };
   };
 
-  // Generate invoice HTML
-  const generateInvoiceHTML = () => {
+  // Generate text-based PDF (much smaller file size)
+  const generatePDFBlob = async () => {
     const data = getInvoiceData();
     
-    return `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Facture - Fédération Algérienne de Pharmacie</title>
-        <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          
-          body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            background: white;
-            color: #1e293b;
-            line-height: 1.5;
-            padding: 40px 20px;
-          }
-          
-          .invoice-container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-          }
-          
-          .invoice-header {
-            background: linear-gradient(135deg, #0b3b5c 0%, #1e4a6f 100%);
-            color: white;
-            padding: 40px;
-          }
-          
-          .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-          }
-          
-          .logo h1 {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-          }
-          
-          .logo p {
-            font-size: 14px;
-            opacity: 0.9;
-          }
-          
-          .invoice-badge {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 12px 24px;
-            border-radius: 40px;
-            text-align: center;
-          }
-          
-          .invoice-badge .badge-title {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.8;
-          }
-          
-          .invoice-badge .badge-number {
-            font-size: 20px;
-            font-weight: 700;
-            margin-top: 4px;
-          }
-          
-          .status-paid {
-            background: #10b981;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-weight: 600;
-            display: inline-block;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-          
-          .company-details {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-          }
-          
-          .detail-block h3 {
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            opacity: 0.8;
-          }
-          
-          .detail-block p {
-            margin-bottom: 4px;
-            font-size: 14px;
-          }
-          
-          .invoice-body {
-            padding: 40px;
-          }
-          
-          .transaction-details {
-            margin-bottom: 40px;
-          }
-          
-          .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #0b3b5c;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e2e8f0;
-          }
-          
-          .details-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 12px;
-          }
-          
-          .detail-item {
-            display: flex;
-            flex-direction: column;
-          }
-          
-          .detail-label {
-            font-size: 12px;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-          }
-          
-          .detail-value {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1e293b;
-          }
-          
-          .detail-value.mono {
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-          }
-          
-          .amount-table {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 30px;
-          }
-          
-          .amount-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e2e8f0;
-          }
-          
-          .amount-row:last-child {
-            border-bottom: none;
-          }
-          
-          .amount-row.total {
-            background: #f8fafc;
-            font-weight: 700;
-            font-size: 18px;
-            color: #0b3b5c;
-          }
-          
-          .amount-label {
-            color: #475569;
-          }
-          
-          .amount-value {
-            font-weight: 600;
-          }
-          
-          .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            text-align: center;
-            color: #64748b;
-            font-size: 13px;
-          }
-          
-          .footer p {
-            margin-bottom: 4px;
-          }
-          
-          @media print {
-            body {
-              background: white;
-              padding: 0;
-            }
-            
-            .invoice-container {
-              box-shadow: none;
-              border-radius: 0;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="invoice-container" id="invoice-container">
-          <div class="invoice-header">
-            <div class="header-top">
-              <div class="logo">
-                <h1>FÉDÉRATION ALGÉRIENNE DE PHARMACIE</h1>
-                <p>Excellence, Engagement, Santé</p>
-              </div>
-              <div class="invoice-badge">
-                <div class="badge-title">Facture N°</div>
-                <div class="badge-number">${data.invoiceNumber}</div>
-              </div>
-            </div>
-            
-            <div class="status-paid">✓ PAYÉ</div>
-            
-            <div class="company-details">
-              <div class="detail-block">
-                <h3>Émetteur</h3>
-                <p>Fédération Algérienne de Pharmacie</p>
-                <p>Chez pharma invest , Centre commercial et des affaires ElQods cheraga ,</p>
-                <p>16000 Alger, Algérie</p>
-              </div>
-              <div class="detail-block">
-                <h3>Date d'émission</h3>
-                <p>${data.fullDate}</p>
-                <p style="margin-top: 12px;"><strong>Échéance:</strong> Payé le ${data.now}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="invoice-body">
-            <div class="transaction-details">
-              <h2 class="section-title">Détails de la transaction</h2>
-              
-              <div class="details-grid">
-                <div class="detail-item">
-                  <span class="detail-label">Référence transaction</span>
-                  <span class="detail-value mono">${data.mdOrder}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Numéro d'autorisation</span>
-                  <span class="detail-value mono">${data.approvalCode}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Numéro de commande</span>
-                  <span class="detail-value mono">${data.orderNumber}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Mode de paiement</span>
-                  <span class="detail-value">CIB/EDAHABIA</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Date de transaction</span>
-                  <span class="detail-value">${data.now}</span>
-                </div>
-              </div>
-            </div>
-            
-            <h2 class="section-title">Récapitulatif des montants</h2>
-            
-            <div class="amount-table">
-              <div class="amount-row">
-                <span class="amount-label">Cotisation annuelle</span>
-                <span class="amount-value">${data.amount} DZD</span>
-              </div>
-              <div class="amount-row">
-                <span class="amount-label">Frais de dossier</span>
-                <span class="amount-value">0 DZD</span>
-              </div>
-              <div class="amount-row total">
-                <span class="amount-label">Total TTC</span>
-                <span class="amount-value">${data.amount} DZD</span>
-              </div>
-            </div>
-            
-            <div class="footer">
-              <p>Merci de votre confiance ! Votre adhésion a bien été enregistrée.</p>
-              <p>Pour toute question concernant cette facture : support@federation-pharmaciens.dz</p>
-              <p style="margin-top: 12px;">Document généré automatiquement - fait foi de reçu</p>
-            </div>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-  };
-
-  // Generate PDF from invoice HTML
-  const generatePDFBlob = async () => {
-    try {
-      // Create a temporary div to render the invoice
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '-9999px';
-      tempDiv.innerHTML = generateInvoiceHTML();
-      document.body.appendChild(tempDiv);
-      
-      const invoiceElement = tempDiv.querySelector('#invoice-container');
-      
-      // Wait for rendering
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Generate canvas from the invoice element
-      const canvas = await html2canvas(invoiceElement, {
-        scale: 3,
-        backgroundColor: '#ffffff',
-        logging: false,
-        useCORS: true
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const imgWidth = 190; // mm
-      const pageHeight = 277; // mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 10, 0, imgWidth, imgHeight);
-      
-      // Add new page if content exceeds one page
-      if (imgHeight > pageHeight) {
-        let heightLeft = imgHeight - pageHeight;
-        let position = -pageHeight;
-        
-        while (heightLeft > 0) {
-          position = position - pageHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-      }
-      
-      // Clean up
-      document.body.removeChild(tempDiv);
-      
-      return pdf;
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      throw error;
-    }
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+    
+    // Header
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(11, 59, 92);
+    pdf.text('FÉDÉRATION ALGÉRIENNE DE PHARMACIE', 20, 25);
+    
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'italic');
+    pdf.setTextColor(100, 100, 100);
+    pdf.text('Excellence, Engagement, Santé', 20, 32);
+    
+    // Invoice number
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(`Facture N°: ${data.invoiceNumber}`, 150, 25);
+    
+    // Paid status
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 150, 0);
+    pdf.text('✓ PAYÉ', 20, 45);
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(9);
+    
+    // Company details
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Émetteur:', 20, 65);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Fédération Algérienne de Pharmacie', 20, 72);
+    pdf.text('Chez pharma invest, Centre commercial ElQods', 20, 79);
+    pdf.text('16000 Alger, Algérie', 20, 86);
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Date d\'émission:', 130, 65);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(data.fullDate, 130, 72);
+    pdf.text(`Payé le ${data.now}`, 130, 79);
+    
+    // Separator
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(20, 95, 190, 95);
+    
+    // Transaction details
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(12);
+    pdf.setTextColor(11, 59, 92);
+    pdf.text('Détails de la transaction', 20, 110);
+    
+    pdf.setFontSize(9);
+    pdf.setTextColor(0, 0, 0);
+    
+    let yPos = 125;
+    const lineHeight = 8;
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Référence transaction:', 20, yPos);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(data.mdOrder, 70, yPos);
+    yPos += lineHeight;
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Numéro d\'autorisation:', 20, yPos);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(data.approvalCode, 70, yPos);
+    yPos += lineHeight;
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Numéro de commande:', 20, yPos);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(data.orderNumber, 70, yPos);
+    yPos += lineHeight;
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Mode de paiement:', 20, yPos);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('CIB/EDAHABIA', 70, yPos);
+    yPos += lineHeight;
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Date de transaction:', 20, yPos);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(data.now, 70, yPos);
+    yPos += lineHeight + 5;
+    
+    // Amounts section
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(12);
+    pdf.setTextColor(11, 59, 92);
+    pdf.text('Récapitulatif des montants', 20, yPos);
+    yPos += 12;
+    
+    // Draw amount box
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setFillColor(248, 250, 252);
+    pdf.rect(20, yPos - 5, 170, 40, 'F');
+    pdf.rect(20, yPos - 5, 170, 40, 'D');
+    
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Cotisation annuelle:', 30, yPos + 8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`${data.amount} DZD`, 160, yPos + 8, { align: 'right' });
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.setTextColor(11, 59, 92);
+    pdf.text('Total TTC:', 30, yPos + 25);
+    pdf.text(`${data.amount} DZD`, 160, yPos + 25, { align: 'right' });
+    
+    yPos += 50;
+    
+    // Footer
+    pdf.setFontSize(8);
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Merci de votre confiance ! Votre adhésion a bien été enregistrée.', 20, yPos);
+    yPos += 6;
+    pdf.text('Pour toute question : support@federation-pharmaciens.dz', 20, yPos);
+    yPos += 6;
+    pdf.text('Document généré automatiquement - fait foi de reçu', 20, yPos);
+    
+    return pdf;
   };
 
   // Generate PDF and open in print dialog
@@ -495,7 +258,6 @@ function RegisterSuccessContent() {
       const pdfBlob = pdf.output('blob');
       const pdfUrl = URL.createObjectURL(pdfBlob);
       
-      // Open PDF in a new window
       const printWindow = window.open(pdfUrl, '_blank');
       
       if (!printWindow) {
@@ -503,14 +265,12 @@ function RegisterSuccessContent() {
         return;
       }
       
-      // Wait for PDF to load then trigger print
       printWindow.onload = () => {
         setTimeout(() => {
           printWindow.print();
         }, 500);
       };
       
-      // Revoke the URL after a delay to clean up
       setTimeout(() => {
         URL.revokeObjectURL(pdfUrl);
       }, 10000);
@@ -554,18 +314,21 @@ function RegisterSuccessContent() {
     setEmailSending(true);
     
     try {
-      // Generate PDF
       const pdf = await generatePDFBlob();
       const pdfBlob = pdf.output('blob');
       
-      const data = getInvoiceData();
+      // Check file size (should be under 1MB)
+      if (pdfBlob.size > 2 * 1024 * 1024) {
+        console.warn(`PDF size is ${(pdfBlob.size / 1024 / 1024).toFixed(2)}MB`);
+      }
       
-      // Create form data for email attachment
+      const data = getInvoiceData();
+      const pdfFile = new File([pdfBlob], `facture-fap-${data.mdOrder}-${data.now}.pdf`, { type: 'application/pdf' });
+      
       const formData = new FormData();
       formData.append("to", userEmail);
       formData.append("subject", "Facture d'adhésion - Fédération Algérienne de Pharmacie");
-      formData.append("body", `
-Bonjour,
+      formData.append("body", `Bonjour,
 
 Nous vous remercions pour votre adhésion à la Fédération Algérienne de Pharmacie.
 
@@ -582,19 +345,14 @@ Prochaines étapes :
 3. Téléchargez votre carte de membre numérique
 
 Cordialement,
-Fédération Algérienne de Pharmacie
-      `);
+Fédération Algérienne de Pharmacie`);
       
-      // Attach the PDF file
-      /* formData.append("attachment", pdfBlob, `facture-fap-${data.mdOrder}-${data.now}.pdf`); */
-      /* formData.append("attachment", pdfBlob); */
+      formData.append("attachment", pdfFile);
       
-      // Send email
       const response = await fetch("/api/email", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${loginToken}`,
-          // Do NOT set Content-Type header - let browser set it for FormData
         },
         body: formData,
       });
@@ -610,7 +368,11 @@ Fédération Algérienne de Pharmacie
       }
     } catch (error) {
       console.error("Error sending email:", error);
-      alert("Erreur lors de l'envoi de l'email. Veuillez réessayer.");
+      if (error.message.includes("size") || error.message.includes("large")) {
+        alert("Le fichier PDF est trop volumineux pour être envoyé par email. Veuillez utiliser l'option de téléchargement.");
+      } else {
+        alert("Erreur lors de l'envoi de l'email. Veuillez réessayer.");
+      }
     } finally {
       setEmailSending(false);
     }
@@ -860,9 +622,6 @@ Fédération Algérienne de Pharmacie
           </div>
         </div>
       )}
-
-      {/* Hidden receipt for reference */}
-      <div ref={invoiceRef} className="hidden"></div>
     </div>
   );
 }
