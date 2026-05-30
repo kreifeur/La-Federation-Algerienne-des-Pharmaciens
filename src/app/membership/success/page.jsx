@@ -1,4 +1,4 @@
-// app/register/success/page.js
+// app/register/success/page.jsx
 "use client";
 import { useEffect, useState, useRef, Suspense } from "react";
 import Head from "next/head";
@@ -17,6 +17,7 @@ function RegisterSuccessContent() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [loginToken, setLoginToken] = useState(null);
   const invoiceRef = useRef(null);
   const now = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const fullDate = new Date().toLocaleString("fr-FR", {
@@ -36,7 +37,41 @@ function RegisterSuccessContent() {
       setError("Aucun identifiant de transaction trouvé");
       setLoading(false);
     }
+    // Get admin token on component mount
+    getAdminToken();
   }, [searchParams]);
+
+  // Get admin authentication token
+  const getAdminToken = async () => {
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: "brahimadmin@gmail.com",
+          password: "passe123"
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Match the token structure from your working test page
+        const token = data.data?.token || data.token || data.access_token;
+        if (token) {
+          setLoginToken(token);
+          console.log("Admin token obtained successfully", token);
+        } else {
+          console.error("Token not found in response", data);
+        }
+      } else {
+        console.error("Failed to get admin token");
+      }
+    } catch (error) {
+      console.error("Error getting admin token:", error);
+    }
+  };
 
   const confirmPayment = async (transactionId) => {
     try {
@@ -51,7 +86,6 @@ function RegisterSuccessContent() {
       setStatus(data);
       if (data.ErrorCode === "0" || data.errorCode === "0") {
         console.log("Payment confirmed:", data);
-        await fetchUserEmail(transactionId);
       } else {
         console.error("Payment failed:", data);
         setError(
@@ -63,20 +97,6 @@ function RegisterSuccessContent() {
       setError(err.message || "Erreur lors de la confirmation du paiement");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchUserEmail = async (transactionId) => {
-    try {
-      const response = await fetch(`/api/get-user-email?mdOrder=${transactionId}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.email) {
-          setUserEmail(data.email);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching user email:", error);
     }
   };
 
@@ -406,7 +426,7 @@ function RegisterSuccessContent() {
     `;
   };
 
-  // Generate PDF from invoice HTML (returns PDF blob URL)
+  // Generate PDF from invoice HTML
   const generatePDFBlob = async () => {
     try {
       // Create a temporary div to render the invoice
@@ -519,57 +539,74 @@ function RegisterSuccessContent() {
     }
   };
 
-  // Convert blob to base64
-  const blobToBase64 = (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  // Send email with invoice
+  // Send email with invoice attachment
   const sendEmailWithInvoice = async () => {
     if (!userEmail) {
       alert("Veuillez entrer votre adresse email");
       return;
     }
 
+    if (!loginToken) {
+      alert("Erreur d'authentification. Veuillez rafraîchir la page.");
+      return;
+    }
+
     setEmailSending(true);
     
     try {
-      // Generate PDF using the shared function
+      // Generate PDF
       const pdf = await generatePDFBlob();
       const pdfBlob = pdf.output('blob');
-      const pdfBase64 = await blobToBase64(pdfBlob);
       
       const data = getInvoiceData();
       
-      // Send email with PDF attachment
-      const response = await fetch("/api/send-invoice", {
+      // Create form data for email attachment
+      const formData = new FormData();
+      formData.append("to", userEmail);
+      formData.append("subject", "Facture d'adhésion - Fédération Algérienne de Pharmacie");
+      formData.append("body", `
+Bonjour,
+
+Nous vous remercions pour votre adhésion à la Fédération Algérienne de Pharmacie.
+
+Voici les détails de votre transaction :
+- Montant: ${data.amount} DZD
+- Référence: ${data.mdOrder}
+- Date: ${data.fullDate}
+
+Veuillez trouver ci-joint votre facture détaillée au format PDF.
+
+Prochaines étapes :
+1. Accédez à votre espace membre pour compléter votre profil
+2. Découvrez les événements et formations à venir
+3. Téléchargez votre carte de membre numérique
+
+Cordialement,
+Fédération Algérienne de Pharmacie
+      `);
+      
+      // Attach the PDF file
+      /* formData.append("attachment", pdfBlob, `facture-fap-${data.mdOrder}-${data.now}.pdf`); */
+      /* formData.append("attachment", pdfBlob); */
+      
+      // Send email
+      const response = await fetch("/api/email", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Authorization": `Bearer ${loginToken}`,
+          // Do NOT set Content-Type header - let browser set it for FormData
         },
-        body: JSON.stringify({
-          email: userEmail,
-          subject: "Facture d'adhésion - Fédération Algérienne de Pharmacie",
-          transactionId: data.mdOrder,
-          invoiceNumber: data.invoiceNumber,
-          amount: data.amount,
-          date: data.fullDate,
-          pdfAttachment: pdfBase64,
-          pdfFilename: `facture-fap-${data.mdOrder}-${data.now}.pdf`
-        }),
+        body: formData,
       });
 
+      const result = await response.json();
+      
       if (response.ok) {
         alert("Facture envoyée avec succès par email !");
         setShowEmailModal(false);
+        setUserEmail("");
       } else {
-        const error = await response.json();
-        throw new Error(error.message || "Erreur lors de l'envoi de l'email");
+        throw new Error(result.message || result.error || "Erreur lors de l'envoi de l'email");
       }
     } catch (error) {
       console.error("Error sending email:", error);
@@ -580,6 +617,10 @@ function RegisterSuccessContent() {
   };
 
   const handleEmailReceipt = () => {
+    if (!loginToken) {
+      alert("Veuillez patienter, authentification en cours...");
+      return;
+    }
     setShowEmailModal(true);
   };
 
@@ -683,7 +724,7 @@ function RegisterSuccessContent() {
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Numéro de commande</p>
-                      <p className="font-mono text-sm">{status?.OrderNumber|| 'N/A'}</p>
+                      <p className="font-mono text-sm">{status?.OrderNumber || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -703,7 +744,7 @@ function RegisterSuccessContent() {
 
                 <button
                   onClick={handleEmailReceipt}
-                  disabled={emailSending}
+                  disabled={emailSending || !loginToken}
                   className="bg-white border-2 border-green-600 text-green-600 py-3 px-4 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -786,15 +827,27 @@ function RegisterSuccessContent() {
                 placeholder="votre@email.com"
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={emailSending}
+                autoFocus
               />
+              <p className="text-xs text-slate-500 mt-1">
+                Entrez votre adresse email pour recevoir la facture en PDF
+              </p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={sendEmailWithInvoice}
                 disabled={emailSending}
-                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {emailSending ? "Envoi en cours..." : "Envoyer"}
+                {emailSending ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Envoi en cours...
+                  </span>
+                ) : "Envoyer"}
               </button>
               <button
                 onClick={() => setShowEmailModal(false)}
