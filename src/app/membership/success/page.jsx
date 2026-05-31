@@ -226,13 +226,13 @@ function RegisterSuccessContent() {
     pdf.setFont('helvetica', 'normal');
     pdf.text('Cotisation annuelle:', 30, yPos + 8);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(`${data.amount} DZD`, 160, yPos + 8, { align: 'right' });
+    pdf.text(`${data.amount / 100} DZD`, 160, yPos + 8, { align: 'right' });
     
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(11);
     pdf.setTextColor(11, 59, 92);
     pdf.text('Total TTC:', 30, yPos + 25);
-    pdf.text(`${data.amount} DZD`, 160, yPos + 25, { align: 'right' });
+    pdf.text(`${data.amount / 100} DZD`, 160, yPos + 25, { align: 'right' });
     
     yPos += 50;
     
@@ -333,7 +333,7 @@ function RegisterSuccessContent() {
 Nous vous remercions pour votre adhésion à la Fédération Algérienne de Pharmacie.
 
 Voici les détails de votre transaction :
-- Montant: ${data.amount} DZD
+- Montant: ${data.amount /100} DZD
 - Référence: ${data.mdOrder}
 - Date: ${data.fullDate}
 
@@ -468,7 +468,7 @@ Fédération Algérienne de Pharmacie`);
                 <div className="space-y-4">
                   <div className="flex justify-between items-center py-3 border-b border-slate-200">
                     <span className="text-slate-600">Montant total</span>
-                    <span className="text-2xl font-bold text-blue-900">{status?.depositAmount || '0'} DZD</span>
+                    <span className="text-2xl font-bold text-blue-900">{status?.depositAmount / 100 || '0'} DZD</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
