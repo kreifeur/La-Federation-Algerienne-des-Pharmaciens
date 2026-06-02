@@ -1217,7 +1217,7 @@ export default function Membership() {
                           </svg>
                           <span>Procéder au paiement sécurisé</span>
                           <img
-                            src="/cib_logo.png"
+                            src="/cibdhahbia.webp"
                             alt="CIB"
                             className="h-8 ml-4"
                             onError={(e) => {
