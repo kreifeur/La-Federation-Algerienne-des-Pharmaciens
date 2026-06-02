@@ -136,7 +136,7 @@ function RegisterSuccessContent() {
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(11, 59, 92);
-    pdf.text('Numéro Facture :', 140, 25);
+    pdf.text('Numéro Facture :', 20, 10);
     
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
