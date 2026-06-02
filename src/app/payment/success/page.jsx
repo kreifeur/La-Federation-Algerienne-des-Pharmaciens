@@ -141,7 +141,7 @@ function RegisterSuccessContent() {
     // Paid status
     pdf.setFontSize(10);
     pdf.setTextColor(0, 150, 0);
-    pdf.text('✓ PAYÉ', 20, 45);
+    pdf.text('PAYÉ', 20, 45);
     
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(9);
