@@ -132,11 +132,16 @@ function RegisterSuccessContent() {
     pdf.setTextColor(100, 100, 100);
     pdf.text('Excellence, Engagement, Santé', 20, 32);
     
-    // Invoice number
-    pdf.setFontSize(10);
+    // Invoice title and number
+    pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(11, 59, 92);
+    pdf.text('Numéro Facture :', 140, 25);
+    
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(0, 0, 0);
-    pdf.text(`Facture N°: ${data.invoiceNumber}`, 150, 25);
+    pdf.text(data.invoiceNumber, 170, 25);
     
     // Paid status
     pdf.setFontSize(10);
@@ -155,7 +160,7 @@ function RegisterSuccessContent() {
     pdf.text('16000 Alger, Algérie', 20, 86);
     
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Date d\'émission:', 130, 65);
+    pdf.text("Date d'émission:", 130, 65);
     pdf.setFont('helvetica', 'normal');
     pdf.text(data.fullDate, 130, 72);
     pdf.text(`Payé le ${data.now}`, 130, 79);
@@ -183,7 +188,7 @@ function RegisterSuccessContent() {
     yPos += lineHeight;
     
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Numéro d\'autorisation:', 20, yPos);
+    pdf.text("Numéro d'autorisation:", 20, yPos);
     pdf.setFont('helvetica', 'normal');
     pdf.text(data.approvalCode, 70, yPos);
     yPos += lineHeight;
@@ -245,7 +250,7 @@ function RegisterSuccessContent() {
     // Green number added here
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(11, 59, 92);
-    pdf.text('Numéro Vert : 30 20 30', 20, yPos);
+    pdf.text('Service Client SATIM - Numéro Vert : 3020', 20, yPos);
     pdf.setFont('helvetica', 'normal');
     yPos += 6;
     
