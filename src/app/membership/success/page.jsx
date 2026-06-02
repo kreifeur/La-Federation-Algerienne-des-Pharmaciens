@@ -1,4 +1,3 @@
-// app/register/success/page.jsx
 "use client";
 import { useEffect, useState, useRef, Suspense } from "react";
 import Head from "next/head";
@@ -236,12 +235,20 @@ function RegisterSuccessContent() {
     
     yPos += 50;
     
-    // Footer
+    // Footer with green number
     pdf.setFontSize(8);
     pdf.setTextColor(100, 100, 100);
     pdf.setFont('helvetica', 'normal');
     pdf.text('Merci de votre confiance ! Votre adhésion a bien été enregistrée.', 20, yPos);
     yPos += 6;
+    
+    // Green number added here
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(11, 59, 92);
+    pdf.text('Numéro Vert : 30 20 30', 20, yPos);
+    pdf.setFont('helvetica', 'normal');
+    yPos += 6;
+    
     pdf.text('Pour toute question : support@federation-pharmaciens.dz', 20, yPos);
     yPos += 6;
     pdf.text('Document généré automatiquement - fait foi de reçu', 20, yPos);
@@ -343,6 +350,8 @@ Prochaines étapes :
 1. Accédez à votre espace membre pour compléter votre profil
 2. Découvrez les événements et formations à venir
 3. Téléchargez votre carte de membre numérique
+
+Pour toute assistance, contactez notre numéro vert : 30 20 30
 
 Cordialement,
 Fédération Algérienne de Pharmacie`);
@@ -567,6 +576,7 @@ Fédération Algérienne de Pharmacie`);
 
               <div className="mt-6 text-center text-sm text-slate-500">
                 <p>Pour toute assistance : support@federation-pharmaciens.dz</p>
+                <p className="mt-1">Numéro Vert : 30 20 30</p>
               </div>
             </div>
           </>

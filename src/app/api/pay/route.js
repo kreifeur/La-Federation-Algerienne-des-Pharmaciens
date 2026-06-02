@@ -29,7 +29,8 @@ export async function GET(request) {
     const params = new URLSearchParams({
       userName: "SAT2601031358",
       password: "satim120",
-      orderNumber: "YAF-" + Date.now(), // MUST be unique
+      //orderNumber: "YAF-" + Date.now(), // MUST be unique
+      orderNumber: "YAF" + Date.now().toString(36).toUpperCase().slice(-7),
       amount: amount*100, // Use dynamic amount from frontend
       currency: "012",
       language: "FR", // Always French language
