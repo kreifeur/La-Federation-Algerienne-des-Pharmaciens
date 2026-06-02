@@ -136,17 +136,13 @@ function RegisterSuccessContent() {
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(11, 59, 92);
-    pdf.text('Numéro Facture :', 20, 10);
+    pdf.text(`Numéro Facture : ${data.invoiceNumber}`, 20, 10);
     
-    pdf.setFontSize(12);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(data.invoiceNumber, 170, 25);
     
     // Paid status
     pdf.setFontSize(10);
     pdf.setTextColor(0, 150, 0);
-    pdf.text('✓ PAYÉ', 20, 45);
+    pdf.text('PAYÉ', 20, 45);
     
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(9);

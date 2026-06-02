@@ -133,15 +133,10 @@ function RegisterSuccessContent() {
     pdf.text('Excellence, Engagement, Santé', 20, 32);
     
     // Invoice title and number
-    pdf.setFontSize(12);
+     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(11, 59, 92);
-    pdf.text('Numéro Facture :', 20, 10);
-    
-    pdf.setFontSize(12);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(data.invoiceNumber, 170, 25);
+    pdf.text(`Numéro Facture : ${data.invoiceNumber}`, 20, 10);
     
     // Paid status
     pdf.setFontSize(10);
