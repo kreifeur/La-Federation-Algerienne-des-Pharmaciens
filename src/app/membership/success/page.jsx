@@ -359,13 +359,14 @@ Fédération Algérienne de Pharmacie`);
       
       formData.append("attachment", pdfFile);
       
-      const response = await fetch("/api/email", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${loginToken}`,
-        },
-        body: formData,
-      });
+      const response = await fetch('https://fapharmacie.dz/email-service/send', {
+      method: 'POST',
+      headers: {
+        'X-API-Key': 'a3f8c2e1b4d7e9f0123456789abcdef0a1b2c3d4e5f6789012345678abcdef01'
+        // Remove Content-Type header - let browser handle it
+      },
+      body: formData,
+    });
 
       const result = await response.json();
       
