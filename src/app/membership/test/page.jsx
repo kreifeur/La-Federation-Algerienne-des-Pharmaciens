@@ -82,10 +82,10 @@ export default function TestEmailsPage() {
   try {
     console.log("Sending email with attachment:", attachment?.name, attachment?.type, attachment?.size);
     
-    const response = await fetch('/api/email', {
+    const response = await fetch('https://fapharmacie.dz/api/email-service/send', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${authToken}`,
+        'x-api-key': 'a3f8c2e1b4d7e9f0123456789abcdef0a1b2c3d4e5f6789012345678abcdef01'
         // Remove Content-Type header - let browser handle it
       },
       body: formData,
