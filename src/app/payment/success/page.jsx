@@ -15,7 +15,6 @@ function RegisterSuccessContent() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
-  const [loginToken, setLoginToken] = useState(null);
   const now = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const fullDate = new Date().toLocaleString("fr-FR", {
     day: "2-digit",
@@ -34,40 +33,9 @@ function RegisterSuccessContent() {
       setError("Aucun identifiant de transaction trouvé");
       setLoading(false);
     }
-    // Get admin token on component mount
-    getAdminToken();
   }, [searchParams]);
 
-  // Get admin authentication token
-  const getAdminToken = async () => {
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: "brahimadmin@gmail.com",
-          password: "passe123"
-        }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const token = data.data?.token || data.token || data.access_token;
-        if (token) {
-          setLoginToken(token);
-          console.log("Admin token obtained successfully");
-        } else {
-          console.error("Token not found in response", data);
-        }
-      } else {
-        console.error("Failed to get admin token");
-      }
-    } catch (error) {
-      console.error("Error getting admin token:", error);
-    }
-  };
+
 
   const confirmPayment = async (transactionId) => {
     try {
@@ -133,10 +101,11 @@ function RegisterSuccessContent() {
     pdf.text('Excellence, Engagement, Santé', 20, 32);
     
     // Invoice title and number
-     pdf.setFontSize(12);
+    pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(11, 59, 92);
     pdf.text(`Numéro Facture : ${data.invoiceNumber}`, 20, 10);
+    
     
     // Paid status
     pdf.setFontSize(10);
@@ -313,11 +282,6 @@ function RegisterSuccessContent() {
       return;
     }
 
-    if (!loginToken) {
-      alert("Erreur d'authentification. Veuillez rafraîchir la page.");
-      return;
-    }
-
     setEmailSending(true);
     
     try {
@@ -389,10 +353,6 @@ Fédération Algérienne de Pharmacie`);
   };
 
   const handleEmailReceipt = () => {
-    if (!loginToken) {
-      alert("Veuillez patienter, authentification en cours...");
-      return;
-    }
     setShowEmailModal(true);
   };
 
@@ -516,7 +476,7 @@ Fédération Algérienne de Pharmacie`);
 
                 <button
                   onClick={handleEmailReceipt}
-                  disabled={emailSending || !loginToken}
+                  disabled={emailSending}
                   className="bg-white border-2 border-green-600 text-green-600 py-3 px-4 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
