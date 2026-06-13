@@ -315,7 +315,7 @@ Prochaines étapes :
 2. Découvrez les événements et formations à venir
 3. Téléchargez votre carte de membre numérique
 
-Pour toute assistance, contactez notre numéro vert : 30 20 30
+Pour toute assistance, contactez notre numéro vert : 30 20
 
 Cordialement,
 Fédération Algérienne de Pharmacie`);
@@ -537,7 +537,7 @@ Fédération Algérienne de Pharmacie`);
 
               <div className="mt-6 text-center text-sm text-slate-500">
                 <p>Pour toute assistance : support@federation-pharmaciens.dz</p>
-                <p className="mt-1">Numéro Vert : 30 20 30</p>
+                <p className="mt-1">Numéro Vert : 30 20</p>
               </div>
             </div>
           </>
