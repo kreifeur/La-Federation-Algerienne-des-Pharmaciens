@@ -104,9 +104,7 @@ function PaymentFailedContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
       <Head>
-        <title>
-          Paiement échoué - La Fédération Algérienne de Pharmacie
-        </title>
+        <title>Paiement échoué - La Fédération Algérienne de Pharmacie</title>
       </Head>
 
       <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
@@ -127,7 +125,7 @@ function PaymentFailedContent() {
                 paiement.
               </p>
               <p className="text-sm text-red-500 mb-6">{error}</p>
-            {/*   {mdOrder && (
+              {/*   {mdOrder && (
                 <div className="bg-gray-50 p-4 rounded mb-6">
                   <p className="text-sm text-gray-600">
                     Référence transaction :{" "}
@@ -190,7 +188,9 @@ function PaymentFailedContent() {
               (status?.errorCode && status.errorCode !== "0") ? (
                 <div className="bg-red-50 p-4 rounded-lg mb-4 border border-red-200">
                   <p className="text-red-600 text-sm mt-2">
-                    { status.params.respCode_desc !== '' || status.params.respCode_desc !== null ? status.params.respCode_desc : status.actionCodeDescription}
+                    {status.params?.respCode_desc
+                      ? status.params.respCode_desc
+                      : status.actionCodeDescription}
                   </p>
                 </div>
               ) : (
@@ -216,8 +216,6 @@ function PaymentFailedContent() {
               </div>
             </div>
 
-      
-
             <div className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                 <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
@@ -241,12 +239,11 @@ function PaymentFailedContent() {
                   besoin d'aide :
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <img
-                          src="/satim.png"
-                          alt="SATIM Payment Gateway"
-                          className="h-10 mr-3"
-                         />
-                
+                  <img
+                    src="/satim.png"
+                    alt="SATIM Payment Gateway"
+                    className="h-10 mr-3"
+                  />
                 </div>
               </div>
 
@@ -275,7 +272,7 @@ function PaymentFailedContent() {
               </div>
             </div>
 
-           {/*  <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+            {/*  <div className="mt-6 pt-4 border-t border-gray-100 text-center">
               <p className="text-xs text-gray-500">
                 Conservez la référence de transaction{" "}
                 <span className="font-mono text-gray-700">
@@ -293,16 +290,18 @@ function PaymentFailedContent() {
 
 export default function PaymentFailed() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
-          <div className="py-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+            <div className="py-8 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Chargement...</p>
+            </div>
           </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PaymentFailedContent />
     </Suspense>
   );
